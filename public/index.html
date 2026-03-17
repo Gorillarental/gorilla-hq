@@ -965,7 +965,7 @@ async function sendChat(agent, preset) {
     const body = isKnowledge ? { question: msg } : { message: msg, history: chatHistories[agent].slice(-10) };
     const d = await apiFetch('POST', endpoint, body);
     thinking.remove();
-    const reply = d.reply || d.response || d.answer || d.message || d.error || 'No response';
+    const reply = d.text || d.reply || d.response || d.answer || d.message || d.error || 'No response';
     chatHistories[agent].push({ role: 'assistant', content: reply });
     appendMsg(container, reply + `<div class="msg-time">${new Date().toLocaleTimeString()}</div>`, 'agent');
   } catch(e) {
@@ -989,7 +989,7 @@ async function sendFloatChat() {
   try {
     const d = await apiFetch('POST', '/chat', { message: msg, agent, history: chatHistories['float'].slice(-10) });
     thinking.remove();
-    const reply = d.reply || d.response || d.answer || d.message || d.error || 'No response';
+    const reply = d.text || d.reply || d.response || d.answer || d.message || d.error || 'No response';
     chatHistories['float'].push({ role: 'user', content: msg }, { role: 'assistant', content: reply });
     appendMsg(container, reply + `<div class="msg-time">${new Date().toLocaleTimeString()}</div>`, 'agent');
   } catch(e) { thinking.remove(); appendMsg(container, 'Error: ' + e.message, 'agent'); }
