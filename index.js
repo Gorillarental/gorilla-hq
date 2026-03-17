@@ -18,6 +18,7 @@ import { financeRoutes, financeChat, runReminderSweep, checkActiveRentals, getRe
 import { marketingRoutes, marketingChat, captureLead, getMarketingStats } from './marketing.js';
 import { knowledgeRoutes } from './knowledge.js';
 import { CONFIG } from './config.js';
+import { getPipeline, initDB } from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app       = express();
@@ -51,7 +52,7 @@ app.get('/api/dashboard', async (req, res) => {
     ]);
 
     let pipeline = [];
-    try { pipeline = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/pipeline.json'), 'utf8')); } catch {}
+    try { pipeline = await getPipeline(); } catch {}
 
     res.json({
       ok:        true,
@@ -204,6 +205,7 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Start ─────────────────────────────────────────────────────
+await initDB();
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
 ╔══════════════════════════════════════════════╗

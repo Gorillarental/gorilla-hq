@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import { CONFIG, DRIVERS } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { sendSMS, getOrCreateContact, addNote } from './ghl.js';
+import { getPipeline, updateJob } from './db.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -35,7 +36,6 @@ const client    = new Anthropic({ apiKey: CONFIG.ANTHROPIC_KEY });
 const DATA = {
   deliveries:   path.join(__dirname, 'data/deliveries.json'),
   handoffs:     path.join(__dirname, 'data/handoffs.json'),
-  pipeline:     path.join(__dirname, 'data/pipeline.json'),
   reservations: path.join(__dirname, 'data/reservations.json'),
 };
 
@@ -82,9 +82,7 @@ export async function scheduleDelivery(jobId, options = {}) {
   const deliveries = readJSON(DATA.deliveries);
   deliveries.push(delivery);
   writeJSON(DATA.deliveries, deliveries);
-  const pipeline = readJSON(DATA.pipeline);
-  const idx      = pipeline.findIndex(j => j.jobId === jobId);
-  if (idx >= 0) { pipeline[idx].stage = 'delivery_scheduled'; pipeline[idx].deliveryScheduledAt = new Date().toISOString(); writeJSON(DATA.pipeline, pipeline); }
+  await updateJob(jobId, { stage: 'delivery_scheduled', deliveryScheduledAt: new Date().toISOString() });
   console.log(`[Ops] ✅ Delivery scheduled: ${jobId} → ${driver.name} on ${delivery.scheduledDate}`);
   return delivery;
 }
@@ -106,9 +104,7 @@ export async function schedulePickup(jobId, options = {}) {
   const deliveries = readJSON(DATA.deliveries);
   deliveries.push(pickup);
   writeJSON(DATA.deliveries, deliveries);
-  const pipeline = readJSON(DATA.pipeline);
-  const idx      = pipeline.findIndex(j => j.jobId === jobId);
-  if (idx >= 0) { pipeline[idx].stage = 'pickup_scheduled'; pipeline[idx].pickupScheduledAt = new Date().toISOString(); writeJSON(DATA.pipeline, pipeline); }
+  await updateJob(jobId, { stage: 'pickup_scheduled', pickupScheduledAt: new Date().toISOString() });
   console.log(`[Ops] ✅ Pickup scheduled: ${jobId} → ${driver.name} on ${pickup.scheduledDate}`);
   return pickup;
 }
@@ -152,9 +148,7 @@ export async function markDeliveryComplete(jobId, notes = '') {
   if (idx < 0) throw new Error(`No delivery found for ${jobId}`);
   deliveries[idx].status = 'completed'; deliveries[idx].completedAt = new Date().toISOString(); deliveries[idx].completionNotes = notes;
   writeJSON(DATA.deliveries, deliveries);
-  const pipeline = readJSON(DATA.pipeline);
-  const pIdx     = pipeline.findIndex(j => j.jobId === jobId);
-  if (pIdx >= 0) { pipeline[pIdx].stage = 'in_progress'; pipeline[pIdx].deliveredAt = new Date().toISOString(); writeJSON(DATA.pipeline, pipeline); }
+  await updateJob(jobId, { stage: 'in_progress', deliveredAt: new Date().toISOString() });
   try { const { contact } = await getOrCreateContact(deliveries[idx].customerPhone, { name: deliveries[idx].customerName }); if (contact?.id) await addNote(contact.id, `✅ Equipment delivered for ${jobId} on ${new Date().toLocaleDateString()}. ${notes}`); } catch {}
   console.log(`[Ops] ✅ Delivery complete: ${jobId}`);
   return deliveries[idx];
@@ -166,9 +160,7 @@ export async function markPickupComplete(jobId, inspectionNotes = '') {
   if (idx < 0) throw new Error(`No pickup found for ${jobId}`);
   deliveries[idx].status = 'completed'; deliveries[idx].completedAt = new Date().toISOString(); deliveries[idx].inspectionNotes = inspectionNotes;
   writeJSON(DATA.deliveries, deliveries);
-  const pipeline = readJSON(DATA.pipeline);
-  const pIdx     = pipeline.findIndex(j => j.jobId === jobId);
-  if (pIdx >= 0) { pipeline[pIdx].stage = 'returned'; pipeline[pIdx].returnedAt = new Date().toISOString(); writeJSON(DATA.pipeline, pipeline); }
+  await updateJob(jobId, { stage: 'returned', returnedAt: new Date().toISOString() });
   const handoffs = readJSON(DATA.handoffs);
   handoffs.push({ jobId, type: 'return_inspection', notes: inspectionNotes, driverId: deliveries[idx].driverId, timestamp: new Date().toISOString() });
   writeJSON(DATA.handoffs, handoffs);
@@ -189,7 +181,7 @@ export async function getUpcomingJobs(days = 7) {
 }
 
 export async function opsChat(message, history = []) {
-  const pipeline  = readJSON(DATA.pipeline);
+  const pipeline  = await getPipeline();
   const today     = new Date().toISOString().split('T')[0];
   const todayJobs = readJSON(DATA.deliveries).filter(d => d.scheduledDate === today);
   const upcoming  = readJSON(DATA.deliveries).filter(d => d.scheduledDate > today && d.status !== 'completed').slice(0, 5);

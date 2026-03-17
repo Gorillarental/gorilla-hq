@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import { CONFIG, PRICING } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { generateQuotePDF } from './quote-pdf.js';
+import { getPipeline, upsertJob, updateJob, getJob } from './db.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -36,7 +37,6 @@ const DATA = {
   reservations: path.join(__dirname, 'data/reservations.json'),
   contracts:    path.join(__dirname, 'data/contracts.json'),
   invoices:     path.join(__dirname, 'data/invoices.json'),
-  pipeline:     path.join(__dirname, 'data/pipeline.json'),
 };
 
 function readJSON(fp, fallback = []) {
@@ -131,8 +131,7 @@ async function generateContractHTML(res) {
 }
 
 export async function createReservation(jobId) {
-  const pipeline = readJSON(DATA.pipeline);
-  const job      = pipeline.find(j => j.jobId === jobId);
+  const job = await getJob(jobId);
   if (!job) throw new Error(`Job ${jobId} not found`);
 
   const balanceDue  = job.total - PRICING.DEPOSIT;
@@ -164,11 +163,7 @@ export async function createReservation(jobId) {
   reservations.push(reservation);
   writeJSON(DATA.reservations, reservations);
 
-  const idx = pipeline.findIndex(j => j.jobId === jobId);
-  pipeline[idx].stage       = 'reserved';
-  pipeline[idx].balanceLink = balanceLink;
-  pipeline[idx].reservedAt  = new Date().toISOString();
-  writeJSON(DATA.pipeline, pipeline);
+  await updateJob(jobId, { stage: 'reserved', balanceLink, reservedAt: new Date().toISOString() });
 
   console.log(`[Admin] ✅ Reservation created: ${jobId}`);
   return { reservation, balanceLink };
@@ -241,9 +236,7 @@ ${CONFIG.BRAND.PHONE} | ${CONFIG.BRAND.EMAIL}
   contracts.push({ jobId, customerEmail: res.customerEmail, status: 'sent', createdAt: new Date().toISOString() });
   writeJSON(DATA.contracts, contracts);
 
-  const pipeline = readJSON(DATA.pipeline);
-  const idx      = pipeline.findIndex(j => j.jobId === jobId);
-  if (idx >= 0) { pipeline[idx].stage = 'contract_sent'; writeJSON(DATA.pipeline, pipeline); }
+  await updateJob(jobId, { stage: 'contract_sent' });
 
   console.log(`[Admin] ✅ Contract sent: ${jobId}`);
   return { ok: true };
@@ -271,9 +264,7 @@ export async function createInvoice(jobId, type = 'final') {
   writeJSON(DATA.invoices, invoices);
 
   if (type === 'final') {
-    const pipeline = readJSON(DATA.pipeline);
-    const idx      = pipeline.findIndex(j => j.jobId === jobId);
-    if (idx >= 0) { pipeline[idx].stage = 'completed'; pipeline[idx].completedAt = new Date().toISOString(); writeJSON(DATA.pipeline, pipeline); }
+    await updateJob(jobId, { stage: 'completed', completedAt: new Date().toISOString() });
   }
 
   console.log(`[Admin] ✅ Invoice created: INV-${jobId}-${type.toUpperCase()}`);
@@ -282,7 +273,7 @@ export async function createInvoice(jobId, type = 'final') {
 
 export async function getReservationStatus(jobId) {
   return {
-    job:          readJSON(DATA.pipeline).find(j => j.jobId === jobId),
+    job:          await getJob(jobId),
     reservation:  readJSON(DATA.reservations).find(r => r.jobId === jobId),
     contract:     readJSON(DATA.contracts).find(c => c.jobId === jobId),
     invoices:     readJSON(DATA.invoices).filter(i => i.jobId === jobId),
@@ -290,7 +281,7 @@ export async function getReservationStatus(jobId) {
 }
 
 export async function adminChat(message, history = []) {
-  const pipeline     = readJSON(DATA.pipeline);
+  const pipeline     = await getPipeline();
   const reservations = readJSON(DATA.reservations);
 
   const systemPrompt = `You are the Admin Agent for Gorilla Rental.

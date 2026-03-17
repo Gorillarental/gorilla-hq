@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import { CONFIG, PRICING } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { sendSMS, getOrCreateContact, addNote, addTag } from './ghl.js';
+import { getPipeline, updateJob } from './db.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -33,7 +34,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const client    = new Anthropic({ apiKey: CONFIG.ANTHROPIC_KEY });
 
 const DATA = {
-  pipeline:     path.join(__dirname, 'data/pipeline.json'),
   reservations: path.join(__dirname, 'data/reservations.json'),
   invoices:     path.join(__dirname, 'data/invoices.json'),
   reminders:    path.join(__dirname, 'data/reminders.json'),
@@ -66,7 +66,7 @@ async function createStripePaymentLink(amount, metadata = {}) {
 }
 
 export async function checkActiveRentals() {
-  const pipeline     = readJSON(DATA.pipeline);
+  const pipeline     = await getPipeline();
   const reservations = readJSON(DATA.reservations);
   const active       = pipeline.filter(j => ['in_progress','delivery_scheduled','contract_sent','reserved'].includes(j.stage));
   const results      = { total: active.length, endingIn48h: [], endingIn24h: [], overdue: [], active: [] };
@@ -97,7 +97,7 @@ export async function checkActiveRentals() {
 
 export async function send48hReminder(jobId) {
   const reservations = readJSON(DATA.reservations);
-  const pipeline     = readJSON(DATA.pipeline);
+  const pipeline     = await getPipeline();
   const data         = reservations.find(r => r.jobId === jobId) || pipeline.find(j => j.jobId === jobId);
   if (!data) throw new Error(`Job ${jobId} not found`);
 
@@ -154,7 +154,6 @@ export async function send24hAlert(jobId) {
 
 export async function processExtension(jobId, newEndDate) {
   const reservations = readJSON(DATA.reservations);
-  const pipeline     = readJSON(DATA.pipeline);
   const resIdx       = reservations.findIndex(r => r.jobId === jobId);
   if (resIdx < 0) throw new Error(`Reservation ${jobId} not found`);
 
@@ -181,8 +180,7 @@ export async function processExtension(jobId, newEndDate) {
   reservations[resIdx].extensions       = [...(res.extensions || []), { from: res.endDate, to: newEndDate, extra, charge: extensionCharge, paymentLink, at: new Date().toISOString() }];
   writeJSON(DATA.reservations, reservations);
 
-  const pipIdx = pipeline.findIndex(j => j.jobId === jobId);
-  if (pipIdx >= 0) { pipeline[pipIdx].endDate = newEndDate; writeJSON(DATA.pipeline, pipeline); }
+  await updateJob(jobId, { endDate: newEndDate });
 
   await sendSMS(res.customerPhone,
     `Gorilla Rental: Extension confirmed for ${jobId}. New return: ${newEndDate}. Charge: $${extensionCharge.toFixed(2)}. Pay: ${paymentLink}`,
@@ -206,7 +204,7 @@ export async function processExtension(jobId, newEndDate) {
 }
 
 export async function getRevenueReport(period = 'month') {
-  const pipeline = readJSON(DATA.pipeline);
+  const pipeline = await getPipeline();
   const now      = new Date();
   let fromDate;
   if (period === 'week')       fromDate = new Date(now.getTime() - 7 * 86400000);

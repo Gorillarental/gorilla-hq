@@ -22,7 +22,8 @@
     "express": "^5.2.1",
     "html-pdf-node": "^1.0.8",
     "node-fetch": "^3.3.2",
-    "pdfkit": "^0.18.0"
+    "pdfkit": "^0.18.0",
+    "pg": "^8.20.0"
   },
   "type": "module"
 }

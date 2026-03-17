@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import { CONFIG, PRICING, EQUIPMENT_CATALOG } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { generateQuotePDF, buildQuoteHTML, buildQuoteEmailHTML } from './quote-pdf.js';
+import { getPipeline, upsertJob, getJob, updateJob } from './db.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -32,20 +33,8 @@ function extractActionJSON(text) {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const client    = new Anthropic({ apiKey: CONFIG.ANTHROPIC_KEY });
 
-const DATA = {
-  pipeline: path.join(__dirname, 'data/pipeline.json'),
-};
-
-function readJSON(fp, fallback = []) {
-  try {
-    if (!fs.existsSync(fp)) { fs.writeFileSync(fp, JSON.stringify(fallback, null, 2)); return fallback; }
-    return JSON.parse(fs.readFileSync(fp, 'utf8'));
-  } catch { return fallback; }
-}
-function writeJSON(fp, data) { fs.writeFileSync(fp, JSON.stringify(data, null, 2)); }
-
-function generateJobId() {
-  const pipeline = readJSON(DATA.pipeline);
+async function generateJobId() {
+  const pipeline = await getPipeline();
   const num      = String(pipeline.length + 1).padStart(4, '0');
   return `GR-2026-${num}`;
 }
@@ -209,7 +198,7 @@ function calculateQuote(items) {
 
 // ─── Build & send quote ───────────────────────────────────────
 export async function buildQuote(params) {
-  const jobId = generateJobId();
+  const jobId = await generateJobId();
 
   // Calculate pricing
   const calc = calculateQuote(params.items || []);
@@ -248,17 +237,14 @@ export async function buildQuote(params) {
   };
 
   // Save to pipeline
-  const pipeline = readJSON(DATA.pipeline);
-  pipeline.push(quote);
-  writeJSON(DATA.pipeline, pipeline);
+  await upsertJob(quote);
 
   console.log(`[Quotes] ✅ Quote built: ${jobId} — $${quote.total.toFixed(2)}`);
   return quote;
 }
 
 export async function sendQuote(jobId) {
-  const pipeline = readJSON(DATA.pipeline);
-  const quote    = pipeline.find(j => j.jobId === jobId);
+  const quote = await getJob(jobId);
   if (!quote) throw new Error(`Quote ${jobId} not found`);
 
   // Generate PDF + HTML email
@@ -276,10 +262,7 @@ export async function sendQuote(jobId) {
   });
 
   // Update pipeline stage
-  const idx = pipeline.findIndex(j => j.jobId === jobId);
-  pipeline[idx].stage    = 'quote_sent';
-  pipeline[idx].sentAt   = new Date().toISOString();
-  writeJSON(DATA.pipeline, pipeline);
+  await updateJob(jobId, { stage: 'quote_sent', sentAt: new Date().toISOString() });
 
   console.log(`[Quotes] ✅ Quote sent: ${jobId} → ${quote.customerEmail}`);
   return { ok: true, jobId, to: quote.customerEmail };
@@ -287,7 +270,7 @@ export async function sendQuote(jobId) {
 
 // ─── AI Quote Chat ────────────────────────────────────────────
 export async function quoteChat(message, history = []) {
-  const pipeline = readJSON(DATA.pipeline);
+  const pipeline = await getPipeline();
 
   const systemPrompt = `You are the Quote Agent for Gorilla Rental — a boom lift and scissor lift rental company in South Florida.
 
@@ -371,9 +354,9 @@ export function quoteRoutes(app) {
     } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 
-  app.get('/quote/pipeline', (req, res) => {
+  app.get('/quote/pipeline', async (req, res) => {
     try {
-      const pipeline = readJSON(DATA.pipeline);
+      const pipeline = await getPipeline();
       res.json({ ok: true, pipeline, total: pipeline.length });
     } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
   });
