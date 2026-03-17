@@ -50,31 +50,88 @@ function generateJobId() {
   return `GR-2026-${num}`;
 }
 
+// ─── Booqable SKU → Product ID map ────────────────────────────
+const BOOQABLE_PRODUCT_IDS = {
+  BL001: '8981d3ef-952c-4d69-bd17-de6943b2abb6',
+  BL002: '212e9a7a-2070-43e4-ac6b-6e706e47a1e3',
+  BL003: 'd84f59f1-08a5-4a78-a716-bc51f3af64d7',
+  BL005: '1637d88d-2759-4a2d-b372-2766029a7b1c',
+  BL007: 'a5d32ddc-9167-44b7-97f2-75d7b9a95595',
+  BL008: 'b5baf61d-44d1-42a5-8bbf-fae62c42a058',
+  BL009: 'ddd6c45b-c6ae-4c3f-ba00-9bf292378d58',
+  BL010: '1b687ef3-c1a4-48e4-9a50-bf5b3135736d',
+  BL011: '78ca2eab-aa7f-4754-a934-9e4daa5fcaa9',
+  PS001: 'bf395dd4-d615-4002-be4f-caac7d7df912',
+  PS002: '05d20059-0429-4871-bb9c-eb64434c9269',
+  OP001: 'a09bd377-4a14-412e-ab5d-615bee4dcd56',
+  T001:  '3551cc84-26dc-4498-bb43-98c5d0c3e853',
+};
+
 // ─── Booqable ─────────────────────────────────────────────────
 async function createBooqableOrder(quote) {
-  const res = await fetch(`${CONFIG.BOOQABLE.BASE_URL}/orders`, {
-    method:  'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${CONFIG.BOOQABLE.API_KEY}`,
-    },
-    body: JSON.stringify({
-      order: {
-        starts_at:  quote.startDate,
-        stops_at:   quote.endDate,
+  const { BASE_URL, API_KEY } = CONFIG.BOOQABLE;
+  const headers = {
+    'Content-Type':  'application/json',
+    'Authorization': `Bearer ${API_KEY}`,
+  };
+
+  // 1. Find or create customer
+  const searchRes = await fetch(
+    `${BASE_URL}/customers?q[email_eq]=${encodeURIComponent(quote.customerEmail)}`,
+    { headers }
+  );
+  const searchData = await searchRes.json();
+  let customerId = searchData?.customers?.[0]?.id || null;
+
+  if (!customerId) {
+    const custRes = await fetch(`${BASE_URL}/customers`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
         customer: {
           name:  quote.customerName,
           email: quote.customerEmail,
           phone: quote.customerPhone,
         },
-        tag_list: [`job-${quote.jobId}`, 'gorilla-rental'],
-        note:     `Job ID: ${quote.jobId}`,
+      }),
+    });
+    const custData = await custRes.json();
+    customerId = custData?.customer?.id;
+    if (!customerId) throw new Error(`Booqable customer error: ${JSON.stringify(custData)}`);
+  }
+
+  // 2. Create order
+  const orderRes = await fetch(`${BASE_URL}/orders`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      order: {
+        starts_at:   quote.startDate ? `${quote.startDate}T08:00:00.000Z` : null,
+        stops_at:    quote.endDate   ? `${quote.endDate}T08:00:00.000Z`   : null,
+        customer_id: customerId,
+        tag_list:    [`job-${quote.jobId}`, 'gorilla-rental'],
+        note:        `Job ID: ${quote.jobId} | ${quote.deliveryAddress || ''}`,
       },
     }),
   });
-  if (!res.ok) throw new Error(`Booqable order error: ${await res.text()}`);
-  const data = await res.json();
-  return data?.order?.id || data?.data?.id || null;
+  if (!orderRes.ok) throw new Error(`Booqable order error: ${await orderRes.text()}`);
+  const orderData = await orderRes.json();
+  const orderId = orderData?.order?.id;
+  if (!orderId) throw new Error(`Booqable order missing ID: ${JSON.stringify(orderData)}`);
+
+  // 3. Add line items
+  const items = quote.equipment || [];
+  for (const item of items) {
+    const productId = BOOQABLE_PRODUCT_IDS[item.sku];
+    if (!productId) continue;
+    await fetch(`${BASE_URL}/orders/${orderId}/lines`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ line: { product_id: productId, quantity: item.quantity || 1 } }),
+    });
+  }
+
+  return orderId;
 }
 
 // ─── Stripe deposit link ──────────────────────────────────────
