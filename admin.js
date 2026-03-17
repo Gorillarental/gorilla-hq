@@ -8,6 +8,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import Anthropic from '@anthropic-ai/sdk';
+import { logActivity, createTask } from './logger.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -227,6 +228,8 @@ export async function createReservation(jobId) {
 
   await updateJob(jobId, { stage: 'reserved', balanceLink, reservedAt: new Date().toISOString() });
 
+  await logActivity({ agent: 'admin', action: 'reservation_created', description: `Reservation created for ${jobId}`, jobId, status: 'success', notify: true }).catch(()=>{});
+
   console.log(`[Admin] ✅ Reservation created: ${jobId}`);
   return { reservation, balanceLink };
 }
@@ -299,6 +302,8 @@ ${CONFIG.BRAND.PHONE} | ${CONFIG.BRAND.EMAIL}
   writeJSON(DATA.contracts, contracts);
 
   await updateJob(jobId, { stage: 'contract_sent' });
+
+  await logActivity({ agent: 'admin', action: 'contract_sent', description: `Contract sent for ${jobId}`, jobId, status: 'success', notify: true }).catch(()=>{});
 
   console.log(`[Admin] ✅ Contract sent: ${jobId}`);
   return { ok: true };

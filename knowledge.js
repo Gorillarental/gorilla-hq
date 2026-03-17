@@ -5,6 +5,7 @@
 // ============================================================
 
 import Anthropic from '@anthropic-ai/sdk';
+import { logActivity, createTask } from './logger.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -153,6 +154,7 @@ export async function learnFromURL(url, category = 'general', addedBy = 'system'
       }
     }
 
+    await logActivity({ agent: 'knowledge', action: 'url_learned', description: `Learned from ${url} — relevance: ${Math.round((entry.relevanceScore||0)*100)}/100`, status: 'success', notify: false }).catch(()=>{});
     console.log(`[Knowledge] ✅ Learned from URL: ${url}`);
     return { success: true, entry };
   } catch (err) {

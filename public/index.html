@@ -3,533 +3,1479 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gorilla HQ</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Gorilla Rental HQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bk:#0a0a08;--s1:#111110;--s2:#1a1a18;--s3:#222220;--b1:rgba(255,255,255,0.07);--b2:rgba(255,255,255,0.14);--tx:#e8e6df;--mt:#6b6960;--ac:#f4a623;--a2:#e05a2b;--gr:#3ecf6e;--bl:#4a9eff;--tl:#2bc4a8;--fn:'Bebas Neue',sans-serif;--fb:'DM Sans',sans-serif;--fm:'DM Mono',monospace;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bk);color:var(--tx);font-family:var(--fb);min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
-/* topbar */
-.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,8,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:100;}
-.logo{display:flex;align-items:center;gap:10px;}
-.logo-icon{width:32px;height:32px;background:var(--ac);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;}
-.logo-text{font-family:var(--fn);font-size:22px;letter-spacing:2px;}
-.logo-sub{font-size:10px;color:var(--mt);font-family:var(--fm);letter-spacing:3px;text-transform:uppercase;margin-top:-2px;}
-.tr{display:flex;align-items:center;gap:20px;}
-.live{display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--fm);color:var(--gr);}
-.ld{width:7px;height:7px;background:var(--gr);border-radius:50%;animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(62,207,110,0.4)}50%{box-shadow:0 0 0 6px rgba(62,207,110,0)}}
-.clk{font-family:var(--fm);font-size:13px;color:var(--mt);}
-.uc{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b1);border-radius:20px;padding:5px 12px 5px 5px;font-size:13px;}
-.av{width:24px;height:24px;background:var(--ac);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--bk);}
-/* sidebar */
-.sidebar{position:fixed;left:0;top:56px;bottom:0;width:220px;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;padding:20px 0;z-index:90;}
-.ns{padding:0 12px;margin-bottom:6px;}
-.nl{font-size:10px;font-family:var(--fm);letter-spacing:2px;color:var(--mt);text-transform:uppercase;padding:8px 10px 6px;}
-.ni{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:14px;color:var(--mt);cursor:pointer;transition:all .15s;}
-.ni:hover{background:var(--s2);color:var(--tx);}
-.ni.active{background:rgba(244,166,35,.12);color:var(--ac);}
-.as{margin-top:auto;padding:12px;border-top:1px solid var(--b1);}
-.al{font-size:10px;font-family:var(--fm);letter-spacing:2px;color:var(--mt);text-transform:uppercase;margin-bottom:8px;}
-.ap{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;font-size:12px;margin-bottom:2px;}
-.ad{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.an{flex:1;color:var(--tx);}
-.av2{font-size:10px;font-family:var(--fm);}
-/* main */
-.main{margin-left:220px;margin-top:56px;padding:28px 28px 380px;position:relative;z-index:1;}
-.ph{margin-bottom:28px;}
-.pt{font-family:var(--fn);font-size:44px;letter-spacing:3px;line-height:1;}
-.pt span{color:var(--ac);}
-.ps{font-size:14px;color:var(--mt);margin-top:4px;}
-/* kpi */
-.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
-.kc{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;}
-.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.kc.or::before{background:linear-gradient(90deg,var(--ac),transparent);}
-.kc.re::before{background:linear-gradient(90deg,var(--a2),transparent);}
-.kc.gr::before{background:linear-gradient(90deg,var(--gr),transparent);}
-.kc.bl::before{background:linear-gradient(90deg,var(--bl),transparent);}
-.kl{font-size:10px;font-family:var(--fm);letter-spacing:1.5px;color:var(--mt);text-transform:uppercase;margin-bottom:8px;}
-.kv{font-family:var(--fn);font-size:34px;letter-spacing:1px;line-height:1;}
-.kc.or .kv{color:var(--ac);}
-.kc.re .kv{color:var(--a2);}
-.kc.gr .kv{color:var(--gr);}
-.kc.bl .kv{color:var(--bl);}
-.km{font-size:11px;color:var(--mt);margin-top:4px;}
-/* panels */
-.g2{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-bottom:18px;}
-.panel{background:var(--s1);border:1px solid var(--b1);border-radius:12px;overflow:hidden;margin-bottom:18px;}
-.ph2{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--b1);}
-.pt2{font-size:13px;font-weight:500;}
-.ptag{font-size:10px;font-family:var(--fm);color:var(--mt);background:var(--s3);padding:2px 7px;border-radius:4px;}
-.es{padding:24px 18px;text-align:center;color:var(--mt);font-size:13px;}
-/* quotes pipeline */
-.qp-item{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .15s;}
-.qp-item:last-child{border-bottom:none;}
-.qp-item:hover{background:var(--s2);}
-.qp-badge{font-size:10px;font-family:var(--fm);padding:3px 8px;border-radius:4px;min-width:70px;text-align:center;}
-.st-draft{background:rgba(107,105,96,.2);color:var(--mt);}
-.st-sent{background:rgba(74,158,255,.12);color:var(--bl);}
-.st-reservation{background:rgba(62,207,110,.12);color:var(--gr);}
-.st-deposit{background:rgba(244,166,35,.12);color:var(--ac);}
-.st-active{background:rgba(43,196,168,.12);color:var(--tl);}
-.qp-info{flex:1;}
-.qp-name{font-size:13px;font-weight:500;}
-.qp-detail{font-size:11px;color:var(--mt);margin-top:1px;font-family:var(--fm);}
-.qp-total{font-family:var(--fn);font-size:20px;color:var(--ac);}
-/* cashflow */
-.cfr{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--b1);}
-.cfr:last-child{border-bottom:none;}
-.cfl{font-size:13px;color:var(--mt);}
-.cfv{font-family:var(--fn);font-size:22px;}
-.ci{color:var(--gr);}
-.co{color:var(--a2);}
-.cb{color:var(--ac);}
-/* feed */
-.fi{display:flex;align-items:flex-start;gap:10px;padding:10px 18px;border-bottom:1px solid var(--b1);}
-.fi:last-child{border-bottom:none;}
-.fd{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0;}
-.fb{flex:1;}
-.ft{font-size:13px;line-height:1.5;}
-.fa{font-family:var(--fm);font-size:10px;padding:1px 6px;border-radius:3px;margin-right:4px;}
-.ftime{font-size:10px;color:var(--mt);font-family:var(--fm);margin-top:2px;}
-/* chat */
-.chatbar{position:fixed;bottom:0;left:220px;right:0;z-index:200;background:rgba(10,10,8,0.97);backdrop-filter:blur(16px);border-top:1px solid var(--b1);padding:12px 24px 16px;}
-.chat-msgs{max-height:220px;overflow-y:auto;margin-bottom:10px;display:none;}
-.chat-msgs.on{display:block;}
-.bub{padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.7;margin-bottom:6px;white-space:pre-wrap;word-break:break-word;}
-.bub.user{background:rgba(244,166,35,.1);border:1px solid rgba(244,166,35,.15);margin-left:auto;max-width:80%;text-align:right;}
-.bub.bot{background:var(--s2);border:1px solid var(--b1);max-width:95%;}
-.bub .tag{font-family:var(--fm);font-size:10px;color:var(--ac);display:block;margin-bottom:4px;}
-.bub.revised .tag{color:var(--bl);}
-.bub.revised{border-color:rgba(74,158,255,.2);}
-.bub.warn{border-color:rgba(224,90,43,.3);}
-.bub.warn .tag{color:var(--a2);}
-.bub.success .tag{color:var(--gr);}
-.bub.success{border-color:rgba(62,207,110,.2);}
-/* quote approval panel */
-.qpanel{display:none;background:var(--s3);border:1px solid var(--b2);border-radius:12px;padding:16px;margin-bottom:10px;}
-.qpanel.on{display:block;}
-.qpanel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.qpanel-title{font-size:12px;font-family:var(--fm);letter-spacing:1px;text-transform:uppercase;}
-.qpanel-title.draft{color:var(--ac);}
-.qpanel-title.sent{color:var(--bl);}
-.qpanel-title.approved{color:var(--gr);}
-.qpanel-ref{font-size:11px;font-family:var(--fm);color:var(--mt);}
-.qpanel-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px;}
-.qpi{font-size:11px;}
-.qpl{color:var(--mt);font-family:var(--fm);font-size:10px;display:block;text-transform:uppercase;margin-bottom:2px;}
-.qpv{color:var(--tx);font-weight:500;}
-.qpv.big{color:var(--ac);font-family:var(--fn);font-size:20px;}
-.qpv.dep{color:var(--gr);}
-.qpanel-btns{display:flex;gap:8px;}
-.btn-primary{background:var(--gr);color:var(--bk);border:none;border-radius:8px;padding:10px 20px;font-family:var(--fm);font-size:12px;font-weight:700;cursor:pointer;flex:1;}
-.btn-primary:hover{opacity:.85;}
-.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
-.btn-sec{background:transparent;color:var(--mt);border:1px solid var(--b1);border-radius:8px;padding:10px 14px;font-family:var(--fm);font-size:11px;cursor:pointer;}
-.btn-sec:hover{border-color:var(--a2);color:var(--a2);}
-/* mode hint */
-.mhint{font-size:11px;font-family:var(--fm);padding:6px 12px;border-radius:6px;margin-bottom:8px;display:none;}
-.mhint.collecting{display:block;background:rgba(244,166,35,.07);color:var(--ac);border:1px solid rgba(244,166,35,.15);}
-.mhint.reviewing{display:block;background:rgba(62,207,110,.07);color:var(--gr);border:1px solid rgba(62,207,110,.15);}
-.mhint.sent{display:block;background:rgba(74,158,255,.07);color:var(--bl);border:1px solid rgba(74,158,255,.15);}
-.input-row{display:flex;gap:8px;align-items:center;}
-.cinp{flex:1;background:var(--s2);border:1px solid var(--b2);border-radius:12px;padding:12px 16px;color:var(--tx);font-family:var(--fb);font-size:14px;outline:none;transition:border-color .15s;}
-.cinp:focus{border-color:var(--ac);}
-.cinp.rev:focus{border-color:var(--gr);}
-.cinp::placeholder{color:var(--mt);}
-.csend{background:var(--ac);color:var(--bk);border:none;border-radius:10px;padding:12px 20px;font-family:var(--fm);font-size:12px;font-weight:700;cursor:pointer;}
-.csend:disabled{opacity:.4;cursor:not-allowed;}
-.cclr{background:transparent;border:1px solid var(--b1);border-radius:10px;padding:12px;color:var(--mt);cursor:pointer;font-size:15px;line-height:1;}
-.cclr:hover{color:var(--a2);border-color:var(--a2);}
-.chint{text-align:center;font-size:11px;font-family:var(--fm);color:var(--mt);margin-top:7px;}
-.toast{position:fixed;top:70px;right:20px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:12px 20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:360px;}
-.toast.on{opacity:1;}
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px;}
+/* === RESET & BASE === */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --yellow: #f6ec0e;
+  --black: #111111;
+  --white: #ffffff;
+  --gray-100: #f5f5f5;
+  --gray-200: #e5e5e5;
+  --gray-300: #d4d4d4;
+  --gray-400: #a3a3a3;
+  --gray-500: #737373;
+  --gray-600: #525252;
+  --gray-700: #404040;
+  --gray-800: #262626;
+  --gray-900: #171717;
+  --green: #22c55e;
+  --red: #ef4444;
+  --orange: #f97316;
+  --blue: #3b82f6;
+  --purple: #a855f7;
+  --teal: #14b8a6;
+  --pink: #ec4899;
+}
+body { font-family: 'Inter', sans-serif; background: var(--gray-900); color: var(--white); min-height: 100vh; }
+
+/* === LOCK SCREEN === */
+#lockScreen {
+  position: fixed; inset: 0; background: var(--black); z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px;
+}
+.lock-logo { font-size: 48px; font-weight: 800; letter-spacing: -2px; }
+.lock-logo span { color: var(--yellow); }
+.lock-subtitle { color: var(--gray-400); font-size: 14px; letter-spacing: 4px; text-transform: uppercase; }
+.lock-form { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.lock-label { font-size: 13px; color: var(--gray-400); letter-spacing: 1px; }
+.lock-input {
+  width: 180px; height: 60px; background: var(--gray-800); border: 2px solid var(--gray-700);
+  border-radius: 12px; color: var(--white); font-size: 28px; font-weight: 700;
+  text-align: center; letter-spacing: 12px; outline: none; transition: border-color 0.2s;
+  font-family: 'Inter', monospace;
+}
+.lock-input:focus { border-color: var(--yellow); }
+.lock-input.shake { animation: shake 0.4s ease; border-color: var(--red); }
+.lock-btn {
+  width: 180px; height: 48px; background: var(--yellow); border: none; border-radius: 10px;
+  color: var(--black); font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px;
+  transition: opacity 0.2s;
+}
+.lock-btn:hover { opacity: 0.85; }
+.lock-error { color: var(--red); font-size: 13px; height: 18px; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-8px); }
+  40%,80% { transform: translateX(8px); }
+}
+
+/* === MAIN APP === */
+#app { display: none; flex-direction: column; min-height: 100vh; }
+#app.visible { display: flex; }
+
+/* === TOP NAV === */
+.topnav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--black); border-bottom: 1px solid var(--gray-800);
+  display: flex; align-items: center; gap: 0; overflow-x: auto;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  padding: 0 8px;
+}
+.topnav::-webkit-scrollbar { display: none; }
+.nav-brand {
+  display: flex; align-items: center; gap: 8px; padding: 0 16px;
+  font-size: 16px; font-weight: 800; white-space: nowrap; color: var(--yellow);
+  border-right: 1px solid var(--gray-800); margin-right: 8px; min-height: 52px;
+}
+.nav-tab {
+  display: flex; align-items: center; gap: 6px; padding: 0 14px;
+  height: 52px; white-space: nowrap; cursor: pointer; font-size: 13px; font-weight: 500;
+  color: var(--gray-400); border-bottom: 2px solid transparent; transition: all 0.15s;
+  user-select: none; border-radius: 0;
+  background: none; border-left: none; border-right: none; border-top: none;
+}
+.nav-tab:hover { color: var(--white); }
+.nav-tab.active { color: var(--yellow); border-bottom-color: var(--yellow); }
+
+/* === PAGE CONTAINER === */
+.page { display: none; flex: 1; padding: 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
+.page.active { display: block; }
+
+/* === CARDS === */
+.card {
+  background: var(--gray-800); border: 1px solid var(--gray-700); border-radius: 12px;
+  padding: 20px; margin-bottom: 20px;
+}
+.card-title { font-size: 14px; font-weight: 600; color: var(--gray-300); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card-title .badge { background: var(--gray-700); color: var(--gray-300); font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+
+/* === STAT CARDS === */
+.stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2, 1fr); overflow-x: auto; } }
+.stat-card {
+  background: var(--gray-800); border: 1px solid var(--gray-700); border-radius: 12px;
+  padding: 16px 20px;
+}
+.stat-value { font-size: 28px; font-weight: 800; color: var(--yellow); line-height: 1; margin-bottom: 4px; }
+.stat-value.red { color: var(--red); }
+.stat-label { font-size: 12px; color: var(--gray-400); font-weight: 500; }
+
+/* === TABLES === */
+.table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--gray-700); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: var(--gray-900); color: var(--gray-400); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; text-align: left; white-space: nowrap; }
+td { padding: 11px 14px; border-top: 1px solid var(--gray-700); color: var(--gray-200); vertical-align: middle; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* === BADGES === */
+.badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+.badge-yellow { background: rgba(246,236,14,0.15); color: var(--yellow); }
+.badge-green  { background: rgba(34,197,94,0.15);  color: var(--green); }
+.badge-red    { background: rgba(239,68,68,0.15);   color: var(--red); }
+.badge-blue   { background: rgba(59,130,246,0.15);  color: var(--blue); }
+.badge-purple { background: rgba(168,85,247,0.15);  color: var(--purple); }
+.badge-orange { background: rgba(249,115,22,0.15);  color: var(--orange); }
+.badge-teal   { background: rgba(20,184,166,0.15);  color: var(--teal); }
+.badge-gray   { background: rgba(115,115,115,0.2);  color: var(--gray-400); }
+.badge-pink   { background: rgba(236,72,153,0.15);  color: var(--pink); }
+
+/* === BUTTONS === */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.15s; white-space: nowrap; }
+.btn:hover { opacity: 0.85; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-yellow { background: var(--yellow); color: var(--black); }
+.btn-green  { background: var(--green);  color: var(--white); }
+.btn-red    { background: var(--red);    color: var(--white); }
+.btn-gray   { background: var(--gray-700); color: var(--gray-200); }
+.btn-ghost  { background: transparent; color: var(--gray-400); border: 1px solid var(--gray-700); }
+.btn-ghost:hover { color: var(--white); border-color: var(--gray-500); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* === SPLIT LAYOUT === */
+.split { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+@media (max-width: 1024px) { .split { grid-template-columns: 1fr; } }
+.split-left { display: flex; flex-direction: column; gap: 16px; }
+
+/* === CHAT === */
+.chat-container { display: flex; flex-direction: column; height: 520px; background: var(--gray-900); border: 1px solid var(--gray-700); border-radius: 12px; overflow: hidden; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--gray-700); border-radius: 2px; }
+.msg { max-width: 85%; padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.6; }
+.msg.user { align-self: flex-end; background: var(--yellow); color: var(--black); font-weight: 500; border-radius: 10px 10px 2px 10px; }
+.msg.agent { align-self: flex-start; background: var(--gray-800); color: var(--gray-100); border: 1px solid var(--gray-700); border-radius: 10px 10px 10px 2px; }
+.msg.agent .msg-time { font-size: 10px; color: var(--gray-500); margin-top: 4px; }
+.msg.thinking { align-self: flex-start; background: var(--gray-800); border: 1px solid var(--gray-700); color: var(--gray-500); font-style: italic; }
+.thinking-dots::after { content: '...'; animation: dots 1.5s infinite; }
+@keyframes dots { 0%,20%{content:'.'} 40%,60%{content:'..'} 80%,100%{content:'...'} }
+.chat-presets { padding: 8px 12px; display: flex; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--gray-700); background: var(--gray-800); }
+.preset-btn { background: var(--gray-700); border: none; color: var(--gray-300); padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.15s; }
+.preset-btn:hover { background: var(--gray-600); color: var(--white); }
+.chat-input-row { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--gray-700); background: var(--gray-800); }
+.chat-input { flex: 1; background: var(--gray-700); border: 1px solid var(--gray-600); border-radius: 8px; color: var(--white); padding: 10px 14px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; resize: none; }
+.chat-input:focus { border-color: var(--yellow); }
+.chat-send { background: var(--yellow); color: var(--black); border: none; border-radius: 8px; padding: 10px 18px; font-weight: 700; font-size: 13px; cursor: pointer; }
+
+/* === QUICK ACTIONS === */
+.actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+
+/* === AGENT STATUS === */
+.agent-status { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--gray-900); border: 1px solid var(--gray-700); border-radius: 8px; margin-bottom: 12px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse-green 2s infinite; }
+@keyframes pulse-green { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+.status-text { font-size: 13px; font-weight: 600; color: var(--green); }
+
+/* === ALERT BANNER === */
+.alert-banner { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 500; display: none; cursor: pointer; }
+.alert-banner.red { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+.alert-banner.yellow { background: rgba(246,236,14,0.1); border: 1px solid rgba(246,236,14,0.3); color: var(--yellow); }
+.alert-banner.show { display: block; }
+
+/* === APPROVAL CARDS === */
+.approval-card { background: var(--gray-900); border: 1px solid var(--gray-700); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+.approval-card .approval-type { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--yellow); margin-bottom: 8px; }
+.approval-card .approval-details { font-size: 14px; color: var(--gray-200); margin-bottom: 12px; line-height: 1.6; }
+.approval-card .approval-meta { font-size: 12px; color: var(--gray-500); margin-bottom: 12px; }
+.approval-btns { display: flex; gap: 8px; }
+
+/* === TASK CARDS === */
+.task-card { background: var(--gray-800); border: 1px solid var(--gray-700); border-radius: 10px; padding: 16px; margin-bottom: 10px; }
+.task-card.high { border-left: 3px solid var(--red); }
+.task-card.medium { border-left: 3px solid var(--yellow); }
+.task-card.low { border-left: 3px solid var(--gray-500); }
+.task-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.task-title { font-size: 14px; font-weight: 600; color: var(--white); }
+.task-desc { font-size: 13px; color: var(--gray-400); margin-bottom: 12px; line-height: 1.5; }
+.task-footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.task-btns { display: flex; gap: 6px; margin-top: 10px; }
+
+/* === ACTIVITY FEED === */
+.activity-entry { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-800); }
+.activity-entry:last-child { border-bottom: none; }
+.activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.activity-content { flex: 1; }
+.activity-action { font-size: 13px; font-weight: 600; color: var(--white); }
+.activity-desc { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+.activity-meta { display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap; }
+.activity-time { font-size: 11px; color: var(--gray-500); }
+
+/* === FILTER TABS === */
+.filter-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-tab { background: var(--gray-800); border: 1px solid var(--gray-700); color: var(--gray-400); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.filter-tab.active { background: var(--yellow); border-color: var(--yellow); color: var(--black); }
+.filter-tab:hover:not(.active) { color: var(--white); border-color: var(--gray-500); }
+
+/* === TOAST === */
+#toastContainer { position: fixed; bottom: 80px; right: 20px; z-index: 9000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; max-width: 340px; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: var(--green); }
+.toast.error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.3);  color: var(--red); }
+.toast.warning { background: rgba(246,236,14,0.1);  border: 1px solid rgba(246,236,14,0.3);  color: var(--yellow); }
+.toast.info    { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);  color: var(--blue); }
+
+/* === FLOATING CHAT BUTTON === */
+#floatChatBtn { position: fixed; bottom: 20px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--yellow); border: none; font-size: 22px; cursor: pointer; z-index: 8000; box-shadow: 0 4px 20px rgba(246,236,14,0.3); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+#floatChatBtn:hover { transform: scale(1.1); }
+
+/* === MODAL === */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 8500; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--gray-800); border: 1px solid var(--gray-700); border-radius: 16px; padding: 24px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-close { background: none; border: none; color: var(--gray-400); font-size: 20px; cursor: pointer; padding: 4px; }
+.modal-close:hover { color: var(--white); }
+
+/* === FORM ELEMENTS === */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--gray-400); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--gray-900); border: 1px solid var(--gray-700);
+  border-radius: 8px; color: var(--white); padding: 10px 14px; font-size: 13px;
+  font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--yellow); }
+.form-select option { background: var(--gray-900); }
+.form-textarea { min-height: 80px; resize: vertical; }
+
+/* === SKELETON === */
+.skeleton { background: linear-gradient(90deg, var(--gray-800) 25%, var(--gray-700) 50%, var(--gray-800) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* === STAGE BADGES === */
+.stage-quote_built { background: rgba(115,115,115,0.2); color: #737373; }
+.stage-quote_sent  { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.stage-reserved    { background: rgba(168,85,247,0.15); color: #c084fc; }
+.stage-contract_sent { background: rgba(249,115,22,0.15); color: #fb923c; }
+.stage-delivery_scheduled { background: rgba(246,236,14,0.15); color: #f6ec0e; }
+.stage-in_progress { background: rgba(34,197,94,0.15); color: #4ade80; }
+.stage-returned    { background: rgba(20,184,166,0.15); color: #2dd4bf; }
+.stage-completed   { background: rgba(21,128,61,0.2); color: #86efac; }
+.stage-cancelled   { background: rgba(239,68,68,0.15); color: #f87171; }
+
+/* === OPS CARDS === */
+.ops-card { background: var(--gray-900); border: 1px solid var(--gray-700); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+.ops-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ops-address { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--gray-300); text-decoration: none; margin: 6px 0; }
+.ops-address:hover { color: var(--yellow); }
+
+/* === SECTION TITLE === */
+.section-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+.section-title a { font-size: 12px; color: var(--yellow); text-decoration: none; }
+.section-title a:hover { text-decoration: underline; }
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .page { padding: 12px; }
+  .split { grid-template-columns: 1fr; }
+  .card { padding: 14px; }
+  .chat-container { height: 420px; }
+}
 </style>
 </head>
 <body>
-<div class="topbar">
-  <div class="logo">
-    <div class="logo-icon">🦍</div>
-    <div><div class="logo-text">GORILLA HQ</div><div class="logo-sub">Command Center</div></div>
-  </div>
-  <div class="tr">
-    <div class="live"><div class="ld"></div>LIVE</div>
-    <div class="clk" id="clk">--:-- --</div>
-    <div class="uc"><div class="av">GR</div>All Staff</div>
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="lock-logo">&#x1F98D; <span>GORILLA</span> RENTAL</div>
+  <div class="lock-subtitle">Command Center</div>
+  <div class="lock-form">
+    <div class="lock-label">ENTER ACCESS CODE</div>
+    <input type="password" class="lock-input" id="lockInput" maxlength="4" inputmode="numeric" autocomplete="off" placeholder="••••">
+    <div class="lock-error" id="lockError"></div>
+    <button class="lock-btn" onclick="checkCode()">UNLOCK</button>
   </div>
 </div>
 
-<div class="sidebar">
-  <div class="ns">
-    <div class="nl">Navigation</div>
-    <div class="ni active" onclick="setNav(this)">⬡ Dashboard</div>
-    <div class="ni" onclick="setNav(this);loadPipeline()">📋 Quotes Pipeline</div>
-    <div class="ni" onclick="setNav(this)">📦 Deliveries</div>
-    <div class="ni" onclick="setNav(this)">📣 Marketing</div>
-    <div class="ni" onclick="setNav(this)">💰 Finance</div>
-    <div class="ni" onclick="setNav(this)">⚙️ Ops</div>
-  </div>
-  <div class="ns">
-    <div class="nl">Integrations</div>
-    <div class="ni" onclick="window.open('https://gorilla-rentals.booqable.com','_blank')">📦 Booqable</div>
-    <div class="ni" onclick="window.open('https://dashboard.stripe.com','_blank')">💳 Stripe</div>
-  </div>
-  <div class="as">
-    <div class="al">Agents</div>
-    <div class="ap"><div class="ad" style="background:var(--bl)"></div><span class="an">Quotes</span><span class="av2" style="color:var(--bl)" id="qs">ready</span></div>
-    <div class="ap"><div class="ad" style="background:var(--ac)"></div><span class="an">Marketing</span><span class="av2" style="color:var(--ac)">ready</span></div>
-    <div class="ap"><div class="ad" style="background:var(--mt)"></div><span class="an">Admin</span><span class="av2" style="color:var(--mt)">ready</span></div>
-    <div class="ap"><div class="ad" style="background:var(--tl)"></div><span class="an">Ops</span><span class="av2" style="color:var(--tl)">ready</span></div>
-    <div class="ap"><div class="ad" style="background:var(--bl)"></div><span class="an">Finance</span><span class="av2" style="color:var(--bl)">ready</span></div>
-    <div class="ap"><div class="ad" style="background:var(--gr)"></div><span class="an">Chip</span><span class="av2" style="color:var(--gr)">ready</span></div>
-  </div>
-</div>
+<!-- MAIN APP -->
+<div id="app">
 
-<div class="main">
-  <div class="ph">
-    <div class="pt" id="greeting">GOOD MORNING, <span>GORILLA</span></div>
-    <div class="ps" id="dateline">Loading...</div>
-  </div>
-  <div class="krow">
-    <div class="kc or"><div class="kl">Revenue This Month</div><div class="kv" id="k1">$0</div><div class="km">Closed + active</div></div>
-    <div class="kc re"><div class="kl">Active Rentals</div><div class="kv" id="k2">0</div><div class="km">On rent now</div></div>
-    <div class="kc gr"><div class="kl">Ending Soon</div><div class="kv" id="k3">0</div><div class="km">Within 48h</div></div>
-    <div class="kc bl"><div class="kl">Open Quotes</div><div class="kv" id="k4">0</div><div class="km">In pipeline</div></div>
-  </div>
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="nav-brand">&#x1F98D; GORILLA</div>
+    <button class="nav-tab active" onclick="showPage('dashboard', this)">&#x1F3E0; Dashboard</button>
+    <button class="nav-tab" onclick="showPage('quote', this)">&#x1F4AC; Quote</button>
+    <button class="nav-tab" onclick="showPage('admin', this)">&#x1F4CB; Admin</button>
+    <button class="nav-tab" onclick="showPage('ops', this)">&#x1F69A; Ops</button>
+    <button class="nav-tab" onclick="showPage('finance', this)">&#x1F4B0; Finance</button>
+    <button class="nav-tab" onclick="showPage('marketing', this)">&#x1F4E3; Marketing</button>
+    <button class="nav-tab" onclick="showPage('knowledge', this)">&#x1F9E0; Knowledge</button>
+    <button class="nav-tab" onclick="showPage('tasks', this)" id="tasksTab">&#x2705; Tasks</button>
+    <button class="nav-tab" onclick="showPage('activity', this)">&#x1F4CA; Activity</button>
+  </nav>
 
-  <!-- Quotes pipeline -->
-  <div class="panel">
-    <div class="ph2"><div class="pt2">Quotes Pipeline</div><div class="ptag" id="pipeline-tag">LIVE</div></div>
-    <div id="pipeline-list"><div class="es">No quotes yet — start one in the chat below</div></div>
-  </div>
-
-  <div class="g2">
-    <div class="panel">
-      <div class="ph2"><div class="pt2">Cash Flow</div><div class="ptag">THIS MONTH</div></div>
-      <div class="cfr"><div class="cfl">Closed Revenue</div><div class="cfv ci" id="cfi">$0</div></div>
-      <div class="cfr"><div class="cfl">Active Revenue</div><div class="cfv cb" id="cfa">$0</div></div>
-      <div class="cfr"><div class="cfl">Pipeline</div><div class="cfv" style="color:var(--mt)" id="cfp">$0</div></div>
+  <!-- ══════════════ PAGE: DASHBOARD ══════════════ -->
+  <div class="page active" id="page-dashboard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-size:22px;font-weight:800;color:var(--yellow);">&#x1F98D; GORILLA RENTAL HQ</div>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:2px;" id="dashLastUpdated">Refreshing...</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:18px;font-weight:700;" id="dashClock">--:-- --</div>
+        <div style="font-size:12px;color:var(--gray-400);" id="dashDate"></div>
+        <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:4px;">
+          <div style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);"></div>
+          <span style="font-size:11px;color:var(--green);font-weight:600;">SYSTEM ONLINE</span>
+        </div>
+      </div>
     </div>
-    <div class="panel">
-      <div class="ph2"><div class="pt2">Live Activity</div><div class="live" style="font-size:10px"><div class="ld" style="width:6px;height:6px"></div>Live</div></div>
-      <div id="feed"><div class="es">Agent activity appears here</div></div>
+
+    <!-- Alert Banner -->
+    <div class="alert-banner red" id="alertBannerRed" onclick="showPage('finance', document.querySelectorAll('.nav-tab')[4])"></div>
+    <div class="alert-banner yellow" id="alertBannerYellow" onclick="showPage('finance', document.querySelectorAll('.nav-tab')[4])"></div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-value" id="statPipeline">—</div><div class="stat-label">Pipeline Jobs</div></div>
+      <div class="stat-card"><div class="stat-value" id="statActive">—</div><div class="stat-label">Active Rentals</div></div>
+      <div class="stat-card"><div class="stat-value" id="statEnding48">—</div><div class="stat-label">Ending 48h</div></div>
+      <div class="stat-card"><div class="stat-value" id="statRevenue">—</div><div class="stat-label">Month Revenue</div></div>
+      <div class="stat-card"><div class="stat-value" id="statTasks">—</div><div class="stat-label">Pending Tasks</div></div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="actions-row">
+      <button class="btn btn-yellow" onclick="showPage('quote', document.querySelectorAll('.nav-tab')[1])">&#x2795; New Quote</button>
+      <button class="btn btn-gray" onclick="apiAction('POST','/finance/sweep','Reminder sweep started','Sweep failed','dashSweepBtn')" id="dashSweepBtn">&#x1F4E7; Reminder Sweep</button>
+      <button class="btn btn-gray" onclick="apiAction('POST','/knowledge/sweep','Learning sweep started','Sweep failed','dashLearnBtn')" id="dashLearnBtn">&#x1F4DA; Learn Now</button>
+      <button class="btn btn-gray" onclick="apiAction('POST','/admin/briefing','Morning briefing sent','Failed','dashBriefBtn')" id="dashBriefBtn">&#x1F4CB; Morning Briefing</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div>
+        <!-- Pipeline -->
+        <div class="card">
+          <div class="section-title">Recent Pipeline <a onclick="showPage('quote', document.querySelectorAll('.nav-tab')[1]);return false;" href="#">View All &rarr;</a></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Job ID</th><th>Customer</th><th>Stage</th><th>Total</th><th>Action</th></tr></thead>
+              <tbody id="dashPipelineBody"><tr><td colspan="5"><div class="skeleton" style="height:12px;width:100%;"></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pending Tasks Preview -->
+        <div class="card">
+          <div class="section-title">High Priority Tasks <a onclick="showPage('tasks', document.querySelectorAll('.nav-tab')[7]);return false;" href="#">View All &rarr;</a></div>
+          <div id="dashTasksPreview"><div class="skeleton" style="height:60px;border-radius:8px;"></div></div>
+        </div>
+      </div>
+
+      <div>
+        <!-- Today's Ops -->
+        <div class="card">
+          <div class="section-title">Today's Operations</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--gray-400);margin-bottom:8px;">&#x1F4E6; DELIVERIES</div>
+              <div id="dashDeliveries"><div class="skeleton" style="height:80px;border-radius:8px;"></div></div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--gray-400);margin-bottom:8px;">&#x1F4E5; PICKUPS</div>
+              <div id="dashPickups"><div class="skeleton" style="height:80px;border-radius:8px;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+          <div class="section-title">Recent Activity <a onclick="showPage('activity', document.querySelectorAll('.nav-tab')[8]);return false;" href="#">View All &rarr;</a></div>
+          <div id="dashActivity"><div class="skeleton" style="height:120px;border-radius:8px;"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PAGE: QUOTE AGENT ══════════════ -->
+  <div class="page" id="page-quote">
+    <div class="split">
+      <div class="split-left">
+        <div class="agent-status"><div class="status-dot"></div><div class="status-text">QUOTE AGENT ONLINE</div></div>
+        <div class="card">
+          <div class="card-title">&#x1F4CA; Quote Stats</div>
+          <div id="quoteStats" style="font-size:13px;color:var(--gray-300);line-height:1.8;">Loading...</div>
+        </div>
+        <div class="card">
+          <div class="card-title">&#x1F550; Recent Activity</div>
+          <div id="quoteActivity">Loading...</div>
+        </div>
+      </div>
+      <div>
+        <div class="card-title" style="margin-bottom:12px;">&#x1F4AC; Quote Agent Chat</div>
+        <div class="chat-container">
+          <div class="chat-messages" id="chatQuote">
+            <div class="msg agent">&#x1F44B; Hey! I'm the Quote Agent. Tell me about your customer and what equipment they need — I'll build a full quote with Booqable pricing.<div class="msg-time">Ready</div></div>
+          </div>
+          <div class="chat-presets">
+            <button class="preset-btn" onclick="sendChat('quote','New Quote')">New Quote</button>
+            <button class="preset-btn" onclick="sendChat('quote','Check pipeline status')">Check Pipeline</button>
+            <button class="preset-btn" onclick="sendChat('quote','Build a quote for a contractor needing a 45ft boom lift for 1 week')">Sample Quote</button>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="inputQuote" placeholder="Describe the customer and equipment needed..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('quote')}"></textarea>
+            <button class="chat-send" onclick="sendChat('quote')">Send</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px;">
+          <div class="section-title">Quote Pipeline</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Job ID</th><th>Customer</th><th>Equipment</th><th>Total</th><th>Stage</th><th>Date</th></tr></thead>
+              <tbody id="quotePipelineBody"><tr><td colspan="6" style="text-align:center;color:var(--gray-500);">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PAGE: ADMIN AGENT ══════════════ -->
+  <div class="page" id="page-admin">
+    <div class="split">
+      <div class="split-left">
+        <div class="agent-status"><div class="status-dot"></div><div class="status-text">ADMIN AGENT ONLINE</div></div>
+        <div class="card">
+          <div class="card-title">&#x23F3; Pending Approvals <span class="badge badge-red" id="approvalCount">0</span></div>
+          <div id="approvalsList">Loading...</div>
+        </div>
+        <div class="card">
+          <div class="card-title">&#x1F550; Recent Activity</div>
+          <div id="adminActivity">Loading...</div>
+        </div>
+      </div>
+      <div>
+        <div class="card-title" style="margin-bottom:12px;">&#x1F4CB; Admin Agent Chat</div>
+        <div class="chat-container">
+          <div class="chat-messages" id="chatAdmin">
+            <div class="msg agent">&#x1F4CB; Admin Agent ready. I handle reservations, contracts, invoices, and payment approvals.<div class="msg-time">Ready</div></div>
+          </div>
+          <div class="chat-presets">
+            <button class="preset-btn" onclick="sendChat('admin','Create reservation')">Create Reservation</button>
+            <button class="preset-btn" onclick="sendChat('admin','Send contract')">Send Contract</button>
+            <button class="preset-btn" onclick="sendChat('admin','Show pending approvals')">Approvals</button>
+            <button class="preset-btn" onclick="sendChat('admin','Create invoice')">Create Invoice</button>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="inputAdmin" placeholder="Manage reservations, contracts, payments..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('admin')}"></textarea>
+            <button class="chat-send" onclick="sendChat('admin')">Send</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px;">
+          <div class="section-title">Reservations</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Job ID</th><th>Customer</th><th>Start</th><th>End</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="reservationsBody"><tr><td colspan="7" style="text-align:center;color:var(--gray-500);">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PAGE: OPS AGENT ══════════════ -->
+  <div class="page" id="page-ops">
+    <div class="split">
+      <div class="split-left">
+        <div class="agent-status"><div class="status-dot"></div><div class="status-text">OPS AGENT ONLINE</div></div>
+        <div class="card">
+          <div class="card-title">&#x1F4CA; Ops Stats</div>
+          <div id="opsStats" style="font-size:13px;color:var(--gray-300);line-height:1.8;">Loading...</div>
+        </div>
+        <div class="card">
+          <div class="card-title">&#x1F697; Drivers</div>
+          <div id="driversList">Loading...</div>
+        </div>
+      </div>
+      <div>
+        <div class="card-title" style="margin-bottom:12px;">&#x1F69A; Ops Agent Chat</div>
+        <div class="chat-container">
+          <div class="chat-messages" id="chatOps">
+            <div class="msg agent">&#x1F69A; Ops Agent ready. I handle deliveries, pickups, and driver scheduling.<div class="msg-time">Ready</div></div>
+          </div>
+          <div class="chat-presets">
+            <button class="preset-btn" onclick="sendChat('ops',&quot;What are today's jobs?&quot;)">Today's Jobs</button>
+            <button class="preset-btn" onclick="sendChat('ops','Schedule a delivery')">Schedule Delivery</button>
+            <button class="preset-btn" onclick="sendChat('ops','Notify driver')">Notify Driver</button>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="inputOps" placeholder="Schedule deliveries, pickups, notify drivers..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('ops')}"></textarea>
+            <button class="chat-send" onclick="sendChat('ops')">Send</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
+          <div class="card">
+            <div class="section-title">&#x1F4E6; Today's Deliveries</div>
+            <div id="opsDeliveries"><div class="skeleton" style="height:100px;border-radius:8px;"></div></div>
+          </div>
+          <div class="card">
+            <div class="section-title">&#x1F4E5; Today's Pickups</div>
+            <div id="opsPickups"><div class="skeleton" style="height:100px;border-radius:8px;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PAGE: FINANCE AGENT ══════════════ -->
+  <div class="page" id="page-finance">
+    <div class="split">
+      <div class="split-left">
+        <div class="agent-status"><div class="status-dot"></div><div class="status-text">FINANCE AGENT ONLINE</div></div>
+        <div class="card">
+          <div class="card-title">&#x1F4B0; Finance Stats</div>
+          <div id="financeStats" style="font-size:13px;color:var(--gray-300);line-height:1.8;">Loading...</div>
+        </div>
+        <div class="card">
+          <div class="card-title">&#x1F550; Recent Activity</div>
+          <div id="financeActivity">Loading...</div>
+        </div>
+      </div>
+      <div>
+        <div class="card-title" style="margin-bottom:12px;">&#x1F4B0; Finance Agent Chat</div>
+        <div class="chat-container">
+          <div class="chat-messages" id="chatFinance">
+            <div class="msg agent">&#x1F4B0; Finance Agent ready. I handle reminders, overdue rentals, and revenue reporting.<div class="msg-time">Ready</div></div>
+          </div>
+          <div class="chat-presets">
+            <button class="preset-btn" onclick="sendChat('finance','Run reminder sweep')">Reminder Sweep</button>
+            <button class="preset-btn" onclick="sendChat('finance','Check active rentals')">Active Rentals</button>
+            <button class="preset-btn" onclick="sendChat('finance','Revenue report this month')">Revenue Report</button>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="inputFinance" placeholder="Check rentals, send reminders, revenue reports..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('finance')}"></textarea>
+            <button class="chat-send" onclick="sendChat('finance')">Send</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px;">
+          <div class="section-title">Active Rentals</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Job ID</th><th>Customer</th><th>End Date</th><th>Days Left</th><th>Balance</th><th>Status</th></tr></thead>
+              <tbody id="financeRentalsBody"><tr><td colspan="6" style="text-align:center;color:var(--gray-500);">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PAGE: MARKETING AGENT ══════════════ -->
+  <div class="page" id="page-marketing">
+    <div class="split">
+      <div class="split-left">
+        <div class="agent-status"><div class="status-dot"></div><div class="status-text">MARKETING AGENT ONLINE</div></div>
+        <div class="card">
+          <div class="card-title">&#x1F4CA; Marketing Stats</div>
+          <div id="marketingStats" style="font-size:13px;color:var(--gray-300);line-height:1.8;">Loading...</div>
+        </div>
+        <div class="card">
+          <div class="card-title">&#x1F550; Recent Activity</div>
+          <div id="marketingActivity">Loading...</div>
+        </div>
+      </div>
+      <div>
+        <div class="card-title" style="margin-bottom:12px;">&#x1F4E3; Marketing Agent Chat</div>
+        <div class="chat-container">
+          <div class="chat-messages" id="chatMarketing">
+            <div class="msg agent">&#x1F4E3; Marketing Agent ready. I handle leads, outreach, and content generation.<div class="msg-time">Ready</div></div>
+          </div>
+          <div class="chat-presets">
+            <button class="preset-btn" onclick="sendChat('marketing','New lead')">New Lead</button>
+            <button class="preset-btn" onclick="sendChat('marketing','Generate a social media post about our boom lifts')">Generate Post</button>
+            <button class="preset-btn" onclick="sendChat('marketing','Show lead stats')">Lead Stats</button>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="inputMarketing" placeholder="Manage leads, generate posts, send outreach..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('marketing')}"></textarea>
+            <button class="chat-send" onclick="sendChat('marketing')">Send</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px;">
+          <div class="section-title">Leads</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Phone</th><th>Equipment</th><th>Source</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody id="leadsBody"><tr><td colspan="6" style="text-align:center;color:var(--gray-500);">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PAGE: KNOWLEDGE AGENT ══════════════ -->
+  <div class="page" id="page-knowledge">
+    <div class="split">
+      <div class="split-left">
+        <div class="agent-status"><div class="status-dot"></div><div class="status-text">KNOWLEDGE AGENT ONLINE</div></div>
+        <div class="card">
+          <div class="card-title">&#x1F4CA; Knowledge Stats</div>
+          <div id="knowledgeStats" style="font-size:13px;color:var(--gray-300);line-height:1.8;">Loading...</div>
+        </div>
+        <div class="card" style="margin-top:0;">
+          <div class="card-title">&#x2795; Add Knowledge</div>
+          <div class="filter-tabs" style="margin-bottom:12px;">
+            <button class="filter-tab active" onclick="switchLearnTab('url',this)">URL</button>
+            <button class="filter-tab" onclick="switchLearnTab('manual',this)">Manual</button>
+            <button class="filter-tab" onclick="switchLearnTab('youtube',this)">YouTube</button>
+          </div>
+          <div id="learnTabUrl">
+            <div class="form-group"><input class="form-input" id="learnUrl" placeholder="https://..."></div>
+            <button class="btn btn-yellow btn-sm" onclick="learnFromUrl()">Learn Now</button>
+          </div>
+          <div id="learnTabManual" style="display:none;">
+            <div class="form-group"><input class="form-input" id="teachTitle" placeholder="Title"></div>
+            <div class="form-group"><textarea class="form-textarea" id="teachContent" placeholder="What should the AI know?"></textarea></div>
+            <button class="btn btn-yellow btn-sm" onclick="teachManual()">Teach</button>
+          </div>
+          <div id="learnTabYoutube" style="display:none;">
+            <div class="form-group"><input class="form-input" id="learnYtUrl" placeholder="https://youtube.com/watch?v=..."></div>
+            <button class="btn btn-yellow btn-sm" onclick="learnFromYoutube()">Learn from Video</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card-title" style="margin-bottom:12px;">&#x1F527; Ask the Expert</div>
+        <div class="chat-container">
+          <div class="chat-messages" id="chatKnowledge">
+            <div class="msg agent">&#x1F9E0; Knowledge Agent ready. Ask me anything about aerial work platforms, safety regulations, equipment specs, or competitor intel.<div class="msg-time">Ready</div></div>
+          </div>
+          <div class="chat-presets">
+            <button class="preset-btn" onclick="sendChat('knowledge','What are the OSHA requirements for aerial lifts?')">OSHA Requirements</button>
+            <button class="preset-btn" onclick="sendChat('knowledge','What is the difference between a boom lift and a scissor lift?')">Equipment Specs</button>
+            <button class="preset-btn" onclick="sendChat('knowledge','What are competitor prices in South Florida?')">Competitor Prices</button>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="inputKnowledge" placeholder="Ask about equipment, safety, competitors, regulations..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('knowledge')}"></textarea>
+            <button class="chat-send" onclick="sendChat('knowledge')">Send</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px;">
+          <div class="section-title">Knowledge Base</div>
+          <div class="filter-tabs">
+            <button class="filter-tab active" onclick="loadKnowledge('',this)">All</button>
+            <button class="filter-tab" onclick="loadKnowledge('competitor',this)">Competitor</button>
+            <button class="filter-tab" onclick="loadKnowledge('equipment',this)">Equipment</button>
+            <button class="filter-tab" onclick="loadKnowledge('safety',this)">Safety</button>
+            <button class="filter-tab" onclick="loadKnowledge('business',this)">Business</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Source</th><th>Category</th><th>Summary</th><th>Date</th></tr></thead>
+              <tbody id="knowledgeBody"><tr><td colspan="4" style="text-align:center;color:var(--gray-500);">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PAGE: TASKS ══════════════ -->
+  <div class="page" id="page-tasks">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div style="font-size:18px;font-weight:700;">&#x2705; Task Manager</div>
+      <button class="btn btn-yellow" onclick="openCreateTask()">&#x2795; New Task</button>
+    </div>
+    <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
+      <div class="stat-card"><div class="stat-value" id="taskStatTotal">—</div><div class="stat-label">Total Tasks</div></div>
+      <div class="stat-card"><div class="stat-value red" id="taskStatHigh">—</div><div class="stat-label">High Priority</div></div>
+      <div class="stat-card"><div class="stat-value" id="taskStatPending">—</div><div class="stat-label">Pending</div></div>
+      <div class="stat-card"><div class="stat-value" id="taskStatDone">—</div><div class="stat-label">Completed</div></div>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+      <div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px;">STATUS</div>
+        <div class="filter-tabs" style="margin-bottom:0;">
+          <button class="filter-tab active" onclick="filterTasks('status','',this)">All</button>
+          <button class="filter-tab" onclick="filterTasks('status','pending',this)">Pending</button>
+          <button class="filter-tab" onclick="filterTasks('status','in_progress',this)">In Progress</button>
+          <button class="filter-tab" onclick="filterTasks('status','completed',this)">Done</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px;">PRIORITY</div>
+        <div class="filter-tabs" style="margin-bottom:0;">
+          <button class="filter-tab active" onclick="filterTasks('priority','',this)">All</button>
+          <button class="filter-tab" onclick="filterTasks('priority','high',this)">&#x1F534; High</button>
+          <button class="filter-tab" onclick="filterTasks('priority','medium',this)">&#x1F7E1; Medium</button>
+          <button class="filter-tab" onclick="filterTasks('priority','low',this)">&#x1F7E2; Low</button>
+        </div>
+      </div>
+    </div>
+    <div id="tasksList">Loading tasks...</div>
+  </div>
+
+  <!-- ══════════════ PAGE: ACTIVITY LOG ══════════════ -->
+  <div class="page" id="page-activity">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div style="font-size:18px;font-weight:700;">&#x1F4CA; Activity Log</div>
+      <button class="btn btn-ghost" onclick="exportCSV()">&#x2B07;&#xFE0F; Export CSV</button>
+    </div>
+    <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+      <div class="stat-card"><div class="stat-value" id="actStatTotal">—</div><div class="stat-label">Actions Today</div></div>
+      <div class="stat-card"><div class="stat-value red" id="actStatErrors">—</div><div class="stat-label">Errors Today</div></div>
+      <div class="stat-card"><div class="stat-value" id="actStatAgent">—</div><div class="stat-label">Most Active Agent</div></div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+      <div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px;">AGENT</div>
+        <div class="filter-tabs" style="margin-bottom:0;">
+          <button class="filter-tab active" onclick="filterActivity('agent','all',this)">All</button>
+          <button class="filter-tab" onclick="filterActivity('agent','quote',this)">Quote</button>
+          <button class="filter-tab" onclick="filterActivity('agent','admin',this)">Admin</button>
+          <button class="filter-tab" onclick="filterActivity('agent','ops',this)">Ops</button>
+          <button class="filter-tab" onclick="filterActivity('agent','finance',this)">Finance</button>
+          <button class="filter-tab" onclick="filterActivity('agent','marketing',this)">Marketing</button>
+          <button class="filter-tab" onclick="filterActivity('agent','knowledge',this)">Knowledge</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px;">TIME RANGE</div>
+        <div class="filter-tabs" style="margin-bottom:0;">
+          <button class="filter-tab" onclick="filterActivity('hours','24',this)">24h</button>
+          <button class="filter-tab active" onclick="filterActivity('hours','168',this)">7 days</button>
+          <button class="filter-tab" onclick="filterActivity('hours','720',this)">30 days</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div id="activityFeed">Loading...</div>
+    </div>
+  </div>
+
+</div><!-- end #app -->
+
+<!-- Toast Container -->
+<div id="toastContainer"></div>
+
+<!-- Floating Chat Button -->
+<button id="floatChatBtn" onclick="openFloatChat()" title="Quick Chat">&#x1F98D;</button>
+
+<!-- Float Chat Modal -->
+<div class="modal-overlay" id="floatChatModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">Quick Chat</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <select class="form-select" id="floatChatAgent" style="width:140px;padding:6px 10px;">
+          <option value="quote">&#x1F4AC; Quote</option>
+          <option value="admin">&#x1F4CB; Admin</option>
+          <option value="ops">&#x1F69A; Ops</option>
+          <option value="finance">&#x1F4B0; Finance</option>
+          <option value="marketing">&#x1F4E3; Marketing</option>
+          <option value="knowledge">&#x1F9E0; Knowledge</option>
+        </select>
+        <button class="modal-close" onclick="closeModal('floatChatModal')">&#x2715;</button>
+      </div>
+    </div>
+    <div class="chat-container" style="height:360px;">
+      <div class="chat-messages" id="chatFloat">
+        <div class="msg agent">Ready to help! Select an agent above.<div class="msg-time">Ready</div></div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="inputFloat" placeholder="Ask anything..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendFloatChat()}"></textarea>
+        <button class="chat-send" onclick="sendFloatChat()">Send</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- CHAT BAR -->
-<div class="chatbar">
-  <div class="mhint" id="mhint"></div>
-  <div class="chat-msgs" id="msgs"></div>
-
-  <!-- Quote panel -->
-  <div class="qpanel" id="qpanel">
-    <div class="qpanel-header">
-      <div class="qpanel-title draft" id="qpanel-title">📋 QUOTE READY — REVIEW BEFORE SENDING</div>
-      <div class="qpanel-ref" id="qpanel-ref"></div>
+<!-- Create Task Modal -->
+<div class="modal-overlay" id="createTaskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">&#x2795; Create Task</div>
+      <button class="modal-close" onclick="closeModal('createTaskModal')">&#x2715;</button>
     </div>
-    <div class="qpanel-grid" id="qpanel-grid"></div>
-    <div class="qpanel-btns" id="qpanel-btns"></div>
+    <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="newTaskTitle" placeholder="Task title"></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="newTaskDesc" placeholder="Details..."></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label class="form-label">Priority</label>
+        <select class="form-select" id="newTaskPriority">
+          <option value="high">&#x1F534; High</option>
+          <option value="medium" selected>&#x1F7E1; Medium</option>
+          <option value="low">&#x1F7E2; Low</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Agent</label>
+        <select class="form-select" id="newTaskAgent">
+          <option value="manual">Manual</option>
+          <option value="quote">Quote</option>
+          <option value="admin">Admin</option>
+          <option value="ops">Ops</option>
+          <option value="finance">Finance</option>
+          <option value="marketing">Marketing</option>
+          <option value="knowledge">Knowledge</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label class="form-label">Job ID (optional)</label><input class="form-input" id="newTaskJobId" placeholder="GR-2026-XXXX"></div>
+      <div class="form-group"><label class="form-label">Due Date</label><input class="form-input" id="newTaskDue" type="date"></div>
+    </div>
+    <button class="btn btn-yellow" style="width:100%;" onclick="submitCreateTask()">Create Task</button>
   </div>
-
-  <div class="input-row">
-    <input class="cinp" id="inp" placeholder="Tell Gorilla HQ what to do…" onkeydown="if(event.key==='Enter'){sendMsg();}">
-    <button class="csend" id="sbtn" onclick="sendMsg()">Send</button>
-    <button class="cclr" onclick="clearAll()" title="Clear">✕</button>
-  </div>
-  <div class="chint" id="chint">Press Enter · HQ routes to the right agent automatically</div>
 </div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-var API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://openclaw-qrxf.onrender.com';
-var chatHistory = [];
-var currentQuote = null;
-var mode = 'idle';
+const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://gorillahq.up.railway.app';
 
-// Clock
-function tick() {
-  var n = new Date();
-  document.getElementById('clk').textContent = n.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
-  var h = n.getHours(), g = h < 12 ? 'GOOD MORNING' : h < 17 ? 'GOOD AFTERNOON' : 'GOOD EVENING';
-  document.getElementById('greeting').innerHTML = g + ', <span>GORILLA</span>';
-  var D = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  var M = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('dateline').textContent = D[n.getDay()] + ', ' + M[n.getMonth()] + ' ' + n.getDate() + ' · South Florida';
-}
-tick(); setInterval(tick, 1000);
-
-// Toast
-var tt;
-function toast(m, dur) {
-  var e = document.getElementById('toast');
-  e.textContent = m; e.classList.add('on');
-  clearTimeout(tt); tt = setTimeout(function(){ e.classList.remove('on'); }, dur || 3500);
-}
-
-// Dashboard
-async function loadDash() {
-  try {
-    var r = await fetch(API + '/api/dashboard');
-    var d = await r.json();
-    if (!d.ok) return;
-    document.getElementById('k1').textContent = '$' + ((d.finance.totalRevenue || d.finance.monthRevenue || 0)).toLocaleString(undefined, {maximumFractionDigits:0});
-    document.getElementById('k2').textContent = d.rentals.active || 0;
-    document.getElementById('k3').textContent = d.rentals.endingIn48h || 0;
-    document.getElementById('cfi').textContent = '$' + (d.finance.totalRevenue || d.finance.monthRevenue || 0).toLocaleString(undefined, {maximumFractionDigits:0});
-    document.getElementById('cfa').textContent = '$' + (d.finance.activeRevenue || 0).toLocaleString(undefined, {maximumFractionDigits:0});
-    document.getElementById('cfp').textContent = '$' + (d.finance.pipelineRevenue || 0).toLocaleString(undefined, {maximumFractionDigits:0});
-  } catch(e) {}
-  loadPipeline();
-}
-loadDash(); setInterval(loadDash, 30000);
-
-// Pipeline
-async function loadPipeline() {
-  try {
-    var r = await fetch(API + '/quote/pipeline');
-    var d = await r.json();
-    var quotes = (d.pipeline || []).slice(-20).reverse();
-
-    // stage → display mapping
-    var stageLabel = {
-      quote_built: 'Draft', quote_sent: 'Sent', reserved: 'Reserved',
-      contract_sent: 'Contract', delivery_scheduled: 'Delivery', in_progress: 'Active',
-      returned: 'Returned', completed: 'Completed'
-    };
-    var stageClass = {
-      quote_built: 'st-draft', quote_sent: 'st-sent', reserved: 'st-reservation',
-      contract_sent: 'st-reservation', delivery_scheduled: 'st-active',
-      in_progress: 'st-active', returned: 'st-deposit', completed: 'st-deposit'
-    };
-
-    var open = quotes.filter(function(q){ return ['quote_built','quote_sent','reserved','contract_sent','delivery_scheduled'].includes(q.stage); }).length;
-    document.getElementById('k4').textContent = open;
-
-    var list = document.getElementById('pipeline-list');
-    if (quotes.length === 0) { list.innerHTML = '<div class="es">No quotes yet — start one in the chat below</div>'; return; }
-
-    list.innerHTML = quotes.map(function(q) {
-      var sc = stageClass[q.stage] || 'st-draft';
-      var sl = stageLabel[q.stage] || q.stage;
-      var eq = (q.equipment && q.equipment[0]) ? q.equipment[0].name : 'Equipment';
-      var dates = (q.startDate || '') + (q.endDate ? ' → ' + q.endDate : '');
-      return '<div class="qp-item">' +
-        '<div class="qp-badge ' + sc + '">' + sl + '</div>' +
-        '<div class="qp-info"><div class="qp-name">' + esc(q.customerName) + ' — ' + esc(eq) + '</div>' +
-        '<div class="qp-detail">' + q.jobId + ' · ' + dates + '</div></div>' +
-        '<div class="qp-total">$' + (q.total || 0).toLocaleString(undefined, {maximumFractionDigits:0}) + '</div>' +
-        '</div>';
-    }).join('');
-  } catch(e) {}
-}
-
-// Feed
-function addFeed(agent, msg, color) {
-  var f = document.getElementById('feed');
-  if (f.querySelector('.es')) f.innerHTML = '';
-  var i = document.createElement('div'); i.className = 'fi';
-  var t = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
-  i.innerHTML = '<div class="fd" style="background:' + color + '"></div><div class="fb"><div class="ft"><span class="fa" style="background:' + color + '22;color:' + color + '">' + agent + '</span>' + esc(msg) + '</div><div class="ftime">' + t + '</div></div>';
-  f.insertBefore(i, f.firstChild);
-  if (f.children.length > 8) f.removeChild(f.lastChild);
-}
-
-// Bubbles
-function addBubble(text, type, tag, cls) {
-  var m = document.getElementById('msgs'); m.classList.add('on');
-  var b = document.createElement('div');
-  b.className = 'bub ' + (type === 'user' ? 'user' : 'bot') + (cls ? ' ' + cls : '');
-  if (type === 'bot') {
-    var label = tag ? '🦍 ' + tag.toUpperCase() : cls === 'success' ? '✅ SUCCESS' : '🦍 GORILLA HQ';
-    b.innerHTML = '<span class="tag">' + label + '</span>' + esc(text);
-  } else { b.textContent = text; }
-  m.appendChild(b); m.scrollTop = m.scrollHeight;
-}
-function esc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// Mode
-function setMode(m) {
-  mode = m;
-  var h = document.getElementById('mhint');
-  var i = document.getElementById('inp');
-  h.className = 'mhint'; i.classList.remove('rev');
-  if (m === 'collecting') {
-    h.classList.add('collecting'); h.textContent = '📋 Collecting quote info — answer the questions';
-    i.placeholder = 'Type your answer…';
-    document.getElementById('chint').textContent = 'Answer each question — HQ remembers everything in this session';
-  } else if (m === 'reviewing') {
-    h.classList.add('reviewing'); h.textContent = '✅ Quote ready — approve to send, or type changes';
-    i.classList.add('rev'); i.placeholder = 'Type changes, or click Send Quote above…';
-    document.getElementById('chint').textContent = 'Type any changes · Or click Send Quote above';
-  } else if (m === 'sent') {
-    h.classList.add('sent'); h.textContent = '📧 Quote sent — waiting for customer';
-    i.placeholder = 'Type next instruction…';
-    document.getElementById('chint').textContent = 'Tell HQ when the customer approves';
+// ══════════════════════════════════════
+// LOCK SCREEN
+// ══════════════════════════════════════
+function checkCode() {
+  const val = document.getElementById('lockInput').value;
+  const err = document.getElementById('lockError');
+  if (val === '1988') {
+    localStorage.setItem('gr_access_granted', 'true');
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    initApp();
   } else {
-    i.placeholder = 'Tell Gorilla HQ what to do…';
-    document.getElementById('chint').textContent = 'Press Enter · HQ routes to the right agent automatically';
+    const inp = document.getElementById('lockInput');
+    inp.classList.add('shake');
+    err.textContent = 'Incorrect code';
+    inp.value = '';
+    setTimeout(() => { inp.classList.remove('shake'); err.textContent = ''; }, 1500);
   }
 }
-
-// Quote panel
-function showQuotePanel(quote) {
-  var panel = document.getElementById('qpanel');
-  var title = document.getElementById('qpanel-title');
-  var ref   = document.getElementById('qpanel-ref');
-  var grid  = document.getElementById('qpanel-grid');
-  var btns  = document.getElementById('qpanel-btns');
-  panel.classList.add('on');
-  title.textContent = '📋 QUOTE READY — REVIEW BEFORE SENDING';
-  title.className = 'qpanel-title draft';
-  ref.textContent = quote.jobId + ' · ' + quote.customerName;
-  var eq = (quote.equipment && quote.equipment[0]) ? quote.equipment[0].name : 'Equipment';
-  grid.innerHTML =
-    '<div class="qpi"><span class="qpl">Customer</span><span class="qpv">' + esc(quote.customerName) + '</span></div>' +
-    '<div class="qpi"><span class="qpl">Equipment</span><span class="qpv">' + esc(eq) + '</span></div>' +
-    '<div class="qpi"><span class="qpl">Dates</span><span class="qpv">' + (quote.startDate||'') + ' → ' + (quote.endDate||'') + '</span></div>' +
-    '<div class="qpi"><span class="qpl">Total</span><span class="qpv big">$' + (quote.total||0).toLocaleString(undefined,{maximumFractionDigits:0}) + '</span></div>' +
-    '<div class="qpi"><span class="qpl">Deposit</span><span class="qpv dep">$150</span></div>';
-  btns.innerHTML =
-    '<button class="btn-primary" onclick="doSendQuote()">📧 Send Quote to Customer</button>' +
-    '<button class="btn-sec" onclick="hideQPanel()">Discard</button>';
+document.getElementById('lockInput').addEventListener('keydown', e => { if(e.key==='Enter') checkCode(); });
+if (localStorage.getItem('gr_access_granted') === 'true') {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  initApp();
 }
 
-function showSentPanel(quote) {
-  var panel = document.getElementById('qpanel');
-  var title = document.getElementById('qpanel-title');
-  var ref   = document.getElementById('qpanel-ref');
-  var grid  = document.getElementById('qpanel-grid');
-  var btns  = document.getElementById('qpanel-btns');
-  panel.classList.add('on');
-  title.textContent = '📧 QUOTE SENT';
-  title.className = 'qpanel-title sent';
-  ref.textContent = quote.jobId + ' → ' + quote.customerEmail;
-  grid.innerHTML =
-    '<div class="qpi"><span class="qpl">Customer</span><span class="qpv">' + esc(quote.customerName) + '</span></div>' +
-    '<div class="qpi"><span class="qpl">Email</span><span class="qpv">' + esc(quote.customerEmail) + '</span></div>' +
-    '<div class="qpi"><span class="qpl">Total</span><span class="qpv big">$' + (quote.total||0).toLocaleString(undefined,{maximumFractionDigits:0}) + '</span></div>' +
-    '<div class="qpi"><span class="qpl">Status</span><span class="qpv" style="color:var(--bl)">Awaiting Approval</span></div>' +
-    (quote.depositLink ? '<div class="qpi"><span class="qpl">Deposit</span><a href="' + quote.depositLink + '" target="_blank" style="color:var(--gr);font-size:11px;font-family:var(--fm)">💳 Pay Link</a></div>' : '');
-  btns.innerHTML = '<button class="btn-sec" onclick="hideQPanel()">Minimize</button>';
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+function showPage(name, tabEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (tabEl) tabEl.classList.add('active');
+  pageLoaders[name]?.();
 }
 
-function hideQPanel() { document.getElementById('qpanel').classList.remove('on'); }
+const pageLoaders = {
+  dashboard: loadDashboard,
+  quote:     loadQuotePage,
+  admin:     loadAdminPage,
+  ops:       loadOpsPage,
+  finance:   loadFinancePage,
+  marketing: loadMarketingPage,
+  knowledge: loadKnowledgePage,
+  tasks:     loadTasksPage,
+  activity:  loadActivityPage,
+};
 
-// Send quote from panel button
-async function doSendQuote() {
-  if (!currentQuote) return;
-  var btn = document.querySelector('#qpanel-btns .btn-primary');
-  if (btn) { btn.textContent = '📧 Sending…'; btn.disabled = true; }
+// ══════════════════════════════════════
+// API HELPERS
+// ══════════════════════════════════════
+async function apiFetch(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  return res.json();
+}
+
+async function apiAction(method, path, successMsg, errMsg, btnId) {
+  const btn = btnId ? document.getElementById(btnId) : null;
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
   try {
-    var r = await fetch(API + '/quote/send', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({jobId: currentQuote.jobId})});
-    var d = await r.json();
-    if (d.ok) {
-      toast('✅ Quote sent to ' + currentQuote.customerEmail);
-      addFeed('Quotes', 'Quote sent to ' + currentQuote.customerName, '#4a9eff');
-      addBubble('Quote sent to ' + currentQuote.customerEmail + ' ✅\n\nPDF attached. Deposit link included.', 'bot', null, 'success');
-      showSentPanel(currentQuote);
-      setMode('sent');
-      document.getElementById('qs').textContent = 'sent';
-      loadPipeline();
-    } else {
-      toast('❌ ' + (d.error || 'Send failed'));
-      if (btn) { btn.textContent = '📧 Send Quote to Customer'; btn.disabled = false; }
-    }
-  } catch(e) {
-    toast('Error: ' + e.message);
-    if (btn) { btn.textContent = '📧 Send Quote to Customer'; btn.disabled = false; }
+    const d = await apiFetch(method, path);
+    toast(d.ok ? successMsg : (d.error || errMsg), d.ok ? 'success' : 'error');
+  } catch { toast(errMsg, 'error'); }
+  finally {
+    if (btn) { setTimeout(() => { btn.disabled = false; btn.textContent = btn.dataset.label || successMsg.split(' ').slice(0,2).join(' '); }, 2000); }
   }
 }
 
-// Main send
-async function sendMsg() {
-  var inp = document.getElementById('inp');
-  var btn = document.getElementById('sbtn');
-  var val = inp.value.trim();
-  if (!val) return;
-  inp.value = ''; btn.disabled = true; btn.textContent = '…';
-  addBubble(val, 'user');
+// ══════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.classList.add('show'), 10);
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 4000);
+}
 
-  if (mode === 'idle') {
-    var lm = val.toLowerCase();
-    if (/quote|rent|need|boom|scissor|lift|scaffold|shore/.test(lm)) setMode('collecting');
-  }
+// ══════════════════════════════════════
+// TIME
+// ══════════════════════════════════════
+function timeAgo(iso) {
+  if (!iso) return '—';
+  const d = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (d < 60) return d + 's ago';
+  if (d < 3600) return Math.floor(d/60) + 'm ago';
+  if (d < 86400) return Math.floor(d/3600) + 'h ago';
+  return Math.floor(d/86400) + 'd ago';
+}
+function fmt(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  chatHistory.push({role:'user', content: val});
+function stageBadge(s) {
+  const labels = { quote_built:'Quote Built', quote_sent:'Quote Sent', reserved:'Reserved', contract_sent:'Contract', delivery_scheduled:'Delivery Sched.', in_progress:'Active', returned:'Returned', completed:'Completed', cancelled:'Cancelled' };
+  return `<span class="badge stage-${esc(s)}">${labels[s]||s}</span>`;
+}
+function agentColor(a) { return {quote:'var(--blue)',admin:'var(--purple)',ops:'var(--yellow)',finance:'var(--green)',marketing:'var(--pink)',knowledge:'var(--teal)',system:'var(--gray-400)'}[a]||'var(--gray-400)'; }
+function priorityBadge(p) { return {high:'<span class="badge badge-red">&#x1F534; HIGH</span>',medium:'<span class="badge badge-yellow">&#x1F7E1; MED</span>',low:'<span class="badge badge-gray">&#x1F7E2; LOW</span>'}[p]||''; }
+
+// ══════════════════════════════════════
+// CHAT ENGINE
+// ══════════════════════════════════════
+const chatHistories = {};
+async function sendChat(agent, preset) {
+  const inputEl = document.getElementById('input' + agent.charAt(0).toUpperCase() + agent.slice(1));
+  const msg = preset || inputEl?.value?.trim();
+  if (!msg) return;
+  if (inputEl) inputEl.value = '';
+  if (!chatHistories[agent]) chatHistories[agent] = [];
+
+  const container = document.getElementById('chat' + agent.charAt(0).toUpperCase() + agent.slice(1));
+  appendMsg(container, msg, 'user');
+  const thinking = appendMsg(container, '<span class="thinking-dots">Thinking</span>', 'thinking');
 
   try {
-    var r = await fetch(API + '/chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({message: val, history: chatHistory.slice(-10)})
-    });
-    var d = await r.json();
-    if (!d.ok) { addBubble('Error: ' + (d.error || 'Unknown error'), 'bot'); return; }
-
-    chatHistory.push({role:'assistant', content: d.text || ''});
-
-    var agentColors = {quote:'#4a9eff', admin:'#6b6960', ops:'#2bc4a8', finance:'#e85d8a', marketing:'#f4a623'};
-    var color = agentColors[d.agent] || '#6b6960';
-
-    // Quote built
-    if (d.action && d.action.action === 'build_quote' && d.result && d.result.jobId) {
-      currentQuote = d.result;
-      addBubble(
-        'Quote built for ' + d.result.customerName + '\n\n' +
-        'Job: ' + d.result.jobId + '\n' +
-        'Equipment: ' + ((d.result.equipment && d.result.equipment[0]) ? d.result.equipment[0].name : '') + '\n' +
-        'Total: $' + (d.result.total||0).toFixed(2) + '\n' +
-        'Deposit: $150\n\nReview below and click Send.',
-        'bot', 'Quotes'
-      );
-      showQuotePanel(d.result);
-      setMode('reviewing');
-      addFeed('Quotes', 'Quote built for ' + d.result.customerName, color);
-      document.getElementById('qs').textContent = 'reviewing';
-      loadPipeline();
-
-    // Quote sent via AI
-    } else if (d.action && d.action.action === 'send_quote' && d.result && d.result.ok) {
-      if (currentQuote) {
-        addBubble('Quote sent to ' + d.result.to + ' ✅', 'bot', null, 'success');
-        showSentPanel(currentQuote);
-        setMode('sent');
-        addFeed('Quotes', 'Quote sent to ' + d.result.to, color);
-        document.getElementById('qs').textContent = 'sent';
-        loadPipeline();
-      }
-
-    // Regular text response
-    } else {
-      addBubble(d.text || 'Done.', 'bot', d.agent || null);
-      addFeed(d.agent || 'HQ', 'Response sent', color);
-      if (d.agent === 'admin' || d.agent === 'finance') loadDash();
-    }
-
+    chatHistories[agent].push({ role: 'user', content: msg });
+    const endpointMap = { quote: '/quote/chat', admin: '/admin/chat', ops: '/ops/chat', finance: '/finance/chat', marketing: '/marketing/chat', knowledge: '/knowledge/query' };
+    const endpoint = endpointMap[agent] || '/chat';
+    const isKnowledge = agent === 'knowledge';
+    const body = isKnowledge ? { question: msg } : { message: msg, history: chatHistories[agent].slice(-10) };
+    const d = await apiFetch('POST', endpoint, body);
+    thinking.remove();
+    const reply = d.reply || d.response || d.answer || d.message || d.error || 'No response';
+    chatHistories[agent].push({ role: 'assistant', content: reply });
+    appendMsg(container, reply + `<div class="msg-time">${new Date().toLocaleTimeString()}</div>`, 'agent');
   } catch(e) {
-    addBubble('Cannot reach server. Is Gorilla HQ running?', 'bot');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Send';
+    thinking.remove();
+    appendMsg(container, 'Error: ' + e.message, 'agent');
   }
 }
 
-function clearAll() {
-  document.getElementById('msgs').innerHTML = '';
-  document.getElementById('msgs').classList.remove('on');
-  hideQPanel(); setMode('idle'); currentQuote = null; chatHistory = [];
-  document.getElementById('qs').textContent = 'ready';
-  toast('Chat cleared');
+async function sendFloatChat() {
+  const agent = document.getElementById('floatChatAgent').value;
+  const inputEl = document.getElementById('inputFloat');
+  const msg = inputEl.value.trim();
+  if (!msg) return;
+  inputEl.value = '';
+  if (!chatHistories['float']) chatHistories['float'] = [];
+
+  const container = document.getElementById('chatFloat');
+  appendMsg(container, msg, 'user');
+  const thinking = appendMsg(container, '<span class="thinking-dots">Thinking</span>', 'thinking');
+
+  try {
+    const d = await apiFetch('POST', '/chat', { message: msg, agent, history: chatHistories['float'].slice(-10) });
+    thinking.remove();
+    const reply = d.reply || d.response || d.answer || d.message || d.error || 'No response';
+    chatHistories['float'].push({ role: 'user', content: msg }, { role: 'assistant', content: reply });
+    appendMsg(container, reply + `<div class="msg-time">${new Date().toLocaleTimeString()}</div>`, 'agent');
+  } catch(e) { thinking.remove(); appendMsg(container, 'Error: ' + e.message, 'agent'); }
 }
 
-function setNav(el) {
-  document.querySelectorAll('.ni').forEach(function(x){ x.classList.remove('active'); });
+function appendMsg(container, html, type) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + type;
+  el.innerHTML = html;
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+  return el;
+}
+
+// ══════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════
+let dashInterval;
+async function loadDashboard() {
+  try {
+    const [dash, tasksData, actData] = await Promise.all([
+      apiFetch('GET', '/api/dashboard'),
+      apiFetch('GET', '/api/tasks?status=pending'),
+      apiFetch('GET', '/api/activity?limit=5'),
+    ]);
+
+    // Stats
+    document.getElementById('statPipeline').textContent = dash.pipeline?.total ?? '—';
+    document.getElementById('statActive').textContent   = dash.rentals?.active ?? '—';
+    const e48 = dash.rentals?.endingIn48h ?? 0;
+    const e48El = document.getElementById('statEnding48');
+    e48El.textContent = e48;
+    if (e48 > 0) e48El.classList.add('red');
+    const rev = dash.finance?.monthRevenue ?? 0;
+    document.getElementById('statRevenue').textContent = '$' + rev.toLocaleString();
+    const pt = tasksData.tasks?.length ?? 0;
+    const ptEl = document.getElementById('statTasks');
+    ptEl.textContent = pt;
+    if (pt > 0) ptEl.classList.add('red');
+
+    // Alert banners
+    const overdue = dash.rentals?.overdueJobs ?? [];
+    const ending = dash.rentals?.endingIn48hJobs ?? [];
+    if (overdue.length > 0) {
+      const b = document.getElementById('alertBannerRed');
+      b.textContent = `\u26A0\uFE0F ${overdue.length} overdue rental(s): ${overdue.map(j=>j.jobId||j.id).join(', ')} — Click to manage`;
+      b.classList.add('show');
+    }
+    if (ending.length > 0) {
+      const b = document.getElementById('alertBannerYellow');
+      b.textContent = `\u23F0 ${ending.length} rental(s) ending in 48h: ${ending.map(j=>j.jobId||j.id).join(', ')} — Click to manage`;
+      b.classList.add('show');
+    }
+
+    // Pipeline table
+    const pipeline = dash.pipeline?.recent ?? [];
+    document.getElementById('dashPipelineBody').innerHTML = pipeline.length ? pipeline.map(j => `
+      <tr>
+        <td><span class="badge badge-yellow">${esc(j.id||j.jobId||'—')}</span></td>
+        <td>${esc(j.customerName||'—')}</td>
+        <td>${stageBadge(j.stage||'quote_built')}</td>
+        <td style="color:var(--yellow);font-weight:600;">$${(j.total||0).toLocaleString()}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="openJobDetail('${esc(j.id||j.jobId)}')">&#x1F441;&#xFE0F; View</button></td>
+      </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);">No pipeline jobs yet</td></tr>';
+
+    // Today's ops
+    const today = dash.ops?.today ?? [];
+    const deliveries = today.filter(j => j.type === 'delivery');
+    const pickups    = today.filter(j => j.type === 'pickup');
+    renderOpsCards('dashDeliveries', deliveries);
+    renderOpsCards('dashPickups', pickups);
+
+    // Tasks preview
+    const highTasks = (tasksData.tasks || []).filter(t => t.priority === 'high').slice(0, 3);
+    document.getElementById('dashTasksPreview').innerHTML = highTasks.length
+      ? highTasks.map(t => renderTaskCard(t, true)).join('')
+      : '<div style="color:var(--gray-500);font-size:13px;">No high priority tasks</div>';
+
+    // Activity
+    const acts = actData.logs ?? [];
+    document.getElementById('dashActivity').innerHTML = acts.length
+      ? acts.map(a => renderActivityEntry(a)).join('')
+      : '<div style="color:var(--gray-500);font-size:13px;">No recent activity</div>';
+
+    document.getElementById('dashLastUpdated').textContent = 'Last updated: just now';
+  } catch(e) { console.error('Dashboard error:', e); }
+}
+
+function renderOpsCards(containerId, jobs) {
+  const el = document.getElementById(containerId);
+  if (!jobs.length) { el.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:12px 0;">None today</div>'; return; }
+  el.innerHTML = jobs.map(j => `
+    <div class="ops-card">
+      <div class="ops-card-header">
+        <span class="badge badge-yellow">${esc(j.jobId||j.id)}</span>
+        <span style="font-size:12px;color:var(--gray-400);">${esc(j.scheduledTime||'TBD')}</span>
+      </div>
+      <div style="font-weight:600;margin-bottom:4px;">${esc(j.customerName||'—')}</div>
+      <a class="ops-address" href="https://maps.google.com/?q=${encodeURIComponent(j.deliveryAddress||j.address||'')}" target="_blank">&#x1F4CD; ${esc(j.deliveryAddress||j.address||'No address')}</a>
+      <div style="font-size:12px;color:var(--gray-400);">Driver: ${esc(j.driverName||j.driver||'TBD')}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════
+// QUOTE PAGE
+// ══════════════════════════════════════
+async function loadQuotePage() {
+  try {
+    const [pipeData, actData] = await Promise.all([
+      apiFetch('GET', '/quote/pipeline').catch(() => ({ pipeline: [] })),
+      apiFetch('GET', '/api/activity?agent=quote&limit=5').catch(() => ({ logs: [] })),
+    ]);
+    const jobs = pipeData.pipeline || pipeData.jobs || [];
+    document.getElementById('quotePipelineBody').innerHTML = jobs.length
+      ? jobs.map(j => `<tr>
+          <td><span class="badge badge-yellow">${esc(j.id||j.jobId)}</span></td>
+          <td>${esc(j.customerName||'—')}</td>
+          <td>${esc(j.equipment?.[0]?.name||'—')}</td>
+          <td style="color:var(--yellow);">$${(j.total||0).toLocaleString()}</td>
+          <td>${stageBadge(j.stage)}</td>
+          <td style="color:var(--gray-400);">${fmt(j.createdAt)}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);">No quotes yet</td></tr>';
+    document.getElementById('quoteStats').innerHTML = `
+      Total: <b>${jobs.length}</b><br>
+      Sent: <b>${jobs.filter(j=>j.stage!=='quote_built').length}</b><br>
+      Pipeline Value: <b style="color:var(--yellow);">$${jobs.reduce((s,j)=>s+(j.total||0),0).toLocaleString()}</b>`;
+    document.getElementById('quoteActivity').innerHTML = renderActivityList(actData.logs || []);
+  } catch(e) { console.error(e); }
+}
+
+// ══════════════════════════════════════
+// ADMIN PAGE
+// ══════════════════════════════════════
+async function loadAdminPage() {
+  try {
+    const [appData, resData, actData] = await Promise.all([
+      apiFetch('GET', '/admin/approvals').catch(() => ({ approvals: [] })),
+      apiFetch('GET', '/admin/reservations').catch(() => ({ reservations: [] })),
+      apiFetch('GET', '/api/activity?agent=admin&limit=5').catch(() => ({ logs: [] })),
+    ]);
+    const approvals = appData.approvals || [];
+    document.getElementById('approvalCount').textContent = approvals.length;
+    document.getElementById('approvalsList').innerHTML = approvals.length
+      ? approvals.map(a => `
+        <div class="approval-card">
+          <div class="approval-type">${esc(a.metadata?.type||'approval')} — ${esc(a.id)}</div>
+          <div class="approval-details">${esc(a.message?.slice(0,150)||'No details')}${a.message?.length>150?'...':''}</div>
+          <div class="approval-meta">Created ${timeAgo(a.createdAt)}</div>
+          <div class="approval-btns">
+            <button class="btn btn-green btn-sm" onclick="respondApproval('${esc(a.id)}','YES',this)">&#x2705; Approve</button>
+            <button class="btn btn-red btn-sm" onclick="respondApproval('${esc(a.id)}','NO',this)">&#x274C; Deny</button>
+          </div>
+        </div>`).join('')
+      : '<div style="color:var(--gray-500);font-size:13px;">No pending approvals</div>';
+
+    const reservations = resData.reservations || [];
+    document.getElementById('reservationsBody').innerHTML = reservations.length
+      ? reservations.map(r => `<tr>
+          <td><span class="badge badge-yellow">${esc(r.jobId||r.id)}</span></td>
+          <td>${esc(r.customerName||'—')}</td>
+          <td>${fmt(r.startDate)}</td>
+          <td>${fmt(r.endDate)}</td>
+          <td style="color:var(--yellow);">$${(r.total||0).toLocaleString()}</td>
+          <td>${stageBadge(r.stage||'reserved')}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="openJobDetail('${esc(r.jobId||r.id)}')">View</button></td>
+        </tr>`).join('')
+      : '<tr><td colspan="7" style="text-align:center;color:var(--gray-500);">No reservations</td></tr>';
+    document.getElementById('adminActivity').innerHTML = renderActivityList(actData.logs || []);
+  } catch(e) { console.error(e); }
+}
+
+async function respondApproval(id, response, btn) {
+  btn.disabled = true;
+  try {
+    const d = await apiFetch('POST', '/admin/approval/respond', { approvalId: id, response });
+    toast(response === 'YES' ? 'Approved \u2705' : 'Denied \u274C', response === 'YES' ? 'success' : 'error');
+    loadAdminPage();
+  } catch(e) { toast('Error: ' + e.message, 'error'); btn.disabled = false; }
+}
+
+// ══════════════════════════════════════
+// OPS PAGE
+// ══════════════════════════════════════
+async function loadOpsPage() {
+  try {
+    const [todayData, upcomingData] = await Promise.all([
+      apiFetch('GET', '/ops/today').catch(() => ({ jobs: [] })),
+      apiFetch('GET', '/ops/upcoming').catch(() => ({ jobs: [] })),
+    ]);
+    const today = todayData.jobs || todayData.today || [];
+    const deliveries = today.filter(j => j.type === 'delivery');
+    const pickups    = today.filter(j => j.type === 'pickup');
+    renderOpsCards('opsDeliveries', deliveries);
+    renderOpsCards('opsPickups', pickups);
+    document.getElementById('opsStats').innerHTML = `
+      Today's Jobs: <b>${today.length}</b><br>
+      Upcoming 7 Days: <b>${(upcomingData.jobs||[]).length}</b>`;
+    document.getElementById('driversList').innerHTML = `
+      <div style="padding:8px 0;border-bottom:1px solid var(--gray-700);">
+        <b>Andrei</b> <span style="color:var(--gray-400);font-size:12px;">· +15619286999</span><br>
+        <span style="font-size:12px;color:var(--gray-500);">${deliveries.length} delivery, ${pickups.length} pickup today</span>
+      </div>`;
+  } catch(e) { console.error(e); }
+}
+
+// ══════════════════════════════════════
+// FINANCE PAGE
+// ══════════════════════════════════════
+async function loadFinancePage() {
+  try {
+    const [activeData, actData] = await Promise.all([
+      apiFetch('GET', '/finance/active').catch(() => ({ rentals: [] })),
+      apiFetch('GET', '/api/activity?agent=finance&limit=5').catch(() => ({ logs: [] })),
+    ]);
+    const rentals = activeData.rentals || activeData.active || [];
+    const now = Date.now();
+    document.getElementById('financeRentalsBody').innerHTML = rentals.length
+      ? rentals.map(r => {
+          const end = r.endDate ? new Date(r.endDate) : null;
+          const daysLeft = end ? Math.ceil((end - now) / 86400000) : null;
+          const rowColor = daysLeft !== null && daysLeft < 0 ? 'background:rgba(239,68,68,0.06);' : daysLeft !== null && daysLeft < 2 ? 'background:rgba(246,236,14,0.06);' : '';
+          return `<tr style="${rowColor}">
+            <td><span class="badge badge-yellow">${esc(r.jobId||r.id)}</span></td>
+            <td>${esc(r.customerName||'—')}</td>
+            <td>${fmt(r.endDate)}</td>
+            <td style="color:${daysLeft<0?'var(--red)':daysLeft<2?'var(--yellow)':'var(--green)'};">${daysLeft !== null ? (daysLeft < 0 ? Math.abs(daysLeft) + ' overdue' : daysLeft + ' days') : '—'}</td>
+            <td style="color:var(--yellow);">$${((r.total||0)-(r.depositPaid||0)).toLocaleString()}</td>
+            <td>${daysLeft<0?'<span class="badge badge-red">OVERDUE</span>':daysLeft<2?'<span class="badge badge-yellow">ENDING</span>':'<span class="badge badge-green">ACTIVE</span>'}</td>
+          </tr>`;}).join('')
+      : '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);">No active rentals</td></tr>';
+    const overdueCt = rentals.filter(r => r.endDate && new Date(r.endDate) < new Date()).length;
+    const ending48 = rentals.filter(r => { const d = r.endDate ? (new Date(r.endDate) - now) / 86400000 : null; return d !== null && d >= 0 && d < 2; }).length;
+    document.getElementById('financeStats').innerHTML = `
+      Active Rentals: <b>${rentals.length}</b><br>
+      Ending in 48h: <b style="color:var(--yellow);">${ending48}</b><br>
+      Overdue: <b style="color:var(--red);">${overdueCt}</b>`;
+    document.getElementById('financeActivity').innerHTML = renderActivityList(actData.logs || []);
+  } catch(e) { console.error(e); }
+}
+
+// ══════════════════════════════════════
+// MARKETING PAGE
+// ══════════════════════════════════════
+async function loadMarketingPage() {
+  try {
+    const [leadsData, actData] = await Promise.all([
+      apiFetch('GET', '/marketing/leads').catch(() => ({ leads: [] })),
+      apiFetch('GET', '/api/activity?agent=marketing&limit=5').catch(() => ({ logs: [] })),
+    ]);
+    const leads = leadsData.leads || [];
+    document.getElementById('leadsBody').innerHTML = leads.length
+      ? leads.map(l => `<tr>
+          <td>${esc(l.name||'—')}</td>
+          <td>${l.phone?`<a href="tel:${esc(l.phone)}" style="color:var(--yellow);">${esc(l.phone)}</a>`:'—'}</td>
+          <td>${esc(l.equipment||'—')}</td>
+          <td>${esc(l.source||'—')}</td>
+          <td><span class="badge ${l.status==='converted'?'badge-green':l.status==='contacted'?'badge-yellow':'badge-red'}">${esc(l.status||'new')}</span></td>
+          <td style="color:var(--gray-400);">${fmt(l.createdAt)}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);">No leads yet</td></tr>';
+    document.getElementById('marketingStats').innerHTML = `
+      Total Leads: <b>${leads.length}</b><br>
+      New: <b style="color:var(--red);">${leads.filter(l=>l.status==='new'||!l.status).length}</b><br>
+      Converted: <b style="color:var(--green);">${leads.filter(l=>l.status==='converted').length}</b>`;
+    document.getElementById('marketingActivity').innerHTML = renderActivityList(actData.logs || []);
+  } catch(e) { console.error(e); }
+}
+
+// ══════════════════════════════════════
+// KNOWLEDGE PAGE
+// ══════════════════════════════════════
+async function loadKnowledgePage() {
+  loadKnowledge('', document.querySelector('#page-knowledge .filter-tab.active'));
+  try {
+    const d = await apiFetch('GET', '/knowledge');
+    const entries = d.entries || [];
+    const weekAgo = Date.now() - 7*86400000;
+    document.getElementById('knowledgeStats').innerHTML = `
+      Total Entries: <b>${entries.length}</b><br>
+      New This Week: <b style="color:var(--yellow);">${entries.filter(e=>new Date(e.learnedAt)>weekAgo).length}</b><br>
+      Last Updated: <b>${entries.length?timeAgo(entries[entries.length-1].learnedAt):'Never'}</b>`;
+  } catch(e) { console.error(e); }
+}
+async function loadKnowledge(category, tabEl) {
+  if (tabEl) { document.querySelectorAll('#page-knowledge .filter-tab').forEach(t=>t.classList.remove('active')); tabEl.classList.add('active'); }
+  try {
+    const url = '/knowledge' + (category ? '?category=' + category : '');
+    const d = await apiFetch('GET', url);
+    const entries = (d.entries||[]).slice(0,50);
+    document.getElementById('knowledgeBody').innerHTML = entries.length
+      ? entries.map(e => `<tr>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">${esc(e.title||e.url||e.fileName||'Manual')}</td>
+          <td><span class="badge badge-teal">${esc(e.category||'general')}</span></td>
+          <td style="max-width:300px;color:var(--gray-400);font-size:12px;">${esc((e.summary||'').slice(0,100))}${(e.summary||'').length>100?'...':''}</td>
+          <td style="color:var(--gray-400);">${timeAgo(e.learnedAt)}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" style="text-align:center;color:var(--gray-500);">No entries yet — add a URL to start learning</td></tr>';
+  } catch(e) { console.error(e); }
+}
+function switchLearnTab(tab, el) {
+  ['url','manual','youtube'].forEach(t => { document.getElementById('learnTab'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t===tab?'block':'none'; });
+  document.querySelectorAll('#page-knowledge .split-left .filter-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+}
+async function learnFromUrl() {
+  const url = document.getElementById('learnUrl').value.trim();
+  if (!url) { toast('Enter a URL first', 'warning'); return; }
+  toast('Learning from URL...', 'info');
+  const d = await apiFetch('POST', '/knowledge/learn', { url, priority: 'high' }).catch(e => ({ error: e.message }));
+  toast(d.ok ? '\u2705 Learned successfully!' : 'Error: ' + (d.error||'Failed'), d.ok ? 'success' : 'error');
+  if (d.ok) { document.getElementById('learnUrl').value = ''; loadKnowledgePage(); }
+}
+async function teachManual() {
+  const title = document.getElementById('teachTitle').value.trim();
+  const content = document.getElementById('teachContent').value.trim();
+  if (!title || !content) { toast('Title and content required', 'warning'); return; }
+  toast('Teaching...', 'info');
+  const d = await apiFetch('POST', '/knowledge/teach', { title, content }).catch(e => ({ error: e.message }));
+  toast(d.ok ? '\u2705 Taught successfully!' : 'Error: ' + (d.error||'Failed'), d.ok ? 'success' : 'error');
+  if (d.ok) { document.getElementById('teachTitle').value = ''; document.getElementById('teachContent').value = ''; loadKnowledgePage(); }
+}
+async function learnFromYoutube() {
+  const url = document.getElementById('learnYtUrl').value.trim();
+  if (!url) { toast('Enter YouTube URL', 'warning'); return; }
+  toast('Fetching video transcript...', 'info');
+  const d = await apiFetch('POST', '/knowledge/youtube', { url }).catch(e => ({ error: e.message }));
+  toast(d.ok ? '\u2705 Learned from video!' : 'Error: ' + (d.error||'Failed'), d.ok ? 'success' : 'error');
+  if (d.ok) { document.getElementById('learnYtUrl').value = ''; loadKnowledgePage(); }
+}
+
+// ══════════════════════════════════════
+// TASKS PAGE
+// ══════════════════════════════════════
+let taskFilters = { status: '', priority: '' };
+async function loadTasksPage() {
+  try {
+    const params = new URLSearchParams();
+    if (taskFilters.status) params.set('status', taskFilters.status);
+    if (taskFilters.priority) params.set('priority', taskFilters.priority);
+    const d = await apiFetch('GET', '/api/tasks?' + params.toString());
+    const tasks = d.tasks || [];
+    const all = await apiFetch('GET', '/api/tasks');
+    const allTasks = all.tasks || [];
+    document.getElementById('taskStatTotal').textContent = allTasks.length;
+    document.getElementById('taskStatHigh').textContent = allTasks.filter(t=>t.priority==='high').length;
+    document.getElementById('taskStatPending').textContent = allTasks.filter(t=>t.status==='pending').length;
+    document.getElementById('taskStatDone').textContent = allTasks.filter(t=>t.status==='completed').length;
+    // Update nav badge
+    const pending = allTasks.filter(t=>t.status==='pending').length;
+    document.getElementById('tasksTab').textContent = pending > 0 ? `\u2705 Tasks (${pending})` : '\u2705 Tasks';
+    document.getElementById('tasksList').innerHTML = tasks.length
+      ? tasks.map(t => renderTaskCard(t, false)).join('')
+      : '<div style="text-align:center;color:var(--gray-500);padding:40px;">No tasks found</div>';
+  } catch(e) { console.error(e); }
+}
+function filterTasks(type, value, el) {
+  taskFilters[type] = value;
+  const group = el.closest('.filter-tabs');
+  group.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
+  loadTasksPage();
+}
+function renderTaskCard(t, compact) {
+  const dueStr = t.dueDate ? (new Date(t.dueDate) < new Date() ? `<span style="color:var(--red);">Due: ${fmt(t.dueDate)} \u26A0\uFE0F</span>` : `Due: ${fmt(t.dueDate)}`) : '';
+  return `<div class="task-card ${t.priority}">
+    <div class="task-header">
+      <div class="task-title">${esc(t.title)}</div>
+      ${priorityBadge(t.priority)}
+    </div>
+    ${t.description?`<div class="task-desc">${esc(compact?t.description.slice(0,80)+(t.description.length>80?'...':''):t.description)}</div>`:''}
+    <div class="task-footer">
+      <span class="badge badge-gray">${esc(t.agent||'system')}</span>
+      ${t.jobId?`<span class="badge badge-yellow">${esc(t.jobId)}</span>`:''}
+      <span style="font-size:11px;color:var(--gray-500);">${timeAgo(t.createdAt)}</span>
+      ${dueStr}
+    </div>
+    ${!compact && t.status === 'pending' ? `<div class="task-btns">
+      <button class="btn btn-green btn-sm" onclick="updateTask('${t.id}','complete')">\u2705 Complete</button>
+      <button class="btn btn-gray btn-sm" onclick="updateTask('${t.id}','dismiss')">\u274C Dismiss</button>
+    </div>` : ''}
+  </div>`;
+}
+async function updateTask(id, action) {
+  const ep = action === 'complete' ? `/api/tasks/${id}/complete` : `/api/tasks/${id}/dismiss`;
+  const d = await apiFetch('POST', ep, {}).catch(e => ({ error: e.message }));
+  toast(d.ok ? (action==='complete' ? '\u2705 Task completed!' : 'Task dismissed') : 'Error: ' + d.error, d.ok ? 'success' : 'error');
+  if (d.ok) loadTasksPage();
+}
+function openCreateTask() { document.getElementById('createTaskModal').classList.add('open'); }
+async function submitCreateTask() {
+  const title = document.getElementById('newTaskTitle').value.trim();
+  if (!title) { toast('Title required', 'warning'); return; }
+  const d = await apiFetch('POST', '/api/tasks', {
+    title, description: document.getElementById('newTaskDesc').value,
+    priority: document.getElementById('newTaskPriority').value,
+    agent: document.getElementById('newTaskAgent').value,
+    jobId: document.getElementById('newTaskJobId').value || null,
+    dueDate: document.getElementById('newTaskDue').value || null,
+    createdBy: 'manual',
+  }).catch(e => ({ error: e.message }));
+  toast(d.ok ? '\u2705 Task created!' : 'Error: ' + d.error, d.ok ? 'success' : 'error');
+  if (d.ok) { closeModal('createTaskModal'); loadTasksPage(); }
+}
+
+// ══════════════════════════════════════
+// ACTIVITY PAGE
+// ══════════════════════════════════════
+let actFilters = { agent: 'all', hours: '168' };
+async function loadActivityPage() {
+  try {
+    const params = `?agent=${actFilters.agent}&hours=${actFilters.hours}&limit=200`;
+    const d = await apiFetch('GET', '/api/activity' + params);
+    const logs = d.logs || [];
+    const today = logs.filter(l => new Date(l.timestamp) > new Date(Date.now()-86400000));
+    document.getElementById('actStatTotal').textContent = today.length;
+    document.getElementById('actStatErrors').textContent = today.filter(l=>l.status==='error').length;
+    const agentCounts = logs.reduce((acc,l) => { acc[l.agent] = (acc[l.agent]||0)+1; return acc; }, {});
+    const topAgent = Object.entries(agentCounts).sort((a,b)=>b[1]-a[1])[0];
+    document.getElementById('actStatAgent').textContent = topAgent ? topAgent[0] : '—';
+    document.getElementById('activityFeed').innerHTML = logs.length
+      ? logs.map(l => renderActivityEntry(l)).join('')
+      : '<div style="text-align:center;color:var(--gray-500);padding:40px;">No activity logged yet</div>';
+  } catch(e) { console.error(e); }
+}
+function filterActivity(type, value, el) {
+  actFilters[type] = value;
+  const group = el.closest('.filter-tabs');
+  group.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  loadActivityPage();
+}
+function renderActivityEntry(a) {
+  const statusIcon = { success:'\u2705', error:'\u274C', warning:'\u26A0\uFE0F', pending:'\u23F3' }[a.status] || '\u2705';
+  return `<div class="activity-entry">
+    <div class="activity-dot" style="background:${agentColor(a.agent)};"></div>
+    <div class="activity-content">
+      <div class="activity-action">${statusIcon} ${esc(a.action||'action')}</div>
+      <div class="activity-desc">${esc(a.description||'')}</div>
+      <div class="activity-meta">
+        <span class="badge badge-gray" style="background:rgba(0,0,0,0.3);border:1px solid ${agentColor(a.agent)}20;color:${agentColor(a.agent)};">${esc(a.agent)}</span>
+        ${a.jobId?`<span class="badge badge-yellow">${esc(a.jobId)}</span>`:''}
+        <span class="activity-time">${timeAgo(a.timestamp)}</span>
+      </div>
+    </div>
+  </div>`;
+}
+function renderActivityList(logs) {
+  if (!logs.length) return '<div style="color:var(--gray-500);font-size:13px;">No recent activity</div>';
+  return logs.slice(0,5).map(a => renderActivityEntry(a)).join('');
+}
+function exportCSV() {
+  toast('Export feature — use GET /api/activity to download all logs', 'info');
+}
+
+// ══════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openFloatChat() { openModal('floatChatModal'); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+
+async function openJobDetail(jobId) {
+  if (!jobId || jobId === '—') return;
+  try {
+    const d = await apiFetch('GET', '/admin/status/' + jobId);
+    const j = d.job || d;
+    toast(`Job ${jobId}: ${j.stage || j.status || 'loaded'}`, 'info');
+  } catch(e) { toast('Could not load job details', 'error'); }
+}
+
+// ══════════════════════════════════════
+// CLOCK & INIT
+// ══════════════════════════════════════
+function updateClock() {
+  const n = new Date();
+  document.getElementById('dashClock').textContent = n.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('dashDate').textContent = n.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+}
+
+function initApp() {
+  updateClock();
+  setInterval(updateClock, 1000);
+  loadDashboard();
+  setInterval(loadDashboard, 30000);
 }
 </script>
 </body>

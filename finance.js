@@ -6,6 +6,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import Anthropic from '@anthropic-ai/sdk';
+import { logActivity, createTask } from './logger.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -239,7 +240,11 @@ export async function runReminderSweep() {
 
   for (const job of status.endingIn48h) {
     if (reminders.find(r => r.jobId === job.jobId && r.type === '48h_reminder')) continue;
-    try { await send48hReminder(job.jobId); results.sent48h.push(job.jobId); }
+    try {
+      await send48hReminder(job.jobId); results.sent48h.push(job.jobId);
+      const jobId = job.jobId;
+      await logActivity({ agent: 'finance', action: 'reminder_sent', description: `Reminder sent for ${jobId}`, jobId, status: 'success', notify: false }).catch(()=>{});
+    }
     catch (e) { results.errors.push({ jobId: job.jobId, error: e.message }); }
   }
   for (const job of status.endingIn24h) {

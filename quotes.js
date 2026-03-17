@@ -6,6 +6,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import Anthropic from '@anthropic-ai/sdk';
+import { logActivity, createTask } from './logger.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -263,6 +264,8 @@ export async function sendQuote(jobId) {
 
   // Update pipeline stage
   await updateJob(jobId, { stage: 'quote_sent', sentAt: new Date().toISOString() });
+
+  await logActivity({ agent: 'quote', action: 'quote_sent', description: `Quote sent for ${jobId}`, jobId, status: 'success', notify: true }).catch(()=>{});
 
   console.log(`[Quotes] ✅ Quote sent: ${jobId} → ${quote.customerEmail}`);
   return { ok: true, jobId, to: quote.customerEmail };

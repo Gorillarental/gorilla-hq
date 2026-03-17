@@ -18,6 +18,7 @@ import { opsRoutes, opsChat, getTodaysJobs, getUpcomingJobs } from './ops.js';
 import { financeRoutes, financeChat, runReminderSweep, checkActiveRentals, getRevenueReport } from './finance.js';
 import { marketingRoutes, marketingChat, captureLead, getMarketingStats } from './marketing.js';
 import { knowledgeRoutes } from './knowledge.js';
+import { loggerRoutes } from './logger.js';
 import { CONFIG } from './config.js';
 import { getPipeline, initDB } from './db.js';
 
@@ -250,6 +251,7 @@ opsRoutes(app);
 financeRoutes(app);
 marketingRoutes(app);
 knowledgeRoutes(app);
+loggerRoutes(app);
 
 // ─── Cron helpers ──────────────────────────────────────────────
 function msUntil(hour, minute = 0) {
@@ -349,6 +351,23 @@ function startCronJobs() {
   console.log('[Cron] ✅ Jobs scheduled');
 }
 
+// ─── Stats API ─────────────────────────────────────────────────
+app.get('/api/stats', async (req, res) => {
+  try {
+    const { getActivityLog, getTasks } = await import('./logger.js');
+    const pipeline = await getPipeline().catch(() => []);
+    const tasks = getTasks({ status: 'pending' });
+    const activity = getActivityLog({ limit: 5 });
+    res.json({
+      ok: true,
+      pipeline: { total: pipeline.length },
+      tasks: { pending: tasks.length, high: tasks.filter(t => t.priority === 'high').length },
+      activity: { recent: activity },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 // ─── Error handler ─────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('[Server] Error:', err.message);
@@ -369,6 +388,7 @@ app.listen(PORT, '0.0.0.0', () => {
 ║   ✅ Quote      ✅ Admin      ✅ Ops         ║
 ║   ✅ Finance    ✅ Marketing  ✅ Knowledge   ║
 ║   ✅ Chip (Email via Microsoft 365)          ║
+║   ✅ Logger (Activity log & Task manager)    ║
 ╚══════════════════════════════════════════════╝
   `);
   startCronJobs();

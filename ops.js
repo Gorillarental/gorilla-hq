@@ -6,6 +6,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import Anthropic from '@anthropic-ai/sdk';
+import { logActivity, createTask } from './logger.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -83,6 +84,7 @@ export async function scheduleDelivery(jobId, options = {}) {
   deliveries.push(delivery);
   writeJSON(DATA.deliveries, deliveries);
   await updateJob(jobId, { stage: 'delivery_scheduled', deliveryScheduledAt: new Date().toISOString() });
+  await logActivity({ agent: 'ops', action: 'delivery_scheduled', description: `Delivery scheduled for ${jobId}`, jobId, status: 'success', notify: false }).catch(()=>{});
   console.log(`[Ops] ✅ Delivery scheduled: ${jobId} → ${driver.name} on ${delivery.scheduledDate}`);
   return delivery;
 }
