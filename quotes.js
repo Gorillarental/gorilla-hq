@@ -131,6 +131,9 @@ async function createBooqableOrder(quote) {
     });
   }
 
+  // 4. Reserve order so it gets a number and appears in dashboard
+  await fetch(`${BASE_URL}/orders/${orderId}/reserve`, { method: 'POST', headers, body: JSON.stringify({}) });
+
   return orderId;
 }
 
