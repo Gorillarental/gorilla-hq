@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import { CONFIG, EQUIPMENT_CATALOG, PRICING } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { sendSMS, getOrCreateContact, addNote, addTag, upsertOpportunity } from './ghl.js';
+import { logActivity, createTask } from './logger.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -102,6 +103,8 @@ export async function captureLead(data) {
     );
   }
 
+  await logActivity({ agent: 'marketing', action: 'lead_captured', description: `New lead: ${lead.name} — ${lead.equipment || 'TBD'} — from ${lead.source}`, status: 'success', notify: true }).catch(() => {});
+  await createTask({ title: `Call new lead — ${lead.name}`, description: `Lead interested in ${lead.equipment || 'equipment'}. Source: ${lead.source}. Phone: ${lead.phone}`, agent: 'marketing', priority: 'high', createdBy: 'marketing' }).catch(() => {});
   console.log(`[Marketing] ✅ Lead captured: ${lead.id} — ${lead.name}`);
   return { lead, ghlContactId: ghlContact?.id };
 }
@@ -148,6 +151,7 @@ export async function generateSocialPost(type = 'equipment', options = {}) {
   marketing.posts.push({ type, content: post, equipment: equipment?.name, generatedAt: new Date().toISOString() });
   writeJSON(DATA.marketing, marketing);
 
+  await logActivity({ agent: 'marketing', action: 'post_generated', description: `Social post generated: ${type} — ${equipment?.name || 'general'}`, status: 'success', notify: false }).catch(() => {});
   console.log(`[Marketing] ✅ Post generated (${type})`);
   return { post, type, equipment: equipment?.name };
 }
@@ -176,6 +180,7 @@ export async function sendOutreachEmail(contractor) {
   marketing.outreach.push({ contractor, subject, sentAt: new Date().toISOString() });
   writeJSON(DATA.marketing, marketing);
 
+  await logActivity({ agent: 'marketing', action: 'outreach_sent', description: `Outreach email sent to ${contractor.name || contractor.email} at ${contractor.company || 'company'}`, status: 'success', notify: false }).catch(() => {});
   console.log(`[Marketing] ✅ Outreach sent to ${contractor.email}`);
   return { sent: true, subject, to: contractor.email };
 }
