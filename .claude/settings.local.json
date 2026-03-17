@@ -27,7 +27,12 @@
       "Bash(security find-internet-password:*)",
       "Bash(git -C /Users/kyle/openclaw/gorillahq config credential.helper)",
       "Bash(env)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git:*)",
+      "Bash(security find-generic-password:*)",
+      "Bash(security list-keychains:*)",
+      "Bash(security dump-keychain:*)",
+      "Bash(curl:*)"
     ]
   }
 }
