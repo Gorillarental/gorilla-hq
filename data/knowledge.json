@@ -1,1 +1,118 @@
-{"entries":[],"lastUpdated":null}
+{
+  "entries": [
+    {
+      "id": "KN-1773790683719",
+      "url": null,
+      "title": "Gorilla Rental — Equipment Fleet & Pricing",
+      "summary": "Complete equipment catalog for Gorilla Rental (South Florida aerial lift rentals):\n\n  Boom Lift 45ft (BL001): Daily $370 | Weekly $1200 | Monthly $3700\n  Boom Lift 65ft (BL002): Daily $400 | Weekly $1",
+      "category": "business",
+      "keyFacts": [],
+      "competitiveIntel": "",
+      "technicalKnowledge": [],
+      "businessInsights": [],
+      "actionItems": [],
+      "confidenceScore": 1,
+      "relevanceScore": 1,
+      "addedBy": "onboarding",
+      "learnedAt": "2026-03-17T23:38:03.719Z",
+      "rawContent": "Complete equipment catalog for Gorilla Rental (South Florida aerial lift rentals):\n\n  Boom Lift 45ft (BL001): Daily $370 | Weekly $1200 | Monthly $3700\n  Boom Lift 65ft (BL002): Daily $400 | Weekly $1300 | Monthly $4000\n  Boom Lift 60ft (BL003): Daily $430 | Weekly $1400 | Monthly $4300\n  Boom Lift 125ft (BL007): Daily $600 | Weekly $2000 | Monthly $6000\n  Boom Lift 85ft (BL010): Daily $450 | Weekly $1500 | Monthly $4500\n  Genie S-40 Boom (BL011): Daily $150 | Weekly $490 | Monthly $1500\n  Scissor Lift 32ft (SL001): Daily $150 | Weekly $500 | Monthly $1500\n  Shore Posts (PS001): Daily call | Weekly call | Monthly $12\n  Scaffolding (SC001): Daily $17 | Weekly call | Monthly call\n  Overhead Protection (OP001): Daily call | Weekly call | Monthly $20\n\nAdditional fees:\n  Delivery/Pickup: $200.00\n  Security Deposit: $150.00\n  Tax Rate: 7%",
+      "type": "manual"
+    },
+    {
+      "id": "KN-1773790695694",
+      "url": null,
+      "title": "Gorilla Rental — Company Overview & Operations",
+      "summary": "Gorilla Rental is a South Florida aerial work platform rental company serving Broward County (primary), Miami-Dade, and Palm Beach. They offer boom lifts (40ft–125ft), scissor lifts (32ft electric), scaffolding, shore posts, and overhead protection to general contractors, painters, landscapers, roofers, drywall, framing, and excavation companies.",
+      "category": "business",
+      "keyFacts": [
+        "Service area: South Florida — Broward County (primary), Miami-Dade, Palm Beach",
+        "Boom Lifts: 40ft to 125ft reach (electric and diesel)",
+        "Scissor Lifts: 32ft electric",
+        "Scaffolding: modular, daily rate",
+        "Shore Posts: monthly rate",
+        "Overhead Protection offered",
+        "Delivery fee: $200.00",
+        "Refundable deposit: $150.00 per rental",
+        "Florida sales tax: 7%",
+        "Driver Andrei: +14474744549",
+        "Driver Nazar: +17860000000",
+        "Phone: +14474744549",
+        "Email: info@gorillarental.us",
+        "Website: gorillarental.us"
+      ],
+      "competitiveIntel": "Gorilla Rental differentiates through a wide boom lift range (up to 125ft), a flat $200 delivery fee with delivery included, and a low $150 refundable deposit — positioning competitively for South Florida contractors needing flexible aerial work platform rentals.",
+      "technicalKnowledge": [
+        "Boom lifts available in both electric and diesel variants, ranging from 40ft to 125ft reach",
+        "Scissor lifts are 32ft electric models",
+        "Scaffolding is modular and rented on a daily rate basis",
+        "Shore posts are rented on a monthly rate basis"
+      ],
+      "businessInsights": [
+        "Primary market is Broward County with expansion coverage into Miami-Dade and Palm Beach",
+        "Target customers span multiple construction trades: general contractors, painters, landscapers, roofers, drywall, framing, and excavation companies",
+        "Flat delivery fee model ($200) simplifies pricing and customer decision-making",
+        "Refundable deposit structure ($150) lowers barrier to entry for new customers",
+        "Small driver team (2 drivers) suggests lean operations — scaling deliveries may become a bottleneck"
+      ],
+      "actionItems": [
+        "Ensure all driver contact information is kept current in the system",
+        "Monitor delivery capacity — with only 2 drivers, scheduling optimization is critical",
+        "Consider expanding service area marketing beyond Broward to grow Miami-Dade and Palm Beach share",
+        "Maintain up-to-date pricing for all equipment categories including scaffolding daily rates and shore post monthly rates"
+      ],
+      "confidenceScore": 1,
+      "relevanceScore": 1,
+      "addedBy": "onboarding",
+      "learnedAt": "2026-03-17T23:38:15.694Z",
+      "rawContent": "Gorilla Rental — South Florida aerial work platform rental company.\n\nSERVICES:\n  • Boom Lifts: 40ft to 125ft reach (electric and diesel)\n  • Scissor Lifts: 32ft electric\n  • Scaffolding: modular, daily rate\n  • Shore Posts: monthly rate\n  • Overhead Protection\n\nSERVICE AREA: South Florida — Broward County (primary), Miami-Dade, Palm Beach\n\nTARGET CUSTOMERS:\n  • General Contractors, Painters, Landscapers, Roofers\n  • Drywall, Framing, Excavation companies\n\nTEAM (DRIVERS):\n  Andrei — +14474744549\n  Nazar — +17860000000\n\nCONTACT:\n  Phone: +14474744549\n  Email: info@gorillarental.us\n  Website: gorillarental.us\n\nPRICING POLICY:\n  • Delivery included in delivery fee ($200.00)\n  • Refundable deposit $150.00 per rental\n  • Tax: 7% Florida sales tax",
+      "type": "manual"
+    },
+    {
+      "id": "KN-1773790709049",
+      "url": null,
+      "title": "Gorilla Rental — Pipeline & Customer Data",
+      "summary": "Gorilla Rental currently has 5 jobs in the pipeline with $20,469.10 in total pipeline revenue. All jobs are in the quoting stage (3 quote_built, 2 quote_sent), with no active rentals or completed jobs yet.",
+      "category": "business",
+      "keyFacts": [
+        "Total jobs in pipeline: 5",
+        "Pipeline revenue: $20,469.10",
+        "Active rentals: 0",
+        "Completed jobs: 0",
+        "3 jobs at quote_built stage, 2 jobs at quote_sent stage",
+        "Top customer by revenue: John Smith at $5,970.60",
+        "4 customers in the system: John Smith, Kyle, Test, Andrei Hazazup",
+        "Zero leads currently in the system (0 new, 0 converted)",
+        "Average job value approximately $4,093.82"
+      ],
+      "competitiveIntel": "",
+      "technicalKnowledge": [
+        "Pipeline stages in use: quote_built and quote_sent",
+        "No jobs have progressed beyond the quoting phase yet",
+        "Lead tracking system is in place but has no entries"
+      ],
+      "businessInsights": [
+        "All revenue is currently unrealized — every job is still in the quoting stage with none converted to active rentals",
+        "The pipeline is top-heavy with no movement through to active or completed stages, suggesting the business may be in early startup phase or experiencing a conversion bottleneck",
+        "The 'Test' customer at $5,756.60 may be a test record and could inflate pipeline revenue figures by ~28%",
+        "Revenue is concentrated among few customers — John Smith, Kyle, and Test account for ~85% of pipeline value",
+        "Zero leads indicate no top-of-funnel activity; lead generation efforts need to be established or improved",
+        "Quote-to-active conversion rate is currently 0%, making follow-up on sent quotes a critical priority"
+      ],
+      "actionItems": [
+        "Follow up on the 2 quotes that have been sent to drive conversion to active rentals",
+        "Finalize and send the 3 quotes currently in quote_built stage",
+        "Investigate and clean up the 'Test' customer record if it is not a real job",
+        "Implement lead generation strategies to build top-of-funnel pipeline",
+        "Establish a quote follow-up cadence to improve conversion rates",
+        "Track conversion metrics as jobs progress through pipeline stages"
+      ],
+      "confidenceScore": 0.95,
+      "relevanceScore": 1,
+      "addedBy": "onboarding",
+      "learnedAt": "2026-03-17T23:38:29.049Z",
+      "rawContent": "Job pipeline summary:\n\nTotal jobs: 5\nActive rentals: 0\nCompleted jobs: 0\nPipeline revenue: $20,469.10\n\nJobs by stage:\n  quote_built: 3 jobs\n  quote_sent: 2 jobs\n\nTop customers by revenue:\n  John Smith: $5,970.60\n  Kyle: $5,756.60\n  Test: $5,756.60\n  Andrei Hazazup: $2,985.30\n\nLeads: 0 total, 0 new, 0 converted",
+      "type": "manual"
+    }
+  ],
+  "lastUpdated": "2026-03-17T23:38:29.050Z"
+}

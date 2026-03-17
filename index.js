@@ -368,6 +368,26 @@ app.get('/api/stats', async (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
+// ─── Company onboarding ────────────────────────────────────────
+app.post('/admin/onboard', async (req, res) => {
+  try {
+    res.json({ ok: true, message: 'Onboarding started — this takes 1-2 minutes' });
+    const { runOnboarding } = await import('./company-onboarding.js');
+    runOnboarding().catch(e => console.error('[Onboarding] Error:', e.message));
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.get('/admin/snapshot', (req, res) => {
+  try {
+    const snapshotPath = path.join(__dirname, 'data/company-snapshot.json');
+    if (!fs.existsSync(snapshotPath)) {
+      return res.json({ ok: false, message: 'No snapshot yet — run POST /admin/onboard first' });
+    }
+    const snapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
+    res.json({ ok: true, snapshot });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 // ─── Error handler ─────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('[Server] Error:', err.message);

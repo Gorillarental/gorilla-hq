@@ -308,6 +308,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   <nav class="topnav">
     <div class="nav-brand">&#x1F98D; GORILLA</div>
     <button class="nav-tab active" onclick="showPage('dashboard', this)">&#x1F3E0; Dashboard</button>
+    <button class="nav-tab" onclick="showPage('company', this)">&#x1F3E2; Company</button>
     <button class="nav-tab" onclick="showPage('quote', this)">&#x1F4AC; Quote</button>
     <button class="nav-tab" onclick="showPage('admin', this)">&#x1F4CB; Admin</button>
     <button class="nav-tab" onclick="showPage('ops', this)">&#x1F69A; Ops</button>
@@ -336,8 +337,8 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     </div>
 
     <!-- Alert Banner -->
-    <div class="alert-banner red" id="alertBannerRed" onclick="showPage('finance', document.querySelectorAll('.nav-tab')[4])"></div>
-    <div class="alert-banner yellow" id="alertBannerYellow" onclick="showPage('finance', document.querySelectorAll('.nav-tab')[4])"></div>
+    <div class="alert-banner red" id="alertBannerRed" onclick="showPage('finance', document.querySelectorAll('.nav-tab')[5])"></div>
+    <div class="alert-banner yellow" id="alertBannerYellow" onclick="showPage('finance', document.querySelectorAll('.nav-tab')[5])"></div>
 
     <!-- Stats Row -->
     <div class="stats-row">
@@ -350,7 +351,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 
     <!-- Quick Actions -->
     <div class="actions-row">
-      <button class="btn btn-yellow" onclick="showPage('quote', document.querySelectorAll('.nav-tab')[1])">&#x2795; New Quote</button>
+      <button class="btn btn-yellow" onclick="showPage('quote', document.querySelectorAll('.nav-tab')[2])">&#x2795; New Quote</button>
       <button class="btn btn-gray" onclick="apiAction('POST','/finance/sweep','Reminder sweep started','Sweep failed','dashSweepBtn')" id="dashSweepBtn">&#x1F4E7; Reminder Sweep</button>
       <button class="btn btn-gray" onclick="apiAction('POST','/knowledge/sweep','Learning sweep started','Sweep failed','dashLearnBtn')" id="dashLearnBtn">&#x1F4DA; Learn Now</button>
       <button class="btn btn-gray" onclick="apiAction('POST','/admin/briefing','Morning briefing sent','Failed','dashBriefBtn')" id="dashBriefBtn">&#x1F4CB; Morning Briefing</button>
@@ -360,7 +361,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
       <div>
         <!-- Pipeline -->
         <div class="card">
-          <div class="section-title">Recent Pipeline <a onclick="showPage('quote', document.querySelectorAll('.nav-tab')[1]);return false;" href="#">View All &rarr;</a></div>
+          <div class="section-title">Recent Pipeline <a onclick="showPage('quote', document.querySelectorAll('.nav-tab')[2]);return false;" href="#">View All &rarr;</a></div>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Job ID</th><th>Customer</th><th>Stage</th><th>Total</th><th>Action</th></tr></thead>
@@ -371,7 +372,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 
         <!-- Pending Tasks Preview -->
         <div class="card">
-          <div class="section-title">High Priority Tasks <a onclick="showPage('tasks', document.querySelectorAll('.nav-tab')[7]);return false;" href="#">View All &rarr;</a></div>
+          <div class="section-title">High Priority Tasks <a onclick="showPage('tasks', document.querySelectorAll('.nav-tab')[8]);return false;" href="#">View All &rarr;</a></div>
           <div id="dashTasksPreview"><div class="skeleton" style="height:60px;border-radius:8px;"></div></div>
         </div>
       </div>
@@ -394,8 +395,102 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 
         <!-- Recent Activity -->
         <div class="card">
-          <div class="section-title">Recent Activity <a onclick="showPage('activity', document.querySelectorAll('.nav-tab')[8]);return false;" href="#">View All &rarr;</a></div>
+          <div class="section-title">Recent Activity <a onclick="showPage('activity', document.querySelectorAll('.nav-tab')[9]);return false;" href="#">View All &rarr;</a></div>
           <div id="dashActivity"><div class="skeleton" style="height:120px;border-radius:8px;"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ PAGE: COMPANY ══════════════ -->
+  <div class="page" id="page-company">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div style="font-size:20px;font-weight:800;color:var(--yellow);">&#x1F3E2; Company Snapshot</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <span id="snapshotAge" style="font-size:12px;color:var(--gray-400);align-self:center;"></span>
+        <button class="btn btn-yellow" onclick="runOnboarding()" id="onboardBtn">&#x1F504; Refresh Data</button>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-row" style="margin-bottom:20px;" id="companyStats">
+      <div class="stat-card"><div class="stat-value" id="cStatEquip">—</div><div class="stat-label">Equipment Units</div></div>
+      <div class="stat-card"><div class="stat-value" id="cStatJobs">—</div><div class="stat-label">Pipeline Jobs</div></div>
+      <div class="stat-card"><div class="stat-value" id="cStatIncome" style="color:#4caf50;">—</div><div class="stat-label">Total Income</div></div>
+      <div class="stat-card"><div class="stat-value" id="cStatExpenses" style="color:#f44336;">—</div><div class="stat-label">Total Expenses</div></div>
+      <div class="stat-card"><div class="stat-value" id="cStatNet">—</div><div class="stat-label">Net Profit</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <!-- Equipment Fleet -->
+      <div class="card">
+        <div class="section-title">&#x1F3D7; Equipment Fleet</div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="equipmentTable">
+            <thead><tr><th>Name</th><th>SKU</th><th>Daily</th><th>Weekly</th><th>Monthly</th></tr></thead>
+            <tbody id="equipmentBody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Financial Summary -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="section-title" style="margin:0;">&#x1F4B3; Financial Overview</div>
+          <select id="cashflowMonth" onchange="loadCashflow()" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:4px 8px;font-size:12px;">
+            <option value="">All Time</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+          <div style="background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.3);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:18px;font-weight:700;color:#4caf50;" id="cfIncome">—</div>
+            <div style="font-size:11px;color:var(--gray-400);">Income</div>
+          </div>
+          <div style="background:rgba(244,67,54,0.1);border:1px solid rgba(244,67,54,0.3);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:18px;font-weight:700;color:#f44336;" id="cfExpenses">—</div>
+            <div style="font-size:11px;color:var(--gray-400);">Expenses</div>
+          </div>
+          <div style="background:rgba(246,236,14,0.1);border:1px solid rgba(246,236,14,0.3);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:18px;font-weight:700;color:var(--yellow);" id="cfNet">—</div>
+            <div style="font-size:11px;color:var(--gray-400);">Net</div>
+          </div>
+        </div>
+        <div id="cashflowTable" style="overflow-x:auto;max-height:300px;overflow-y:auto;">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Type</th></tr></thead>
+            <tbody id="cashflowBody"><tr><td colspan="5" class="empty-state">Loading cashflow...</td></tr></tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;">
+          <button class="btn btn-yellow" onclick="showAddEntryModal()" style="font-size:12px;">&#x2795; Add Entry</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline by stage -->
+    <div class="card" style="margin-top:16px;">
+      <div class="section-title">&#x1F4CB; Pipeline Overview</div>
+      <div id="pipelineStages" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;"></div>
+    </div>
+
+    <!-- Add Cashflow Entry Modal -->
+    <div class="modal-overlay" id="addEntryModal">
+      <div class="modal" style="max-width:400px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div style="font-weight:700;font-size:16px;">&#x2795; Add Cashflow Entry</div>
+          <button onclick="document.getElementById('addEntryModal').classList.remove('open')" style="background:none;border:none;color:var(--gray-400);font-size:20px;cursor:pointer;">&times;</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <input type="date" id="entryDate" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
+          <input type="text" id="entryDesc" placeholder="Description" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
+          <input type="text" id="entryCat" placeholder="Category (e.g. Equipment, Labor)" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
+          <input type="number" id="entryAmount" placeholder="Amount (e.g. 500)" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
+          <select id="entryType" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+          <input type="text" id="entryJobId" placeholder="Job ID (optional)" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
+          <button class="btn btn-yellow" onclick="submitCashflowEntry()">Save Entry</button>
         </div>
       </div>
     </div>
@@ -874,6 +969,7 @@ function showPage(name, tabEl) {
 
 const pageLoaders = {
   dashboard: loadDashboard,
+  company:   loadCompanyPage,
   quote:     loadQuotePage,
   admin:     loadAdminPage,
   ops:       loadOpsPage,
@@ -1006,6 +1102,170 @@ function appendMsg(container, html, type) {
 
 // ══════════════════════════════════════
 // DASHBOARD
+// ══ COMPANY PAGE ═══════════════════════
+let companySnapshot = null;
+
+async function loadCompanyPage() {
+  try {
+    const d = await apiFetch('GET', '/admin/snapshot');
+    if (!d.ok || !d.snapshot) {
+      document.getElementById('cStatEquip').textContent = '—';
+      showToast('No snapshot yet. Click Refresh Data to run onboarding.', 'warning');
+      return;
+    }
+    companySnapshot = d.snapshot;
+    renderCompanySnapshot(d.snapshot);
+    loadCashflow();
+  } catch(e) { showToast('Error loading snapshot: ' + e.message, 'error'); }
+}
+
+function renderCompanySnapshot(s) {
+  // Age
+  const age = s.lastUpdated ? `Updated ${timeAgo(s.lastUpdated)}` : '';
+  document.getElementById('snapshotAge').textContent = age;
+
+  // Stats
+  document.getElementById('cStatEquip').textContent = s.equipment?.total || 0;
+  document.getElementById('cStatJobs').textContent = s.pipeline?.total || 0;
+  const inc = s.financials?.totalIncome || 0;
+  const exp = s.financials?.totalExpenses || 0;
+  const net = inc - exp;
+  document.getElementById('cStatIncome').textContent = '$' + inc.toLocaleString('en-US', {maximumFractionDigits:0});
+  document.getElementById('cStatExpenses').textContent = '$' + exp.toLocaleString('en-US', {maximumFractionDigits:0});
+  const netEl = document.getElementById('cStatNet');
+  netEl.textContent = (net >= 0 ? '+' : '') + '$' + Math.abs(net).toLocaleString('en-US', {maximumFractionDigits:0});
+  netEl.style.color = net >= 0 ? '#4caf50' : '#f44336';
+
+  // Equipment table
+  const tbody = document.getElementById('equipmentBody');
+  if (s.equipment?.units?.length) {
+    tbody.innerHTML = s.equipment.units.map(e => `
+      <tr>
+        <td style="font-weight:600;">${e.name}</td>
+        <td><span class="badge" style="background:var(--gray-700);">${e.sku}</span></td>
+        <td>${e.daily ? '$'+e.daily : '—'}</td>
+        <td>${e.weekly ? '$'+e.weekly : '—'}</td>
+        <td>${e.monthly ? '$'+e.monthly : '—'}</td>
+      </tr>`).join('');
+  } else {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No equipment data</td></tr>';
+  }
+
+  // Pipeline stages
+  const stagesEl = document.getElementById('pipelineStages');
+  if (s.pipeline?.byStage && Object.keys(s.pipeline.byStage).length) {
+    const colors = { quote_built:'#555', quote_sent:'#2196F3', reserved:'#9C27B0', contract_sent:'#FF9800', delivery_scheduled:'#f6ec0e', in_progress:'#4CAF50', returned:'#009688', completed:'#1B5E20', cancelled:'#F44336' };
+    stagesEl.innerHTML = Object.entries(s.pipeline.byStage).map(([stage, count]) => {
+      const c = colors[stage] || '#555';
+      const textC = stage === 'delivery_scheduled' ? '#111' : '#fff';
+      return `<span style="background:${c};color:${textC};padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;">${stage.replace(/_/g,' ')}: ${count}</span>`;
+    }).join('');
+  } else {
+    stagesEl.innerHTML = '<span style="color:var(--gray-400);">No pipeline jobs yet</span>';
+  }
+
+  // Populate month selector
+  const monthSel = document.getElementById('cashflowMonth');
+  const existingMonths = new Set([...monthSel.options].map(o => o.value));
+  if (s.financials?.monthlyBreakdown) {
+    Object.keys(s.financials.monthlyBreakdown).sort().reverse().forEach(m => {
+      if (m && !existingMonths.has(m)) {
+        const opt = document.createElement('option');
+        opt.value = m; opt.textContent = m;
+        monthSel.appendChild(opt);
+      }
+    });
+  }
+}
+
+async function loadCashflow() {
+  const month = document.getElementById('cashflowMonth')?.value || '';
+  const url = month ? `/admin/cashflow/summary?month=${month}` : '/admin/cashflow';
+  try {
+    const d = await apiFetch('GET', url);
+    const tbody = document.getElementById('cashflowBody');
+    if (month && d.summary) {
+      const { income, expenses, net, entries } = d.summary;
+      document.getElementById('cfIncome').textContent = '$' + (income||0).toLocaleString('en-US',{maximumFractionDigits:0});
+      document.getElementById('cfExpenses').textContent = '$' + (expenses||0).toLocaleString('en-US',{maximumFractionDigits:0});
+      document.getElementById('cfNet').textContent = (net>=0?'+':'')+  '$' + Math.abs(net||0).toLocaleString('en-US',{maximumFractionDigits:0});
+      renderCashflowRows(entries || [], tbody);
+    } else if (Array.isArray(d)) {
+      renderCashflowRows(d, tbody);
+      updateCashflowTotals(d);
+    } else if (companySnapshot?.financials) {
+      const cf = companySnapshot.financials;
+      document.getElementById('cfIncome').textContent = '$' + (cf.totalIncome||0).toLocaleString('en-US',{maximumFractionDigits:0});
+      document.getElementById('cfExpenses').textContent = '$' + (cf.totalExpenses||0).toLocaleString('en-US',{maximumFractionDigits:0});
+      const net = (cf.totalIncome||0)-(cf.totalExpenses||0);
+      document.getElementById('cfNet').textContent = (net>=0?'+':'')+'$'+Math.abs(net).toLocaleString('en-US',{maximumFractionDigits:0});
+      renderCashflowRows(cf.recentTransactions || [], tbody);
+    }
+  } catch(e) {
+    document.getElementById('cashflowBody').innerHTML = `<tr><td colspan="5" class="empty-state">SharePoint not connected yet</td></tr>`;
+  }
+}
+
+function renderCashflowRows(rows, tbody) {
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>'; return; }
+  tbody.innerHTML = rows.map(r => {
+    const isIncome = (r.type||'').toLowerCase() === 'income';
+    const color = isIncome ? '#4caf50' : '#f44336';
+    return `<tr>
+      <td style="white-space:nowrap;">${r.date||'—'}</td>
+      <td>${r.description||'—'}</td>
+      <td><span class="badge" style="background:var(--gray-700);font-size:11px;">${r.category||'—'}</span></td>
+      <td style="color:${color};font-weight:600;">${isIncome?'+':'-'}$${Math.abs(r.amount||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td><span class="badge" style="background:${isIncome?'rgba(76,175,80,0.2)':'rgba(244,67,54,0.2)'};color:${color};">${r.type||'—'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateCashflowTotals(rows) {
+  let income = 0, expenses = 0;
+  for (const r of rows) {
+    if ((r.type||'').toLowerCase() === 'income') income += Math.abs(r.amount||0);
+    else expenses += Math.abs(r.amount||0);
+  }
+  document.getElementById('cfIncome').textContent = '$' + income.toLocaleString('en-US',{maximumFractionDigits:0});
+  document.getElementById('cfExpenses').textContent = '$' + expenses.toLocaleString('en-US',{maximumFractionDigits:0});
+  const net = income - expenses;
+  document.getElementById('cfNet').textContent = (net>=0?'+':'')+'$'+Math.abs(net).toLocaleString('en-US',{maximumFractionDigits:0});
+}
+
+function showAddEntryModal() {
+  document.getElementById('entryDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('addEntryModal').classList.add('open');
+}
+
+async function submitCashflowEntry() {
+  const entry = {
+    date:        document.getElementById('entryDate').value,
+    description: document.getElementById('entryDesc').value,
+    category:    document.getElementById('entryCat').value,
+    amount:      parseFloat(document.getElementById('entryAmount').value) || 0,
+    type:        document.getElementById('entryType').value,
+    jobId:       document.getElementById('entryJobId').value,
+  };
+  try {
+    await apiFetch('POST', '/admin/cashflow/entry', entry);
+    document.getElementById('addEntryModal').classList.remove('open');
+    showToast('Entry saved to SharePoint cashflow!', 'success');
+    loadCashflow();
+  } catch(e) { showToast('Error saving entry: ' + e.message, 'error'); }
+}
+
+async function runOnboarding() {
+  const btn = document.getElementById('onboardBtn');
+  btn.textContent = '⏳ Running...';
+  btn.disabled = true;
+  try {
+    await apiFetch('POST', '/admin/onboard');
+    showToast('Onboarding started — refreshing in 15s...', 'info');
+    setTimeout(() => { loadCompanyPage(); btn.textContent = '🔄 Refresh Data'; btn.disabled = false; }, 15000);
+  } catch(e) { showToast('Error: ' + e.message, 'error'); btn.textContent = '🔄 Refresh Data'; btn.disabled = false; }
+}
+
 // ══════════════════════════════════════
 let dashInterval;
 async function loadDashboard() {

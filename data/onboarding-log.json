@@ -1,0 +1,41 @@
+{
+  "startedAt": "2026-03-17T23:37:43.857Z",
+  "steps": [
+    {
+      "step": "cashflow",
+      "count": 0,
+      "source": "unavailable"
+    },
+    {
+      "step": "equipment",
+      "count": 10
+    },
+    {
+      "step": "local_data",
+      "pipeline": 5,
+      "leads": 0,
+      "reservations": 0,
+      "invoices": 0,
+      "contracts": 0
+    },
+    {
+      "step": "knowledge",
+      "entriesCreated": 3
+    }
+  ],
+  "errors": [],
+  "completedAt": "2026-03-17T23:38:29.051Z",
+  "summary": {
+    "cashflowTransactions": 0,
+    "cashflowSource": "unavailable",
+    "equipmentUnits": 10,
+    "pipelineJobs": 5,
+    "leadsTotal": 0,
+    "knowledgeEntries": 3,
+    "financials": {
+      "totalIncome": 0,
+      "totalExpenses": 0,
+      "netProfit": 0
+    }
+  }
+}
