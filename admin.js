@@ -16,7 +16,56 @@ import { CONFIG, PRICING } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { generateQuotePDF } from './quote-pdf.js';
 import { getPipeline, upsertJob, updateJob, getJob } from './db.js';
-import { readCashflow, addCashflowEntry, uploadReceipt, listReceipts, getCashflowSummary } from './sharepoint.js';
+import { readCashflow as spReadCashflow, addCashflowEntry as spAddCashflowEntry, uploadReceipt, listReceipts, getCashflowSummary as spGetCashflowSummary } from './sharepoint.js';
+
+// ─── Local cashflow fallback (data/cashflow.json) ──────────
+const CASHFLOW_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data/cashflow.json');
+
+function readLocalCashflow() {
+  try {
+    if (!fs.existsSync(CASHFLOW_FILE)) { fs.writeFileSync(CASHFLOW_FILE, '[]'); return []; }
+    return JSON.parse(fs.readFileSync(CASHFLOW_FILE, 'utf8'));
+  } catch { return []; }
+}
+
+function writeLocalCashflow(rows) {
+  fs.writeFileSync(CASHFLOW_FILE, JSON.stringify(rows, null, 2));
+}
+
+function addLocalCashflowEntry(entry) {
+  const rows = readLocalCashflow();
+  rows.push({ ...entry, id: `CF-${Date.now()}`, createdAt: new Date().toISOString() });
+  writeLocalCashflow(rows);
+  return rows.length;
+}
+
+async function readCashflow() {
+  // Try SharePoint first, fall back to local
+  try { return await spReadCashflow(); } catch { return readLocalCashflow(); }
+}
+
+async function addCashflowEntry(entry) {
+  // Always write to local, also try SharePoint
+  addLocalCashflowEntry(entry);
+  try { await spAddCashflowEntry(entry); } catch { /* SharePoint unavailable — local saved */ }
+}
+
+async function getCashflowSummary(month) {
+  try { return await spGetCashflowSummary(month); } catch {
+    const rows = readLocalCashflow();
+    const entries = rows.filter(r => String(r.date || '').slice(0, 7) === month);
+    let income = 0, expenses = 0;
+    const byCategory = {};
+    for (const e of entries) {
+      const amt = Math.abs(e.amount || 0);
+      const cat = e.category || 'Uncategorized';
+      if (!byCategory[cat]) byCategory[cat] = 0;
+      if ((e.type || '').toLowerCase() === 'income') { income += amt; byCategory[cat] += amt; }
+      else { expenses += amt; byCategory[cat] -= amt; }
+    }
+    return { income, expenses, net: income - expenses, byCategory, entries };
+  }
+}
 import { requestApproval, notifyAndrei, grantApproval, denyApproval, listPendingApprovals } from './whatsapp.js';
 import { sendSMS } from './ghl.js';
 
