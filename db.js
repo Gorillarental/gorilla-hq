@@ -10,7 +10,8 @@ import { fileURLToPath } from 'url';
 
 const { Pool } = pg;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PIPELINE_FILE = path.join(__dirname, 'data/pipeline.json');
+const PIPELINE_FILE  = path.join(__dirname, 'data/pipeline.json');
+const CASHFLOW_FILE  = path.join(__dirname, 'data/cashflow.json');
 
 let pool = null;
 
@@ -44,7 +45,14 @@ export async function initDB() {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
-  console.log('[DB] ✅ Pipeline table ready');
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS cashflow (
+      id         TEXT PRIMARY KEY,
+      data       JSONB        NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  console.log('[DB] ✅ Pipeline + Cashflow tables ready');
 }
 
 // ─── Get all jobs ──────────────────────────────────────────
@@ -103,4 +111,55 @@ export async function getJob(jobId) {
   }
   const { rows } = await p.query('SELECT data FROM pipeline WHERE job_id = $1', [jobId]);
   return rows[0]?.data || null;
+}
+
+// ─── Cashflow file helpers ─────────────────────────────────
+function cfFileRead() {
+  try {
+    if (!fs.existsSync(CASHFLOW_FILE)) { fs.writeFileSync(CASHFLOW_FILE, '[]'); return []; }
+    return JSON.parse(fs.readFileSync(CASHFLOW_FILE, 'utf8'));
+  } catch { return []; }
+}
+function cfFileWrite(rows) { fs.writeFileSync(CASHFLOW_FILE, JSON.stringify(rows, null, 2)); }
+
+// ─── Add cashflow entry ────────────────────────────────────
+export async function dbAddCashflow(entry) {
+  const id   = `CF-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+  const data = { ...entry, id, createdAt: new Date().toISOString() };
+  const p    = getPool();
+  if (!p) {
+    const rows = cfFileRead();
+    rows.push(data);
+    cfFileWrite(rows);
+    return data;
+  }
+  await p.query(
+    'INSERT INTO cashflow (id, data) VALUES ($1, $2)',
+    [id, data]
+  );
+  return data;
+}
+
+// ─── Get all cashflow entries ──────────────────────────────
+export async function dbGetCashflow() {
+  const p = getPool();
+  if (!p) return cfFileRead();
+  const { rows } = await p.query("SELECT data FROM cashflow ORDER BY (data->>'date') ASC, created_at ASC");
+  return rows.map(r => r.data);
+}
+
+// ─── Get cashflow summary for a month ─────────────────────
+export async function dbGetCashflowSummary(month) {
+  const all     = await dbGetCashflow();
+  const entries = month ? all.filter(r => String(r.date || '').slice(0, 7) === month) : all;
+  let income = 0, expenses = 0;
+  const byCategory = {};
+  for (const e of entries) {
+    const amt = Math.abs(e.amount || 0);
+    const cat = e.category || 'Uncategorized';
+    if (!byCategory[cat]) byCategory[cat] = 0;
+    if ((e.type || '').toLowerCase() === 'income') { income += amt; byCategory[cat] += amt; }
+    else { expenses += amt; byCategory[cat] -= amt; }
+  }
+  return { income, expenses, net: income - expenses, byCategory, entries };
 }

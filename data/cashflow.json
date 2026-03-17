@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "date": "2026-03-17",
+    "description": "Test entry",
+    "category": "Test",
+    "amount": 100,
+    "type": "expense",
+    "jobId": null,
+    "id": "CF-1773791820197-unad",
+    "createdAt": "2026-03-17T23:57:00.197Z"
+  }
+]
