@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>🦍 Gorilla Ops — Driver App</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --yellow: #f6ec0e;
+      --black:  #111111;
+      --card:   #1a1a1a;
+      --border: #2a2a2a;
+      --text:   #e8e8e8;
+      --muted:  #888;
+      --red:    #ff3b3b;
+      --green:  #2ecc71;
+      --blue:   #3b9eff;
+      --orange: #ff9f0a;
+    }
+
+    body {
+      background: var(--black);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--card);
+      border-bottom: 3px solid var(--yellow);
+      padding: 14px 18px;
+      display: flex; align-items: center; gap: 12px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-icon { font-size: 26px; }
+    .header-title { font-size: 17px; font-weight: 800; color: var(--yellow); }
+    .header-sub   { font-size: 11px; color: var(--muted); }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      display: flex; z-index: 200;
+    }
+    .nav-tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 3px;
+      padding: 10px 4px; font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .5px;
+      color: var(--muted); cursor: pointer; border: none; background: none;
+      min-height: 60px;
+    }
+    .nav-tab .nav-icon { font-size: 20px; }
+    .nav-tab.active { color: var(--yellow); }
+    .nav-tab.active .nav-icon { filter: drop-shadow(0 0 6px var(--yellow)); }
+
+    /* TAB PANELS */
+    .tab-panel { display: none; padding: 16px; }
+    .tab-panel.active { display: block; }
+
+    /* CARDS */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; margin-bottom: 14px;
+    }
+    .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .job-id { font-size: 12px; font-weight: 700; color: var(--yellow); }
+    .job-time { font-size: 12px; color: var(--muted); }
+    .customer-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .job-address { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .equip-list { font-size: 13px; color: var(--text); margin: 10px 0; }
+    .equip-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+    .equip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); }
+
+    /* CARD ACTIONS */
+    .card-actions { display: flex; gap: 10px; margin-top: 12px; }
+    .btn-big {
+      flex: 1; min-height: 48px; border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-deliver { background: var(--green); color: #fff; }
+    .btn-deliver:hover { background: #27ae60; }
+    .btn-pickup  { background: var(--orange); color: #fff; }
+    .btn-pickup:hover { background: #e08800; }
+    .btn-icon {
+      min-height: 48px; min-width: 48px;
+      border: 1px solid var(--border); border-radius: 10px;
+      background: var(--card); color: var(--text);
+      font-size: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-icon:hover { border-color: var(--yellow); color: var(--yellow); }
+
+    /* EQUIPMENT GRID */
+    .equip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .equip-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+    .equip-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .equip-sku  { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .equip-rate { font-size: 13px; color: var(--yellow); font-weight: 700; margin-bottom: 8px; }
+    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .status-available { background: rgba(46,204,113,.2); color: #2ecc71; }
+    .status-rented    { background: rgba(255,59,59,.2);   color: #ff3b3b; }
+    .btn-qr { background: rgba(246,236,14,.1); border: 1px solid rgba(246,236,14,.3); color: var(--yellow); border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 8px; }
+
+    /* SEARCH */
+    .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-input {
+      flex:1; background: var(--card); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 14px; border-radius: 10px;
+      font-size: 14px; outline: none;
+    }
+    .search-input:focus { border-color: var(--yellow); }
+
+    /* WORK ORDERS */
+    .wo-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px; margin-bottom: 12px;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .wo-priority { width: 6px; border-radius: 3px; flex-shrink: 0; align-self: stretch; }
+    .wo-priority.high   { background: var(--red); }
+    .wo-priority.medium { background: var(--orange); }
+    .wo-priority.low    { background: var(--green); }
+    .wo-info { flex: 1; }
+    .wo-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .wo-meta  { font-size: 12px; color: var(--muted); }
+    .priority-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-left: 8px; }
+    .priority-high   { background: rgba(255,59,59,.2);  color: var(--red); }
+    .priority-medium { background: rgba(255,159,10,.2); color: var(--orange); }
+    .priority-low    { background: rgba(46,204,113,.2); color: var(--green); }
+    .btn-add-wo { width: 100%; min-height: 52px; background: rgba(246,236,14,.1); border: 1px dashed rgba(246,236,14,.4); color: var(--yellow); border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 16px; }
+    .btn-add-wo:hover { background: rgba(246,236,14,.15); }
+
+    /* SECTION TITLE */
+    .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 12px; }
+
+    /* MODAL */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 500; align-items: center; justify-content: center; padding: 20px; }
+    .modal-bg.open { display: flex; }
+    .modal { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; width: 100%; max-width: 480px; }
+    .modal-title { font-size: 16px; font-weight: 800; color: var(--yellow); margin-bottom: 16px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: .5px; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; background: #111; border: 1px solid var(--border);
+      color: var(--text); padding: 12px 14px; border-radius: 8px;
+      font-size: 14px; outline: none; font-family: inherit;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--yellow); }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .btn-cancel { flex:1; min-height: 46px; background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-submit { flex:2; min-height: 46px; background: var(--yellow); color: var(--black); border: none; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; }
+    .btn-submit:hover { background: #ffe900; }
+
+    /* QR MODAL */
+    #qr-modal .modal { text-align: center; }
+    #qr-container { margin: 16px auto; display: inline-block; }
+
+    /* SERVICE */
+    .service-form { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 20px; }
+    .service-form .form-group { margin-bottom: 14px; }
+    .btn-report { width: 100%; min-height: 52px; background: var(--yellow); color: var(--black); border: none; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; }
+    .btn-report:hover { background: #ffe900; }
+    .sr-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+    .sr-equip { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .sr-issue { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    .sr-meta  { font-size: 11px; color: var(--muted); }
+    .sr-status { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+    .sr-open     { background: rgba(255,159,10,.2); color: var(--orange); }
+    .sr-resolved { background: rgba(46,204,113,.2); color: var(--green); }
+
+    .empty-state { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">🦍</div>
+  <div>
+    <div class="header-title">GORILLA OPS</div>
+    <div class="header-sub">Driver Mobile App</div>
+  </div>
+</header>
+
+<!-- TAB PANELS -->
+<div id="tab-today" class="tab-panel active">
+  <div class="sec-title">Today's Schedule</div>
+  <div id="today-list"><div class="empty-state">Loading jobs...</div></div>
+</div>
+
+<div id="tab-equipment" class="tab-panel">
+  <div class="search-bar">
+    <input type="search" class="search-input" id="equip-search" placeholder="Search equipment..." oninput="filterEquipment()">
+  </div>
+  <div class="sec-title">Fleet Status</div>
+  <div class="equip-grid" id="equip-grid"><div style="grid-column:1/-1" class="empty-state">Loading...</div></div>
+</div>
+
+<div id="tab-workorders" class="tab-panel">
+  <button class="btn-add-wo" onclick="openWOModal()">+ New Work Order</button>
+  <div class="sec-title">Open Work Orders</div>
+  <div id="wo-list"><div class="empty-state">No open work orders</div></div>
+</div>
+
+<div id="tab-service" class="tab-panel">
+  <div class="sec-title">Report Equipment Issue</div>
+  <div class="service-form">
+    <div class="form-group">
+      <label class="form-label">Equipment</label>
+      <select class="form-select" id="sr-equipment"><option value="">Select equipment...</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Issue Description</label>
+      <textarea class="form-textarea" id="sr-issue" placeholder="Describe the issue..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Reported By</label>
+      <input class="form-input" id="sr-reporter" type="text" placeholder="Your name">
+    </div>
+    <button class="btn-report" onclick="submitServiceRequest()">Report Issue</button>
+  </div>
+  <div class="sec-title">Recent Service Requests</div>
+  <div id="sr-list"><div class="empty-state">No service requests</div></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-tab active" onclick="showTab('today',this)"><span class="nav-icon">📅</span>Today</button>
+  <button class="nav-tab" onclick="showTab('equipment',this)"><span class="nav-icon">🏗️</span>Equipment</button>
+  <button class="nav-tab" onclick="showTab('workorders',this)"><span class="nav-icon">🔧</span>Work Orders</button>
+  <button class="nav-tab" onclick="showTab('service',this)"><span class="nav-icon">🛠️</span>Service</button>
+</nav>
+
+<!-- NEW WORK ORDER MODAL -->
+<div class="modal-bg" id="wo-modal">
+  <div class="modal">
+    <div class="modal-title">New Work Order</div>
+    <div class="form-group">
+      <label class="form-label">Job ID (optional)</label>
+      <input class="form-input" id="wo-jobid" type="text" placeholder="GR-2026-XXXX">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description *</label>
+      <textarea class="form-textarea" id="wo-desc" placeholder="What needs to be done?"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Priority</label>
+      <select class="form-select" id="wo-priority">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Assign To</label>
+      <select class="form-select" id="wo-assign">
+        <option value="">Unassigned</option>
+        <option value="Andrei">Andrei</option>
+        <option value="Nazar">Nazar</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeWOModal()">Cancel</button>
+      <button class="btn-submit" onclick="submitWorkOrder()">Create Work Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR CODE MODAL -->
+<div class="modal-bg" id="qr-modal">
+  <div class="modal">
+    <div class="modal-title" id="qr-title">QR Code</div>
+    <div id="qr-container"></div>
+    <div id="qr-sku" style="color:var(--muted);font-size:13px;margin-top:8px"></div>
+    <div class="modal-actions">
+      <button class="btn-submit" onclick="closeQRModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://gorillaops.up.railway.app';
+
+  let allEquipment = [];
+
+  // ── Tabs ─────────────────────────────────────────────────────
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+    if (name === 'equipment' && allEquipment.length === 0) loadEquipment();
+    if (name === 'workorders') loadWorkOrders();
+    if (name === 'service') { loadServiceRequests(); loadEquipmentDropdown(); }
+  }
+
+  // ── TODAY ─────────────────────────────────────────────────────
+  async function loadToday() {
+    try {
+      const res  = await fetch(API + '/api/deliveries');
+      const data = await res.json();
+      const all  = [...(data.today || [])];
+      const el   = document.getElementById('today-list');
+      if (!all.length) { el.innerHTML = '<div class="empty-state">No jobs scheduled today 🎉</div>'; return; }
+      el.innerHTML = all.map(j => renderJobCard(j)).join('');
+    } catch(e) {
+      document.getElementById('today-list').innerHTML = '<div class="empty-state">Could not load jobs: ' + e.message + '</div>';
+    }
+  }
+
+  function renderJobCard(j) {
+    const isDelivery = j.type === 'delivery' || !j.type;
+    const addr = j.address || j.deliveryAddress || '';
+    const mapsUrl = addr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}` : '#';
+    const phone = j.customerPhone || '';
+    const equip = (j.equipment || []);
+    return `
+      <div class="card">
+        <div class="card-top">
+          <span class="job-id">${j.jobId || j.id || '—'}</span>
+          <span class="job-time">${j.time || j.scheduledTime || ''} <span style="background:${isDelivery?'rgba(255,159,10,.15)':'rgba(165,94,234,.15)'};color:${isDelivery?'#ff9f0a':'#a55eea'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">${isDelivery?'DELIVERY':'PICKUP'}</span></span>
+        </div>
+        <div class="customer-name">${j.customerName || j.customer || 'Unknown Customer'}</div>
+        <div class="job-address">📍 ${addr || 'No address'}</div>
+        ${equip.length ? `<div class="equip-list">${equip.map(e=>`<div class="equip-item"><div class="equip-dot"></div>${e.name||e}</div>`).join('')}</div>` : ''}
+        ${j.notes ? `<div style="font-size:12px;color:var(--muted);margin-top:6px">📝 ${j.notes}</div>` : ''}
+        <div class="card-actions">
+          ${isDelivery
+            ? `<button class="btn-big btn-deliver" onclick="markDelivered('${j.jobId||j.id}')">✓ Mark Delivered</button>`
+            : `<button class="btn-big btn-pickup"  onclick="markPickedUp('${j.jobId||j.id}')">✓ Mark Picked Up</button>`
+          }
+          ${addr  ? `<a href="${mapsUrl}" target="_blank"><button class="btn-icon" title="Open Maps">🗺️</button></a>` : ''}
+          ${phone ? `<a href="tel:${phone}"><button class="btn-icon" title="Call Customer">📞</button></a>` : ''}
+        </div>
+      </div>`;
+  }
+
+  async function markDelivered(jobId) {
+    if (!confirm('Mark job ' + jobId + ' as delivered?')) return;
+    await fetch(API + '/api/delivery/complete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ jobId }) });
+    loadToday();
+  }
+
+  async function markPickedUp(jobId) {
+    if (!confirm('Mark job ' + jobId + ' as picked up?')) return;
+    await fetch(API + '/api/pickup/complete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ jobId }) });
+    loadToday();
+  }
+
+  // ── EQUIPMENT ────────────────────────────────────────────────
+  async function loadEquipment() {
+    try {
+      const res  = await fetch(API + '/api/equipment');
+      const data = await res.json();
+      allEquipment = data.equipment || [];
+      renderEquipment(allEquipment);
+    } catch(e) {
+      document.getElementById('equip-grid').innerHTML = '<div style="grid-column:1/-1" class="empty-state">Could not load equipment</div>';
+    }
+  }
+
+  function renderEquipment(list) {
+    const grid = document.getElementById('equip-grid');
+    if (!list.length) { grid.innerHTML = '<div style="grid-column:1/-1" class="empty-state">No equipment found</div>'; return; }
+    grid.innerHTML = list.map(e => `
+      <div class="equip-card">
+        <div class="equip-name">${e.name}</div>
+        <div class="equip-sku">SKU: ${e.sku}</div>
+        <div class="equip-rate">${e.daily ? '$' + e.daily + '/day' : e.monthly ? '$' + e.monthly + '/mo' : 'Call for pricing'}</div>
+        <span class="status-badge ${e.status === 'rented' ? 'status-rented' : 'status-available'}">${e.status === 'rented' ? '● Rented' : '● Available'}</span>
+        <button class="btn-qr" onclick="showQR('${e.sku}','${e.name}')">📱 QR Code</button>
+      </div>`).join('');
+  }
+
+  function filterEquipment() {
+    const q = document.getElementById('equip-search').value.toLowerCase();
+    renderEquipment(allEquipment.filter(e => e.name.toLowerCase().includes(q) || e.sku.toLowerCase().includes(q)));
+  }
+
+  function loadEquipmentDropdown() {
+    if (!allEquipment.length) {
+      fetch(API + '/api/equipment').then(r=>r.json()).then(d => {
+        allEquipment = d.equipment || [];
+        populateEquipDropdown();
+      }).catch(()=>{});
+    } else populateEquipDropdown();
+  }
+
+  function populateEquipDropdown() {
+    const sel = document.getElementById('sr-equipment');
+    sel.innerHTML = '<option value="">Select equipment...</option>' +
+      allEquipment.map(e => `<option value="${e.sku}">${e.name} (${e.sku})</option>`).join('');
+  }
+
+  // ── QR MODAL ─────────────────────────────────────────────────
+  function showQR(sku, name) {
+    document.getElementById('qr-title').textContent = name;
+    document.getElementById('qr-sku').textContent = 'SKU: ' + sku;
+    const container = document.getElementById('qr-container');
+    container.innerHTML = '';
+    new QRCode(container, { text: sku, width: 180, height: 180, colorDark: '#111', colorLight: '#f6ec0e' });
+    document.getElementById('qr-modal').classList.add('open');
+  }
+  function closeQRModal() { document.getElementById('qr-modal').classList.remove('open'); }
+
+  // ── WORK ORDERS ──────────────────────────────────────────────
+  async function loadWorkOrders() {
+    try {
+      const res  = await fetch(API + '/api/workorders');
+      const data = await res.json();
+      const wos  = (data.workorders || []).filter(w => w.status !== 'closed');
+      const el   = document.getElementById('wo-list');
+      if (!wos.length) { el.innerHTML = '<div class="empty-state">No open work orders</div>'; return; }
+      el.innerHTML = wos.map(w => `
+        <div class="wo-item">
+          <div class="wo-priority ${w.priority||'medium'}"></div>
+          <div class="wo-info">
+            <div class="wo-title">${w.description} <span class="priority-badge priority-${w.priority||'medium'}">${w.priority||'medium'}</span></div>
+            <div class="wo-meta">
+              ${w.jobId ? `Job: ${w.jobId}  ` : ''}
+              ${w.assignedTo ? `Assigned: ${w.assignedTo}  ` : ''}
+              ${new Date(w.createdAt).toLocaleDateString()}
+            </div>
+          </div>
+        </div>`).join('');
+    } catch(e) { document.getElementById('wo-list').innerHTML = '<div class="empty-state">Error loading work orders</div>'; }
+  }
+
+  function openWOModal()  { document.getElementById('wo-modal').classList.add('open'); }
+  function closeWOModal() { document.getElementById('wo-modal').classList.remove('open'); }
+
+  async function submitWorkOrder() {
+    const desc = document.getElementById('wo-desc').value.trim();
+    if (!desc) { alert('Please enter a description'); return; }
+    const body = {
+      jobId:       document.getElementById('wo-jobid').value.trim() || undefined,
+      description: desc,
+      priority:    document.getElementById('wo-priority').value,
+      assignedTo:  document.getElementById('wo-assign').value || undefined,
+    };
+    try {
+      await fetch(API + '/api/workorder', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      closeWOModal();
+      document.getElementById('wo-desc').value = '';
+      document.getElementById('wo-jobid').value = '';
+      loadWorkOrders();
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
+  // ── SERVICE REQUESTS ─────────────────────────────────────────
+  async function loadServiceRequests() {
+    try {
+      const res  = await fetch(API + '/api/service-requests');
+      const data = await res.json();
+      const reqs = data.requests || [];
+      const el   = document.getElementById('sr-list');
+      if (!reqs.length) { el.innerHTML = '<div class="empty-state">No service requests</div>'; return; }
+      el.innerHTML = reqs.slice().reverse().map(r => `
+        <div class="sr-item">
+          <div class="sr-equip">🔧 ${r.equipment}</div>
+          <div class="sr-issue">${r.issue}</div>
+          <div class="sr-meta">By: ${r.reportedBy||'Unknown'} &middot; ${new Date(r.createdAt).toLocaleDateString()} <span class="sr-status ${r.status==='open'?'sr-open':'sr-resolved'}">${r.status||'open'}</span></div>
+        </div>`).join('');
+    } catch(e) { document.getElementById('sr-list').innerHTML = '<div class="empty-state">Error loading requests</div>'; }
+  }
+
+  async function submitServiceRequest() {
+    const equipment = document.getElementById('sr-equipment').value;
+    const issue     = document.getElementById('sr-issue').value.trim();
+    const reporter  = document.getElementById('sr-reporter').value.trim();
+    if (!equipment || !issue) { alert('Please fill in equipment and issue'); return; }
+    try {
+      await fetch(API + '/api/service-request', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ equipment, issue, reportedBy: reporter }) });
+      document.getElementById('sr-equipment').value = '';
+      document.getElementById('sr-issue').value = '';
+      loadServiceRequests();
+      alert('Service request submitted!');
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
+  // ── Modal click-outside ───────────────────────────────────────
+  document.querySelectorAll('.modal-bg').forEach(bg => {
+    bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+  });
+
+  // ── Init ─────────────────────────────────────────────────────
+  loadToday();
+</script>
+</body>
+</html>

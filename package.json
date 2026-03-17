@@ -1,0 +1,28 @@
+{
+  "name": "gorillahq",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "start:all": "node index.js & node ops-server.js",
+    "start:hq": "node index.js",
+    "start:ops": "node ops-server.js",
+    "dev": "node --watch index.js",
+    "dev:ops": "node --watch ops-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.79.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "html-pdf-node": "^1.0.8",
+    "node-fetch": "^3.3.2",
+    "pdfkit": "^0.18.0"
+  },
+  "type": "module"
+}

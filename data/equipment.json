@@ -1,0 +1,12 @@
+[
+  {"sku":"BL001","name":"Boom Lift 45ft","type":"boom_lift","daily":370,"weekly":1200,"monthly":3700},
+  {"sku":"BL002","name":"Boom Lift 65ft","type":"boom_lift","daily":400,"weekly":1300,"monthly":4000},
+  {"sku":"BL003","name":"Boom Lift 60ft","type":"boom_lift","daily":430,"weekly":1400,"monthly":4300},
+  {"sku":"BL007","name":"Boom Lift 125ft","type":"boom_lift","daily":600,"weekly":2000,"monthly":6000},
+  {"sku":"BL010","name":"Boom Lift 85ft","type":"boom_lift","daily":450,"weekly":1500,"monthly":4500},
+  {"sku":"BL011","name":"Genie S-40 Boom","type":"boom_lift","daily":150,"weekly":490,"monthly":1500},
+  {"sku":"SL001","name":"Scissor Lift 32ft","type":"scissor_lift","daily":150,"weekly":500,"monthly":1500},
+  {"sku":"PS001","name":"Shore Posts","type":"shore_post","daily":null,"weekly":null,"monthly":12},
+  {"sku":"SC001","name":"Scaffolding","type":"scaffolding","daily":17,"weekly":null,"monthly":null},
+  {"sku":"OP001","name":"Overhead Protection","type":"overhead","daily":null,"weekly":null,"monthly":20}
+]

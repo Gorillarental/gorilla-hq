@@ -1,0 +1,91 @@
+[
+  {
+    "jobId": "GR-2026-0001",
+    "customerName": "John Smith",
+    "customerEmail": "john@test.com",
+    "customerPhone": "954-555-1234",
+    "deliveryAddress": "Fort Lauderdale, FL",
+    "startDate": "2025-03-24",
+    "endDate": "2025-03-30",
+    "duration": "1 week",
+    "equipment": [
+      {
+        "sku": "BL001",
+        "name": "Boom Lift 45ft",
+        "quantity": 1,
+        "dailyRate": 370,
+        "rentalPeriod": "7 days",
+        "unitPrice": 2590,
+        "total": 2590
+      }
+    ],
+    "subtotal": 2790,
+    "tax": 195.3,
+    "total": 2985.3,
+    "depositLink": "https://buy.stripe.com/aFa7sD8vK2V65Lr1eh97G01",
+    "booqableOrderId": "956ddbb4-be8a-4f2e-bef1-503825883893",
+    "notes": "",
+    "stage": "quote_built",
+    "createdAt": "2026-03-17T13:47:54.621Z"
+  },
+  {
+    "jobId": "GR-2026-0002",
+    "customerName": "John Smith",
+    "customerEmail": "john@test.com",
+    "customerPhone": "954-555-1234",
+    "deliveryAddress": "Fort Lauderdale, FL",
+    "startDate": "2025-03-24",
+    "endDate": "2025-03-31",
+    "duration": "1 week",
+    "equipment": [
+      {
+        "sku": "BL001",
+        "name": "Boom Lift 45ft",
+        "quantity": 1,
+        "dailyRate": 370,
+        "rentalPeriod": "7 days",
+        "unitPrice": 2590,
+        "total": 2590
+      }
+    ],
+    "subtotal": 2790,
+    "tax": 195.3,
+    "total": 2985.3,
+    "depositLink": "https://buy.stripe.com/28EeV513ifHSc9P6yB97G02",
+    "booqableOrderId": "866cc914-7a4b-4be3-af5a-9ba759e6a76d",
+    "notes": "",
+    "stage": "quote_sent",
+    "createdAt": "2026-03-17T13:53:24.619Z",
+    "sentAt": "2026-03-17T14:07:01.989Z"
+  },
+  {
+    "jobId": "GR-2026-0003",
+    "customerName": "Andrei Hazazup",
+    "customerEmail": "hazazupandrei@gmail.com",
+    "customerPhone": "954-555-0000",
+    "deliveryAddress": "Fort Lauderdale, FL",
+    "startDate": "2025-03-24",
+    "endDate": "2025-03-31",
+    "duration": "1 week",
+    "equipment": [
+      {
+        "sku": "BL001",
+        "name": "Boom Lift 45ft",
+        "quantity": 1,
+        "dailyRate": 370,
+        "rentalPeriod": "7 days",
+        "unitPrice": 2590,
+        "total": 2590
+      }
+    ],
+    "subtotal": 2790,
+    "tax": 195.3,
+    "total": 2985.3,
+    "depositLink": "https://buy.stripe.com/dRm9AL27m0MYc9P4qt97G03",
+    "booqableOrderId": "c665c669-4fb4-4d28-807a-34df07086cd2",
+    "notes": "",
+    "stage": "quote_sent",
+    "createdAt": "2026-03-17T14:08:22.680Z",
+    "sentAt": "2026-03-17T14:27:25.886Z"
+  }
+]

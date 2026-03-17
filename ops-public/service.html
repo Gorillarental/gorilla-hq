@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🦍 Gorilla Rental — Customer Service Portal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --yellow: #f6ec0e;
+      --black:  #111111;
+      --card:   #1a1a1a;
+      --border: #2a2a2a;
+      --text:   #e8e8e8;
+      --muted:  #888;
+      --red:    #ff3b3b;
+      --green:  #2ecc71;
+    }
+
+    body {
+      background: var(--black);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--card);
+      border-bottom: 4px solid var(--yellow);
+      padding: 0 24px;
+      height: 70px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 14px; }
+    .logo-icon { font-size: 32px; }
+    .logo-text { font-size: 20px; font-weight: 900; color: var(--yellow); letter-spacing: 1px; }
+    .logo-sub  { font-size: 12px; color: var(--muted); }
+    .header-contact { text-align: right; }
+    .header-contact a { color: var(--yellow); text-decoration: none; font-size: 13px; font-weight: 600; display: block; }
+    .header-contact a:hover { text-decoration: underline; }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 50px 24px;
+      text-align: center;
+    }
+    .hero-title { font-size: 32px; font-weight: 900; color: var(--yellow); margin-bottom: 10px; }
+    .hero-sub   { font-size: 16px; color: var(--muted); max-width: 500px; margin: 0 auto; }
+
+    /* MAIN */
+    main { max-width: 680px; margin: 0 auto; padding: 32px 24px; }
+
+    /* CARD */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; margin-bottom: 24px;
+    }
+    .card-header {
+      padding: 16px 22px; background: #1f1f1f;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--yellow); }
+    .card-body  { padding: 22px; }
+
+    /* FORM */
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: .5px; }
+    .form-input, .form-select {
+      width: 100%; background: #111; border: 1px solid var(--border);
+      color: var(--text); padding: 14px 16px; border-radius: 10px;
+      font-size: 15px; outline: none;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--yellow); }
+    .form-input::placeholder { color: var(--muted); }
+
+    /* BUTTONS */
+    .btn-primary {
+      width: 100%; min-height: 52px;
+      background: var(--yellow); color: var(--black);
+      border: none; border-radius: 10px;
+      font-size: 16px; font-weight: 800; cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-primary:hover { background: #ffe900; }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-outline {
+      width: 100%; min-height: 52px;
+      background: transparent; color: var(--yellow);
+      border: 2px solid var(--yellow); border-radius: 10px;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+    }
+    .btn-outline:hover { background: rgba(246,236,14,.08); }
+
+    /* RENTAL STATUS */
+    #status-result { display: none; }
+    .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .status-field { background: #111; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+    .field-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 4px; }
+    .field-value { font-size: 15px; font-weight: 600; color: var(--text); }
+    .field-value.yellow { color: var(--yellow); }
+    .field-value.green  { color: var(--green); }
+    .field-value.red    { color: var(--red); }
+
+    .equip-tag {
+      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      background: rgba(246,236,14,.1); color: var(--yellow);
+      font-size: 12px; font-weight: 600; margin: 3px;
+    }
+
+    .balance-box {
+      background: rgba(246,236,14,.07); border: 1px solid rgba(246,236,14,.2);
+      border-radius: 10px; padding: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .balance-label { font-size: 13px; color: var(--muted); }
+    .balance-amount { font-size: 24px; font-weight: 900; color: var(--yellow); }
+
+    /* DEPOSIT LINK */
+    .deposit-btn {
+      display: block; width: 100%; min-height: 52px;
+      background: var(--green); color: #fff;
+      border: none; border-radius: 10px;
+      font-size: 16px; font-weight: 800; cursor: pointer;
+      text-decoration: none; display: flex; align-items: center; justify-content: center;
+      margin-bottom: 12px;
+    }
+    .deposit-btn:hover { background: #27ae60; }
+
+    /* EXTENSION */
+    #extension-section { display: none; }
+    .success-msg { background: rgba(46,204,113,.1); border: 1px solid rgba(46,204,113,.3); border-radius: 10px; padding: 14px 16px; color: var(--green); font-size: 14px; margin-top: 12px; display: none; }
+    .error-msg   { background: rgba(255,59,59,.1);  border: 1px solid rgba(255,59,59,.3);  border-radius: 10px; padding: 14px 16px; color: var(--red);   font-size: 14px; margin-top: 12px; display: none; }
+
+    /* CONTACT */
+    .contact-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .contact-item { background: #111; border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+    .contact-icon { font-size: 24px; margin-bottom: 6px; }
+    .contact-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+    .contact-value a { color: var(--yellow); text-decoration: none; font-size: 13px; font-weight: 600; }
+    .contact-value a:hover { text-decoration: underline; }
+
+    /* FOOTER */
+    footer {
+      text-align: center; padding: 24px;
+      color: var(--muted); font-size: 12px;
+      border-top: 1px solid var(--border); margin-top: 20px;
+    }
+    footer a { color: var(--yellow); text-decoration: none; }
+
+    @media (max-width: 500px) {
+      .status-grid   { grid-template-columns: 1fr; }
+      .contact-grid  { grid-template-columns: 1fr; }
+      .hero-title    { font-size: 24px; }
+      header         { padding: 0 14px; }
+      .header-contact { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🦍</div>
+    <div>
+      <div class="logo-text">GORILLA RENTAL</div>
+      <div class="logo-sub">Customer Service Portal</div>
+    </div>
+  </div>
+  <div class="header-contact">
+    <a href="tel:+14474744549">+1 (447) 474-4549</a>
+    <a href="mailto:info@gorillarental.us">info@gorillarental.us</a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-title">Check Your Rental Status</div>
+  <div class="hero-sub">Enter your Job ID to view your rental details, balance, and manage your rental.</div>
+</div>
+
+<main>
+
+  <!-- LOOKUP CARD -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">Rental Lookup</div></div>
+    <div class="card-body">
+      <div class="form-group">
+        <label class="form-label">Job ID</label>
+        <input class="form-input" id="job-id-input" type="text" placeholder="e.g. GR-2026-0001" maxlength="30" onkeydown="if(event.key==='Enter') lookupJob()">
+      </div>
+      <button class="btn-primary" id="lookup-btn" onclick="lookupJob()">Check Status</button>
+      <div class="error-msg" id="lookup-error"></div>
+    </div>
+  </div>
+
+  <!-- STATUS RESULT -->
+  <div id="status-result">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Rental Details</div></div>
+      <div class="card-body">
+        <div class="status-grid">
+          <div class="status-field">
+            <div class="field-label">Job ID</div>
+            <div class="field-value yellow" id="r-jobid">—</div>
+          </div>
+          <div class="status-field">
+            <div class="field-label">Status</div>
+            <div class="field-value" id="r-stage">—</div>
+          </div>
+          <div class="status-field">
+            <div class="field-label">Start Date</div>
+            <div class="field-value" id="r-start">—</div>
+          </div>
+          <div class="status-field">
+            <div class="field-label">End Date</div>
+            <div class="field-value" id="r-end">—</div>
+          </div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Equipment</div>
+          <div id="r-equipment">—</div>
+        </div>
+        <div class="balance-box">
+          <div>
+            <div class="balance-label">Total Balance</div>
+          </div>
+          <div class="balance-amount" id="r-total">—</div>
+        </div>
+        <div id="r-deposit-link"></div>
+      </div>
+    </div>
+
+    <!-- EXTENSION CARD -->
+    <div class="card" id="extension-section">
+      <div class="card-header"><div class="card-title">Request Extension</div></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">New End Date</label>
+          <input class="form-input" id="extend-date" type="date">
+        </div>
+        <button class="btn-outline" onclick="requestExtension()">Request Extension</button>
+        <div class="success-msg" id="extend-success">Extension request submitted! We'll contact you to confirm.</div>
+        <div class="error-msg"   id="extend-error"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACT CARD -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">Contact Us</div></div>
+    <div class="card-body">
+      <div class="contact-grid">
+        <div class="contact-item">
+          <div class="contact-icon">📞</div>
+          <div class="contact-label">Phone</div>
+          <div class="contact-value"><a href="tel:+14474744549">+1 (447) 474-4549</a></div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">✉️</div>
+          <div class="contact-label">Email</div>
+          <div class="contact-value"><a href="mailto:info@gorillarental.us">info@gorillarental.us</a></div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">🌐</div>
+          <div class="contact-label">Website</div>
+          <div class="contact-value"><a href="https://gorillarental.us" target="_blank">gorillarental.us</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  &copy; 2026 Gorilla Rental · <a href="https://gorillarental.us" target="_blank">gorillarental.us</a> · South Florida (Fort Lauderdale, FL)
+</footer>
+
+<script>
+  const HQ_API = 'https://gorillahq.up.railway.app';
+
+  let currentJobId = null;
+
+  async function lookupJob() {
+    const jobId = document.getElementById('job-id-input').value.trim().toUpperCase();
+    if (!jobId) { showLookupError('Please enter a Job ID'); return; }
+
+    const btn = document.getElementById('lookup-btn');
+    btn.disabled = true; btn.textContent = 'Looking up...';
+    hideLookupError();
+    document.getElementById('status-result').style.display = 'none';
+
+    try {
+      const res  = await fetch(`${HQ_API}/admin/status/${encodeURIComponent(jobId)}`);
+      const data = await res.json();
+
+      if (!data.ok || !data.job) {
+        showLookupError(data.error || 'Job not found. Please check your Job ID.');
+        return;
+      }
+
+      currentJobId = jobId;
+      renderStatus(data.job);
+      document.getElementById('status-result').style.display = 'block';
+      document.getElementById('extension-section').style.display = 'block';
+
+      // Set min date for extension to tomorrow
+      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById('extend-date').min = tomorrow.toISOString().slice(0,10);
+      document.getElementById('extend-date').value = data.job.endDate || '';
+
+    } catch(e) {
+      showLookupError('Error connecting to server. Please try again or call us at +1 (447) 474-4549.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Check Status';
+    }
+  }
+
+  function renderStatus(job) {
+    document.getElementById('r-jobid').textContent = job.jobId || '—';
+
+    const stageName = (job.stage || 'unknown').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const stageEl = document.getElementById('r-stage');
+    stageEl.textContent = stageName;
+    stageEl.className = 'field-value ' + (['in_progress','reserved','delivery_scheduled'].includes(job.stage) ? 'green' : job.stage === 'cancelled' ? 'red' : 'yellow');
+
+    document.getElementById('r-start').textContent = job.startDate || '—';
+    document.getElementById('r-end').textContent   = job.endDate   || '—';
+
+    const equip = job.equipment || [];
+    document.getElementById('r-equipment').innerHTML = equip.length
+      ? equip.map(e => `<span class="equip-tag">${e.name || e.sku || e}</span>`).join('')
+      : '<span style="color:var(--muted)">—</span>';
+
+    document.getElementById('r-total').textContent = job.total != null
+      ? '$' + Number(job.total).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})
+      : '—';
+
+    const depEl = document.getElementById('r-deposit-link');
+    if (job.depositLink && job.stage !== 'completed') {
+      depEl.innerHTML = `<a href="${job.depositLink}" target="_blank" class="deposit-btn">💳 Pay / View Deposit Link</a>`;
+    } else {
+      depEl.innerHTML = '';
+    }
+  }
+
+  async function requestExtension() {
+    const newDate = document.getElementById('extend-date').value;
+    if (!newDate)        { showExtendError('Please select a new end date'); return; }
+    if (!currentJobId)   { showExtendError('No job selected'); return; }
+
+    hideExtendMessages();
+    try {
+      const res  = await fetch(`${HQ_API}/finance/extend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId: currentJobId, newEndDate: newDate }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        document.getElementById('extend-success').style.display = 'block';
+      } else {
+        showExtendError(data.error || 'Extension request failed. Please call us directly.');
+      }
+    } catch(e) {
+      showExtendError('Error submitting request. Please call +1 (447) 474-4549.');
+    }
+  }
+
+  function showLookupError(msg) { const el = document.getElementById('lookup-error'); el.textContent = msg; el.style.display = 'block'; }
+  function hideLookupError()    { document.getElementById('lookup-error').style.display = 'none'; }
+  function showExtendError(msg) { const el = document.getElementById('extend-error'); el.textContent = msg; el.style.display = 'block'; }
+  function hideExtendMessages() { document.getElementById('extend-success').style.display='none'; document.getElementById('extend-error').style.display='none'; }
+
+  // Pre-fill from URL param: ?job=GR-2026-0001
+  const urlParams = new URLSearchParams(window.location.search);
+  const jobParam  = urlParams.get('job');
+  if (jobParam) { document.getElementById('job-id-input').value = jobParam; lookupJob(); }
+</script>
+</body>
+</html>
