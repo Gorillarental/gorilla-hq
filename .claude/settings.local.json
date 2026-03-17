@@ -1,38 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(curl -s -X POST http://localhost:3000/quote/chat -H \"Content-Type: application/json\" -d '{\"\"\"\"message\"\"\"\": \"\"\"\"I need a 45ft boom lift for 1 week, starting March 24. My name is John Smith, email john@test.com, phone 954-555-1234, delivery to Fort Lauderdale FL\"\"\"\"}')",
-      "Bash(python3 -m json.tool)",
-      "Bash(pkill -f \"node index.js\")",
-      "Bash(pkill -f \"node --watch index.js\")",
-      "Bash(node -e \"import\\(''''html-pdf-node''''\\).then\\(m => console.log\\(''''loaded''''\\)\\).catch\\(e => console.log\\(''''error:'''', e.message\\)\\)\")",
       "Bash(node:*)",
-      "Bash(grep -E '^pdfkit$|^pdf-lib$')",
-      "Bash(npm install:*)",
-      "Bash(curl -s -X POST http://localhost:3000/quote/chat -H \"Content-Type: application/json\" -d '{\"\"\"\"message\"\"\"\": \"\"\"\"Send quote GR-2026-0002 to john@test.com\"\"\"\"}')",
-      "Bash(find /Users/kyle/openclaw/gorillahq -name *.png -o -name *.jpg -o -name *.svg)",
-      "Bash(curl -s -X POST http://localhost:3000/quote/chat -H \"Content-Type: application/json\" -d '{\"\"\"\"message\"\"\"\": \"\"\"\"Send quote GR-2026-0003 to hazazupandrei@gmail.com\"\"\"\"}')",
-      "Bash(for f:*)",
-      "Bash(do echo:*)",
-      "Read(//Users/kyle/openclaw/gorillahq/**)",
-      "Bash(done)",
-      "Bash(git init:*)",
-      "Bash(git remote:*)",
-      "Bash(git pull:*)",
-      "Bash(git config:*)",
-      "Bash(gh auth:*)",
-      "Bash(git -C /Users/kyle/openclaw/gorillahq ls-remote origin)",
-      "Bash(git --version)",
-      "Read(//Users/kyle/**)",
-      "Bash(security find-internet-password:*)",
-      "Bash(git -C /Users/kyle/openclaw/gorillahq config credential.helper)",
-      "Bash(env)",
-      "Bash(git add:*)",
+      "Bash(npm:*)",
+      "Bash(curl:*)",
       "Bash(git:*)",
-      "Bash(security find-generic-password:*)",
-      "Bash(security list-keychains:*)",
-      "Bash(security dump-keychain:*)",
-      "Bash(curl:*)"
+      "Bash(pkill:*)",
+      "Bash(python3:*)",
+      "Bash(grep:*)",
+      "Bash(file:*)",
+      "Bash(xattr:*)",
+      "Read(/Users/kyle/**)"
     ]
   }
 }
