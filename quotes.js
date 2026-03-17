@@ -272,6 +272,12 @@ export async function sendQuote(jobId) {
 export async function quoteChat(message, history = []) {
   const pipeline = await getPipeline();
 
+  let knowledgeContext = '';
+  try {
+    const { getAgentContext } = await import('./knowledge.js');
+    knowledgeContext = await getAgentContext('quote');
+  } catch {}
+
   const systemPrompt = `You are the Quote Agent for Gorilla Rental — a boom lift and scissor lift rental company in South Florida.
 
 Your job is to gather information from the customer and build accurate rental quotes.
@@ -298,7 +304,8 @@ When you have all info, respond with a JSON action block:
 To send a built quote:
 {"action": "send_quote", "jobId": "GR-2026-XXXX"}
 
-Be friendly, professional, and efficient. You represent Gorilla Rental.`;
+Be friendly, professional, and efficient. You represent Gorilla Rental.
+${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
 
   const messages  = [...history, { role: 'user', content: message }];
   const response  = await client.messages.create({

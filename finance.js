@@ -262,6 +262,13 @@ export async function runReminderSweep() {
 export async function financeChat(message, history = []) {
   const status      = await checkActiveRentals();
   const monthReport = await getRevenueReport('month');
+
+  let knowledgeContext = '';
+  try {
+    const { getAgentContext } = await import('./knowledge.js');
+    knowledgeContext = await getAgentContext('finance');
+  } catch {}
+
   const systemPrompt = `You are the Finance Agent for Gorilla Rental. SMS via GHL.
 ACTIVE: ${status.total} | 48h: ${status.endingIn48h.map(j=>j.jobId).join(',')||'none'} | 24h: ${status.endingIn24h.map(j=>j.jobId).join(',')||'none'} | Overdue: ${status.overdue.map(j=>j.jobId).join(',')||'none'}
 MONTH: Jobs:${monthReport.totalJobs} | Closed:$${monthReport.totalRevenue.toFixed(2)} | Active:$${monthReport.activeRevenue.toFixed(2)} | Pipeline:$${monthReport.pipelineRevenue.toFixed(2)} | Avg:$${monthReport.avgJobValue.toFixed(2)}
@@ -271,7 +278,7 @@ ACTIONS:
 {"action":"send_24h","jobId":"GR-2026-XXXX"}
 {"action":"extend","jobId":"GR-2026-XXXX","newEndDate":"YYYY-MM-DD"}
 {"action":"revenue_report","period":"month|week|year"}
-{"action":"check_rentals"}`;
+{"action":"check_rentals"}${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
   const messages = [...history, { role: 'user', content: message }];
   const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
   const text     = response.content[0].text;

@@ -810,6 +810,12 @@ export async function adminChat(message, history = []) {
   }
 
   // ── Claude AI handling ──────────────────────────────────
+  let knowledgeContext = '';
+  try {
+    const { getAgentContext } = await import('./knowledge.js');
+    knowledgeContext = await getAgentContext('admin');
+  } catch {}
+
   const systemPrompt = `You are the Admin Agent for Gorilla Rental.
 PIPELINE: ${pipeline.length} jobs | Reserved: ${pipeline.filter(j=>j.stage==='reserved').length} | Contract sent: ${pipeline.filter(j=>j.stage==='contract_sent').length} | In progress: ${pipeline.filter(j=>j.stage==='in_progress').length} | Completed: ${pipeline.filter(j=>j.stage==='completed').length}
 RECENT: ${pipeline.slice(-5).map(j=>`${j.jobId}|${j.customerName}|${j.stage}|$${j.total?.toFixed(2)||'?'}`).join(' | ')}
@@ -825,7 +831,7 @@ ACTIONS:
 {"action":"check_late_rentals"}
 {"action":"morning_briefing"}
 {"action":"monthly_report"}
-{"action":"pending_approvals"}`;
+{"action":"pending_approvals"}${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
 
   const messages = [...history, { role: 'user', content: message }];
   const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });

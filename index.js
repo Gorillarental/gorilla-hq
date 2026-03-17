@@ -205,6 +205,29 @@ app.post('/webhook/whatsapp', async (req, res) => {
         await notifyAndrei(`❌ Denied — ${approval.id}`);
       }
     }
+    // Learning commands from Andrei
+    else if (message.startsWith('LEARN ')) {
+      const url = rawMsg.slice(6).trim();
+      const { addToLearningQueue } = await import('./knowledge.js');
+      await addToLearningQueue(url, 'andrei_whatsapp', 'high');
+      await notifyAndrei(`🧠 Learning from: ${url}\nI'll send you a summary when done.`);
+    }
+    else if (message.startsWith('TEACH ')) {
+      const content = rawMsg.slice(6).trim();
+      const { teach } = await import('./knowledge.js');
+      await teach('Manual: ' + content.slice(0, 50), content, 'general', 'andrei_whatsapp');
+      await notifyAndrei(`✅ Taught! Added to knowledge base.`);
+    }
+    else if (message === 'SWEEP') {
+      const { dailyLearningSweep } = await import('./knowledge.js');
+      await notifyAndrei('🔄 Starting learning sweep...');
+      dailyLearningSweep().then(r => notifyAndrei(`✅ Sweep done: ${r.learned?.length || 0} learned, ${r.failed?.length || 0} failed`)).catch(() => {});
+    }
+    else if (message === 'KNOWLEDGE REPORT') {
+      const { weeklyKnowledgeReport } = await import('./knowledge.js');
+      const result = await weeklyKnowledgeReport();
+      await notifyAndrei('📚 KNOWLEDGE REPORT\n\n' + result.report.slice(0, 1500));
+    }
   } catch (err) {
     console.error('[Webhook] WhatsApp error:', err.message);
   }
@@ -305,6 +328,23 @@ function startCronJobs() {
     const { sendReminderIfStale } = await import('./whatsapp.js');
     sendReminderIfStale().catch(e => console.error('[Cron] Approval reminder error:', e.message));
   }, 60 * 60 * 1000);
+
+  // Daily learning sweep — 2:00 AM
+  dailyAt(2, 0, async () => {
+    const { dailyLearningSweep } = await import('./knowledge.js');
+    await dailyLearningSweep();
+  }, 'Daily Learning Sweep');
+
+  // Weekly knowledge report — Monday 8:00 AM
+  // Check if today is Monday (day 1)
+  setInterval(async () => {
+    if (new Date().getDay() === 1 && new Date().getHours() === 8 && new Date().getMinutes() < 5) {
+      const { weeklyKnowledgeReport } = await import('./knowledge.js');
+      const { notifyAndrei } = await import('./whatsapp.js');
+      const result = await weeklyKnowledgeReport().catch(e => ({ report: 'Error: ' + e.message }));
+      await notifyAndrei('📚 WEEKLY KNOWLEDGE REPORT\n\n' + result.report).catch(() => {});
+    }
+  }, 5 * 60 * 1000); // check every 5 minutes
 
   console.log('[Cron] ✅ Jobs scheduled');
 }

@@ -211,6 +211,13 @@ export function getMarketingStats() {
 export async function marketingChat(message, history = []) {
   const stats  = getMarketingStats();
   const recent = readJSON(DATA.leads).slice(-5);
+
+  let knowledgeContext = '';
+  try {
+    const { getAgentContext } = await import('./knowledge.js');
+    knowledgeContext = await getAgentContext('marketing');
+  } catch {}
+
   const systemPrompt = `You are the Marketing Agent for Gorilla Rental — South Florida boom lift rentals. SMS + CRM via GHL.
 STATS: ${stats.totalLeads} leads | ${stats.newLeads} new | ${stats.convertedLeads} converted | ${stats.conversionRate} conversion
 RECENT: ${recent.map(l=>`${l.id}|${l.name}|${l.source}|${l.status}`).join(' | ')||'None'}
@@ -220,7 +227,7 @@ ACTIONS:
 {"action":"capture_lead","name":"...","email":"...","phone":"...","equipment":"...","source":"..."}
 {"action":"send_outreach","email":"...","name":"...","company":"...","industry":"..."}
 {"action":"get_stats"}
-{"action":"get_leads","status":"new|contacted|converted"}`;
+{"action":"get_leads","status":"new|contacted|converted"}${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
   const messages = [...history, { role: 'user', content: message }];
   const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
   const text     = response.content[0].text;

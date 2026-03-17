@@ -185,6 +185,13 @@ export async function opsChat(message, history = []) {
   const today     = new Date().toISOString().split('T')[0];
   const todayJobs = readJSON(DATA.deliveries).filter(d => d.scheduledDate === today);
   const upcoming  = readJSON(DATA.deliveries).filter(d => d.scheduledDate > today && d.status !== 'completed').slice(0, 5);
+
+  let knowledgeContext = '';
+  try {
+    const { getAgentContext } = await import('./knowledge.js');
+    knowledgeContext = await getAgentContext('ops');
+  } catch {}
+
   const systemPrompt = `You are the Ops Agent for Gorilla Rental. SMS via GHL.
 DRIVERS: ${DRIVERS.map(d => `${d.name} (${d.phone})`).join(', ')}
 TODAY (${today}): ${todayJobs.map(d => `${d.type.toUpperCase()}|${d.jobId}|${d.customerName}|${d.scheduledTime}`).join(' | ') || 'None'}
@@ -198,7 +205,7 @@ ACTIONS:
 {"action":"mark_delivered","jobId":"GR-2026-XXXX","notes":"..."}
 {"action":"mark_picked_up","jobId":"GR-2026-XXXX","notes":"..."}
 {"action":"todays_jobs"}
-{"action":"upcoming_jobs","days":7}`;
+{"action":"upcoming_jobs","days":7}${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
   const messages = [...history, { role: 'user', content: message }];
   const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
   const text     = response.content[0].text;

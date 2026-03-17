@@ -1,0 +1,19 @@
+[
+  { "name": "RSC Equipment Rental", "url": "https://www.rscrental.com", "region": "South Florida", "type": "competitor" },
+  { "name": "Sunbelt Rentals", "url": "https://www.sunbeltrentals.com", "region": "South Florida", "type": "competitor" },
+  { "name": "United Rentals", "url": "https://www.unitedrentals.com", "region": "South Florida", "type": "competitor" },
+  { "name": "BlueLine Rental", "url": "https://www.bluelinerental.com", "region": "South Florida", "type": "competitor" },
+  { "name": "H&E Equipment", "url": "https://www.he-equipment.com", "region": "South Florida", "type": "competitor" },
+  { "name": "Neff Rentals", "url": "https://www.neffrental.com", "region": "South Florida", "type": "competitor" },
+  { "name": "Baker Equipment", "url": "https://www.bakerequipment.com", "region": "South Florida", "type": "competitor" },
+  { "name": "BrandSafway", "url": "https://www.brandsafway.com", "region": "South Florida", "type": "competitor" },
+  { "name": "Ahern Rentals", "url": "https://www.ahernrentals.com", "region": "South Florida", "type": "competitor" },
+  { "name": "Genie Industries", "url": "https://www.genielift.com", "type": "manufacturer" },
+  { "name": "JLG Industries", "url": "https://www.jlg.com", "type": "manufacturer" },
+  { "name": "Skyjack", "url": "https://www.skyjack.com", "type": "manufacturer" },
+  { "name": "Hy-Brid Lifts", "url": "https://www.hy-brid.com", "type": "manufacturer" },
+  { "name": "OSHA Aerial Lifts", "url": "https://www.osha.gov/aerial-lifts", "type": "safety" },
+  { "name": "IPAF", "url": "https://www.ipaf.org", "type": "safety" },
+  { "name": "Construction Dive", "url": "https://www.constructiondive.com", "type": "industry_news" },
+  { "name": "Equipment World", "url": "https://www.equipmentworld.com", "type": "industry_news" }
+]
