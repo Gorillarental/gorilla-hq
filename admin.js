@@ -831,12 +831,16 @@ ACTIONS:
 {"action":"create_invoice","jobId":"GR-2026-XXXX","type":"final"}
 {"action":"get_status","jobId":"GR-2026-XXXX"}
 {"action":"cashflow_report","month":"2026-03"}
+{"action":"add_expense","amount":200,"description":"Gas for delivery","category":"Fuel","jobId":"GR-2026-XXXX"}
+{"action":"add_income","amount":1500,"description":"Equipment rental payment","category":"Rental Income","jobId":"GR-2026-XXXX"}
 {"action":"request_deposit_approval","jobId":"GR-2026-XXXX"}
 {"action":"request_balance_approval","jobId":"GR-2026-XXXX"}
 {"action":"check_late_rentals"}
 {"action":"morning_briefing"}
 {"action":"monthly_report"}
-{"action":"pending_approvals"}${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
+{"action":"pending_approvals"}
+
+IMPORTANT: You CAN and SHOULD log expenses and income directly using add_expense or add_income. When someone says "log $200 gas expense" or "record a payment" — use the action immediately. Never tell the user to log it elsewhere.${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
 
   const messages = [...history, { role: 'user', content: message }];
   const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
@@ -853,6 +857,8 @@ ACTIONS:
       else if (action.action === 'create_invoice')             result = await createInvoice(action.jobId, action.type || 'final');
       else if (action.action === 'get_status')                 result = await getReservationStatus(action.jobId);
       else if (action.action === 'cashflow_report')            result = await getCashflowReport(action.month || new Date().toISOString().slice(0, 7));
+      else if (action.action === 'add_expense')                result = await recordPaymentInCashflow(action.jobId || null, action.amount, 'expense', action.description, action.category || 'Expense');
+      else if (action.action === 'add_income')                 result = await recordPaymentInCashflow(action.jobId || null, action.amount, 'income', action.description, action.category || 'Rental Income');
       else if (action.action === 'request_deposit_approval')   result = await requestDepositApproval(action.jobId);
       else if (action.action === 'request_balance_approval')   result = await requestBalanceApproval(action.jobId);
       else if (action.action === 'check_late_rentals')         result = await checkLateRentals();
