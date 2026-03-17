@@ -15,16 +15,15 @@ import { sendSMS, getOrCreateContact, addNote } from './ghl.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-  const start = clean.indexOf('{"action"');
-  if (start === -1) return null;
-  let depth = 0;
-  let i = start;
+  const actionIdx = clean.indexOf('"action"');
+  if (actionIdx === -1) return null;
+  let start = actionIdx - 1;
+  while (start >= 0 && /[\s]/.test(clean[start])) start--;
+  if (start < 0 || clean[start] !== '{') return null;
+  let depth = 0, i = start;
   while (i < clean.length) {
     if (clean[i] === '{') depth++;
-    else if (clean[i] === '}') {
-      depth--;
-      if (depth === 0) return clean.slice(start, i + 1);
-    }
+    else if (clean[i] === '}') { depth--; if (depth === 0) return clean.slice(start, i + 1); }
     i++;
   }
   return null;
