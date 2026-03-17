@@ -248,7 +248,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
 <script>
 var API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://openclaw-qrxf.onrender.com';
-var history = [];
+var chatHistory = [];
 var currentQuote = null;
 var mode = 'idle';
 
@@ -461,18 +461,18 @@ async function sendMsg() {
     if (/quote|rent|need|boom|scissor|lift|scaffold|shore/.test(lm)) setMode('collecting');
   }
 
-  history.push({role:'user', content: val});
+  chatHistory.push({role:'user', content: val});
 
   try {
     var r = await fetch(API + '/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({message: val, history: history.slice(-10)})
+      body: JSON.stringify({message: val, history: chatHistory.slice(-10)})
     });
     var d = await r.json();
     if (!d.ok) { addBubble('Error: ' + (d.error || 'Unknown error'), 'bot'); return; }
 
-    history.push({role:'assistant', content: d.text || ''});
+    chatHistory.push({role:'assistant', content: d.text || ''});
 
     var agentColors = {quote:'#4a9eff', admin:'#6b6960', ops:'#2bc4a8', finance:'#e85d8a', marketing:'#f4a623'};
     var color = agentColors[d.agent] || '#6b6960';
@@ -522,7 +522,7 @@ async function sendMsg() {
 function clearAll() {
   document.getElementById('msgs').innerHTML = '';
   document.getElementById('msgs').classList.remove('on');
-  hideQPanel(); setMode('idle'); currentQuote = null; history = [];
+  hideQPanel(); setMode('idle'); currentQuote = null; chatHistory = [];
   document.getElementById('qs').textContent = 'ready';
   toast('Chat cleared');
 }
