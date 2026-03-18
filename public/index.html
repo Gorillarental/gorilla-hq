@@ -3,287 +3,318 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gorilla Rental HQ</title>
+<title>Gorilla Rental AI Operations Center</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* === RESET & BASE === */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
-  --yellow: #f6ec0e;
-  --black: #111111;
-  --white: #ffffff;
-  --gray-100: #f5f5f5;
-  --gray-200: #e5e5e5;
-  --gray-300: #d4d4d4;
-  --gray-400: #a3a3a3;
-  --gray-500: #737373;
-  --gray-600: #525252;
-  --gray-700: #404040;
-  --gray-800: #262626;
-  --gray-900: #171717;
-  --green: #22c55e;
-  --red: #ef4444;
-  --orange: #f97316;
-  --blue: #3b82f6;
-  --purple: #a855f7;
-  --teal: #14b8a6;
-  --pink: #ec4899;
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg-primary:#0a0a0a;--bg-secondary:#141414;--bg-card:#1a1a1a;--bg-card-hover:#202020;
+  --accent:#f6ec0e;--accent-hover:#e6dc0e;--accent-dark:#c4c40c;
+  --text-primary:#ffffff;--text-secondary:#999999;--text-muted:#555555;
+  --border:#2a2a2a;--border-hover:#3a3a3a;
+  --success:#22c55e;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;
+  --purple:#a855f7;--teal:#14b8a6;--pink:#ec4899;--orange:#f97316;
 }
-body { font-family: 'Inter', sans-serif; background: var(--gray-900); color: var(--white); min-height: 100vh; }
+body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden;}
 
-/* === LOCK SCREEN === */
-#lockScreen {
-  position: fixed; inset: 0; background: var(--black); z-index: 9999;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px;
+/* LOCK SCREEN */
+#lockScreen{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;}
+.ls-emoji{font-size:60px;}
+.ls-title{font-size:32px;font-weight:800;letter-spacing:4px;color:var(--accent);text-transform:uppercase;}
+.ls-sub{font-size:14px;color:var(--text-secondary);}
+.ls-label{font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;}
+.ls-digits{display:flex;gap:12px;}
+.ls-digit{width:64px;height:80px;background:var(--bg-card);border:2px solid var(--border);border-radius:12px;color:var(--text-primary);font-size:32px;font-weight:700;text-align:center;outline:none;transition:border-color .2s;font-family:'Inter',monospace;}
+.ls-digit:focus{border-color:var(--accent);}
+.ls-digit.error{border-color:var(--danger);}
+.ls-error{color:var(--danger);font-size:13px;display:none;}
+.ls-footer{font-size:11px;color:#333;}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.shake{animation:shake .4s ease;}
+
+/* APP LAYOUT */
+#app{display:none;min-height:100vh;}
+.layout{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto;}
+.sidebar-logo{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.sidebar-logo-emoji{font-size:24px;}
+.sidebar-logo-text{font-size:14px;font-weight:800;letter-spacing:2px;color:var(--accent);}
+.sidebar-logo-sub{font-size:10px;color:var(--text-muted);letter-spacing:1px;}
+nav{flex:1;padding:8px 0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;color:var(--text-secondary);font-size:13px;font-weight:500;transition:all .15s;border-left:3px solid transparent;}
+.nav-item:hover{background:var(--bg-card);color:var(--text-primary);}
+.nav-item.active{background:rgba(246,236,14,.07);color:var(--accent);border-left-color:var(--accent);}
+.nav-emoji{font-size:16px;width:20px;}
+.sidebar-status{padding:16px;border-top:1px solid var(--border);}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--success);margin-right:6px;}
+.status-text{font-size:12px;color:var(--text-secondary);}
+.sidebar-logout{margin:8px 16px;padding:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text-secondary);font-size:12px;cursor:pointer;text-align:center;transition:all .15s;}
+.sidebar-logout:hover{border-color:var(--danger);color:var(--danger);}
+
+/* MAIN */
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+
+/* TOPBAR */
+.topbar{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:18px;font-weight:700;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.notif-btn{position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;color:var(--text-secondary);transition:all .15s;}
+.notif-btn:hover{border-color:var(--border-hover);color:var(--text-primary);}
+.notif-badge{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;}
+.qa-btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;position:relative;}
+.qa-btn:hover{background:var(--accent-hover);}
+.qa-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;min-width:180px;z-index:200;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.qa-dropdown.open{display:block;}
+.qa-item{padding:10px 14px;font-size:13px;cursor:pointer;transition:background .1s;}
+.qa-item:hover{background:var(--bg-card-hover);}
+
+/* PAGE CONTENT */
+.page{padding:24px;display:none;}
+.page.active{display:block;}
+
+/* CARDS */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.card:hover{border-color:var(--border-hover);}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .15s;}
+.stat-card:hover{border-color:var(--border-hover);}
+.stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.stat-value{font-size:22px;font-weight:800;}
+.stat-sub{font-size:11px;color:var(--text-secondary);margin-top:4px;}
+.stat-card.yellow .stat-value{color:var(--accent);}
+.stat-card.red .stat-value{color:var(--danger);}
+.stat-card.green .stat-value{color:var(--success);}
+
+/* ALERT BANNERS */
+.alert{padding:10px 16px;border-radius:8px;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.alert-red{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5;}
+.alert-yellow{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#fcd34d;}
+.alert-blue{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:#93c5fd;}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:var(--bg-secondary);padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+td{padding:10px 12px;border-top:1px solid var(--border);vertical-align:middle;}
+tr:hover td{background:var(--bg-card-hover);}
+
+/* STAGE PILLS */
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.pill-quote_built{background:#333;color:#aaa;}
+.pill-quote_sent{background:rgba(59,130,246,.2);color:#93c5fd;}
+.pill-reserved{background:rgba(168,85,247,.2);color:#d8b4fe;}
+.pill-contract_sent{background:rgba(249,115,22,.2);color:#fdba74;}
+.pill-delivery_scheduled{background:rgba(246,236,14,.2);color:#f6ec0e;}
+.pill-in_progress{background:rgba(34,197,94,.2);color:#86efac;}
+.pill-returned{background:rgba(20,184,166,.2);color:#5eead4;}
+.pill-completed{background:rgba(22,101,52,.4);color:#4ade80;}
+.pill-cancelled{background:rgba(239,68,68,.2);color:#fca5a5;}
+
+/* SECTION HEADERS */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.section-title{font-size:15px;font-weight:700;}
+.section-sub{font-size:12px;color:var(--text-secondary);}
+
+/* QUICK ACTIONS */
+.qa-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.qab{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--text-primary);}
+.qab:hover{background:var(--bg-card-hover);border-color:var(--accent);color:var(--accent);}
+.qab.primary{background:var(--accent);color:#000;border-color:var(--accent);}
+.qab.primary:hover{background:var(--accent-hover);}
+
+/* TWO PANEL */
+.two-panel{display:grid;grid-template-columns:35% 1fr;gap:16px;}
+.two-panel.wide{grid-template-columns:30% 1fr;}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:400px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.chat-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-secondary);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;}
+.chat-status{width:8px;height:8px;border-radius:50%;background:var(--success);}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.msg{max-width:85%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+.msg.user{background:var(--accent);color:#000;margin-left:auto;border-radius:12px 12px 4px 12px;}
+.msg.agent{background:var(--bg-secondary);color:var(--text-primary);margin-right:auto;border-radius:12px 12px 12px 4px;}
+.msg.thinking{background:var(--bg-secondary);color:var(--text-muted);font-style:italic;}
+@keyframes dots{0%,100%{opacity:.3}50%{opacity:1}}
+.thinking-dots span{animation:dots 1.4s ease infinite;display:inline-block;}
+.thinking-dots span:nth-child(2){animation-delay:.2s;}
+.thinking-dots span:nth-child(3){animation-delay:.4s;}
+.chat-input-row{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.chat-input{flex:1;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text-primary);outline:none;font-family:'Inter',sans-serif;}
+.chat-input:focus{border-color:var(--accent);}
+.chat-send{background:var(--accent);color:#000;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;}
+.chat-send:hover{background:var(--accent-hover);}
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.preset{background:var(--bg-secondary);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;transition:all .15s;color:var(--text-secondary);}
+.preset:hover{border-color:var(--accent);color:var(--accent);}
+
+/* JOBS GRID */
+.jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.job-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.job-card:hover{border-color:var(--border-hover);}
+.job-card-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;}
+.job-id{font-size:12px;font-weight:700;color:var(--accent);}
+.job-type{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.job-type.delivery{background:rgba(59,130,246,.2);color:#93c5fd;}
+.job-type.pickup{background:rgba(249,115,22,.2);color:#fdba74;}
+.job-customer{font-size:13px;font-weight:600;margin-bottom:4px;}
+.job-detail{font-size:12px;color:var(--text-secondary);margin-bottom:2px;}
+.job-actions{display:flex;gap:6px;margin-top:10px;}
+.jab{flex:1;padding:6px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-secondary);transition:all .15s;text-align:center;}
+.jab:hover{border-color:var(--accent);color:var(--accent);}
+.jab.green:hover{border-color:var(--success);color:var(--success);}
+
+/* ACTION BUTTONS */
+.btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);transition:all .15s;}
+.btn:hover{border-color:var(--border-hover);}
+.btn.success{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:var(--success);}
+.btn.danger{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:var(--danger);}
+.btn.primary{background:var(--accent);color:#000;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+
+/* LOADING SKELETON */
+.skel{background:linear-gradient(90deg,var(--bg-card) 25%,var(--bg-card-hover) 50%,var(--bg-card) 75%);background-size:200% 100%;animation:skel-anim 1.5s infinite;border-radius:4px;height:16px;margin:4px 0;}
+@keyframes skel-anim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:640px;width:90%;max-height:80vh;overflow-y:auto;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.modal-title{font-size:16px;font-weight:700;}
+.modal-close{background:none;border:none;color:var(--text-secondary);font-size:20px;cursor:pointer;padding:4px;}
+.modal-close:hover{color:var(--text-primary);}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;color:var(--text-secondary);margin-bottom:6px;display:block;}
+.form-input{width:100%;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text-primary);outline:none;font-family:'Inter',sans-serif;}
+.form-input:focus{border-color:var(--accent);}
+select.form-input option{background:var(--bg-card);}
+
+/* TOAST */
+#toastContainer{position:fixed;bottom:20px;right:20px;z-index:9000;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:13px;min-width:260px;max-width:380px;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:toast-in .3s ease;border-left:4px solid var(--border);}
+.toast.success{border-left-color:var(--success);}
+.toast.error{border-left-color:var(--danger);}
+.toast.warning{border-left-color:var(--warning);}
+.toast.info{border-left-color:var(--info);}
+@keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* FLOAT CHAT BTN */
+#floatChatBtn{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#000;border:none;font-size:22px;cursor:pointer;z-index:500;box-shadow:0 4px 16px rgba(246,236,14,.3);transition:transform .2s;}
+#floatChatBtn:hover{transform:scale(1.1);}
+#floatChatPanel{position:fixed;bottom:86px;right:24px;width:340px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;z-index:500;display:none;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+#floatChatPanel.open{display:block;}
+.float-panel-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.float-panel-title{font-size:13px;font-weight:700;}
+.float-agent-select{background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text-primary);outline:none;}
+.float-msgs{height:260px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.float-input-row{padding:10px;border-top:1px solid var(--border);display:flex;gap:6px;}
+.float-input{flex:1;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--text-primary);outline:none;}
+.float-send{background:var(--accent);color:#000;border:none;border-radius:6px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;}
+
+/* GRID HELPERS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mt20{margin-top:20px;}
+.mb8{margin-bottom:8px;}.mb12{margin-bottom:12px;}.mb16{margin-bottom:16px;}
+.flex{display:flex;}.items-center{align-items:center;}.gap8{gap:8px;}.gap12{gap:12px;}
+.text-sm{font-size:12px;}.text-muted{color:var(--text-secondary);}.text-accent{color:var(--accent);}
+.font-bold{font-weight:700;}.font-600{font-weight:600;}
+.w100{width:100%;}
+
+/* APPROVAL CARDS */
+.approval-card{background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
+.approval-meta{font-size:12px;color:var(--text-muted);margin-top:4px;}
+.approval-actions{display:flex;gap:8px;margin-top:12px;}
+
+/* HOUR CHART */
+.hour-chart{display:flex;align-items:flex-end;gap:2px;height:60px;margin-top:8px;}
+.hour-bar{flex:1;background:var(--accent);border-radius:2px 2px 0 0;min-height:2px;transition:height .3s;}
+
+/* ACTIVITY TIMELINE */
+.activity-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.activity-item:last-child{border-bottom:none;}
+.activity-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.activity-body{flex:1;}
+.activity-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+.activity-desc{font-size:13px;}
+.activity-time{font-size:11px;color:var(--text-muted);}
+.activity-expand{font-size:11px;color:var(--text-muted);cursor:pointer;margin-top:4px;}
+.activity-meta{display:none;background:var(--bg-secondary);border-radius:6px;padding:8px;font-size:11px;font-family:monospace;color:var(--text-secondary);margin-top:6px;white-space:pre-wrap;}
+
+/* AGENT BADGE */
+.agent-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;}
+
+/* TASK CARD */
+.task-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;transition:border-color .15s;}
+.task-card:hover{border-color:var(--border-hover);}
+.task-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;}
+.task-title{font-size:13px;font-weight:600;}
+.task-actions{display:flex;gap:6px;margin-top:10px;}
+.tab-row{display:flex;gap:4px;margin-bottom:16px;}
+.tab{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);transition:all .15s;}
+.tab.active{background:var(--accent);color:#000;border-color:var(--accent);}
+
+/* COLLAPSIBLE */
+.collapsible-toggle{cursor:pointer;user-select:none;}
+.collapsible-body{display:none;}
+.collapsible-body.open{display:block;}
+
+/* FILTERS */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+.filter-input{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--text-primary);outline:none;}
+.filter-input:focus{border-color:var(--accent);}
+.filter-select{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--text-primary);outline:none;}
+
+/* LEAD STATUS */
+.lead-new{background:rgba(239,68,68,.2);color:#fca5a5;}
+.lead-contacted{background:rgba(245,158,11,.2);color:#fcd34d;}
+.lead-converted{background:rgba(34,197,94,.2);color:#86efac;}
+.lead-dismissed{background:rgba(85,85,85,.2);color:#888;}
+
+/* DATE GROUP */
+.date-group-header{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+
+/* ROW COLORS */
+tr.overdue td{background:rgba(239,68,68,.06);}
+tr.ending-soon td{background:rgba(245,158,11,.06);}
+
+/* KNOWLEDGE */
+.kb-item{background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;}
+.kb-item:hover{border-color:var(--border-hover);}
+.kb-item-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:4px;}
+.kb-title{font-size:13px;font-weight:600;}
+.kb-summary{font-size:12px;color:var(--text-secondary);display:none;}
+.kb-summary.expanded{display:block;}
+
+/* DRIVER CARD */
+.driver-card{background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.driver-name{font-size:15px;font-weight:700;margin-bottom:4px;}
+.driver-phone{font-size:12px;color:var(--text-muted);margin-bottom:10px;}
+
+/* MOBILE */
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .main{margin-left:0;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .two-panel{grid-template-columns:1fr;}
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+  .mobile-tabs{display:flex!important;}
 }
-.lock-logo { font-size: 48px; font-weight: 800; letter-spacing: -2px; }
-.lock-logo span { color: var(--yellow); }
-.lock-subtitle { color: var(--gray-400); font-size: 14px; letter-spacing: 4px; text-transform: uppercase; }
-.lock-form { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.lock-label { font-size: 13px; color: var(--gray-400); letter-spacing: 1px; }
-.lock-input {
-  width: 180px; height: 60px; background: var(--gray-800); border: 2px solid var(--gray-700);
-  border-radius: 12px; color: var(--white); font-size: 28px; font-weight: 700;
-  text-align: center; letter-spacing: 12px; outline: none; transition: border-color 0.2s;
-  font-family: 'Inter', monospace;
-}
-.lock-input:focus { border-color: var(--yellow); }
-.lock-input.shake { animation: shake 0.4s ease; border-color: var(--red); }
-.lock-btn {
-  width: 180px; height: 48px; background: var(--yellow); border: none; border-radius: 10px;
-  color: var(--black); font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px;
-  transition: opacity 0.2s;
-}
-.lock-btn:hover { opacity: 0.85; }
-.lock-error { color: var(--red); font-size: 13px; height: 18px; }
-@keyframes shake {
-  0%,100% { transform: translateX(0); }
-  20%,60% { transform: translateX(-8px); }
-  40%,80% { transform: translateX(8px); }
-}
-
-/* === MAIN APP === */
-#app { display: none; flex-direction: column; min-height: 100vh; }
-#app.visible { display: flex; }
-
-/* === TOP NAV === */
-.topnav {
-  position: sticky; top: 0; z-index: 100;
-  background: var(--black); border-bottom: 1px solid var(--gray-800);
-  display: flex; align-items: center; gap: 0; overflow-x: auto;
-  scrollbar-width: none; -webkit-overflow-scrolling: touch;
-  padding: 0 8px;
-}
-.topnav::-webkit-scrollbar { display: none; }
-.nav-brand {
-  display: flex; align-items: center; gap: 8px; padding: 0 16px;
-  font-size: 16px; font-weight: 800; white-space: nowrap; color: var(--yellow);
-  border-right: 1px solid var(--gray-800); margin-right: 8px; min-height: 52px;
-}
-.nav-tab {
-  display: flex; align-items: center; gap: 6px; padding: 0 14px;
-  height: 52px; white-space: nowrap; cursor: pointer; font-size: 13px; font-weight: 500;
-  color: var(--gray-400); border-bottom: 2px solid transparent; transition: all 0.15s;
-  user-select: none; border-radius: 0;
-  background: none; border-left: none; border-right: none; border-top: none;
-}
-.nav-tab:hover { color: var(--white); }
-.nav-tab.active { color: var(--yellow); border-bottom-color: var(--yellow); }
-
-/* === PAGE CONTAINER === */
-.page { display: none; flex: 1; padding: 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
-.page.active { display: block; }
-
-/* === CARDS === */
-.card {
-  background: var(--gray-800); border: 1px solid var(--gray-700); border-radius: 12px;
-  padding: 20px; margin-bottom: 20px;
-}
-.card-title { font-size: 14px; font-weight: 600; color: var(--gray-300); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-.card-title .badge { background: var(--gray-700); color: var(--gray-300); font-size: 11px; padding: 2px 8px; border-radius: 20px; }
-
-/* === STAT CARDS === */
-.stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
-@media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2, 1fr); overflow-x: auto; } }
-.stat-card {
-  background: var(--gray-800); border: 1px solid var(--gray-700); border-radius: 12px;
-  padding: 16px 20px;
-}
-.stat-value { font-size: 28px; font-weight: 800; color: var(--yellow); line-height: 1; margin-bottom: 4px; }
-.stat-value.red { color: var(--red); }
-.stat-label { font-size: 12px; color: var(--gray-400); font-weight: 500; }
-
-/* === TABLES === */
-.table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--gray-700); }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { background: var(--gray-900); color: var(--gray-400); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; text-align: left; white-space: nowrap; }
-td { padding: 11px 14px; border-top: 1px solid var(--gray-700); color: var(--gray-200); vertical-align: middle; }
-tr:hover td { background: rgba(255,255,255,0.02); }
-
-/* === BADGES === */
-.badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
-.badge-yellow { background: rgba(246,236,14,0.15); color: var(--yellow); }
-.badge-green  { background: rgba(34,197,94,0.15);  color: var(--green); }
-.badge-red    { background: rgba(239,68,68,0.15);   color: var(--red); }
-.badge-blue   { background: rgba(59,130,246,0.15);  color: var(--blue); }
-.badge-purple { background: rgba(168,85,247,0.15);  color: var(--purple); }
-.badge-orange { background: rgba(249,115,22,0.15);  color: var(--orange); }
-.badge-teal   { background: rgba(20,184,166,0.15);  color: var(--teal); }
-.badge-gray   { background: rgba(115,115,115,0.2);  color: var(--gray-400); }
-.badge-pink   { background: rgba(236,72,153,0.15);  color: var(--pink); }
-
-/* === BUTTONS === */
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.15s; white-space: nowrap; }
-.btn:hover { opacity: 0.85; }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-yellow { background: var(--yellow); color: var(--black); }
-.btn-green  { background: var(--green);  color: var(--white); }
-.btn-red    { background: var(--red);    color: var(--white); }
-.btn-gray   { background: var(--gray-700); color: var(--gray-200); }
-.btn-ghost  { background: transparent; color: var(--gray-400); border: 1px solid var(--gray-700); }
-.btn-ghost:hover { color: var(--white); border-color: var(--gray-500); }
-.btn-sm { padding: 5px 10px; font-size: 12px; }
-
-/* === SPLIT LAYOUT === */
-.split { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
-@media (max-width: 1024px) { .split { grid-template-columns: 1fr; } }
-.split-left { display: flex; flex-direction: column; gap: 16px; }
-
-/* === CHAT === */
-.chat-container { display: flex; flex-direction: column; height: 520px; background: var(--gray-900); border: 1px solid var(--gray-700); border-radius: 12px; overflow: hidden; }
-.chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.chat-messages::-webkit-scrollbar { width: 4px; }
-.chat-messages::-webkit-scrollbar-thumb { background: var(--gray-700); border-radius: 2px; }
-.msg { max-width: 85%; padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.6; }
-.msg.user { align-self: flex-end; background: var(--yellow); color: var(--black); font-weight: 500; border-radius: 10px 10px 2px 10px; }
-.msg.agent { align-self: flex-start; background: var(--gray-800); color: var(--gray-100); border: 1px solid var(--gray-700); border-radius: 10px 10px 10px 2px; }
-.msg.agent .msg-time { font-size: 10px; color: var(--gray-500); margin-top: 4px; }
-.msg.thinking { align-self: flex-start; background: var(--gray-800); border: 1px solid var(--gray-700); color: var(--gray-500); font-style: italic; }
-.thinking-dots::after { content: '...'; animation: dots 1.5s infinite; }
-@keyframes dots { 0%,20%{content:'.'} 40%,60%{content:'..'} 80%,100%{content:'...'} }
-.chat-presets { padding: 8px 12px; display: flex; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--gray-700); background: var(--gray-800); }
-.preset-btn { background: var(--gray-700); border: none; color: var(--gray-300); padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.15s; }
-.preset-btn:hover { background: var(--gray-600); color: var(--white); }
-.chat-input-row { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--gray-700); background: var(--gray-800); }
-.chat-input { flex: 1; background: var(--gray-700); border: 1px solid var(--gray-600); border-radius: 8px; color: var(--white); padding: 10px 14px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; resize: none; }
-.chat-input:focus { border-color: var(--yellow); }
-.chat-send { background: var(--yellow); color: var(--black); border: none; border-radius: 8px; padding: 10px 18px; font-weight: 700; font-size: 13px; cursor: pointer; }
-
-/* === QUICK ACTIONS === */
-.actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-
-/* === AGENT STATUS === */
-.agent-status { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--gray-900); border: 1px solid var(--gray-700); border-radius: 8px; margin-bottom: 12px; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse-green 2s infinite; }
-@keyframes pulse-green { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
-.status-text { font-size: 13px; font-weight: 600; color: var(--green); }
-
-/* === ALERT BANNER === */
-.alert-banner { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 500; display: none; cursor: pointer; }
-.alert-banner.red { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
-.alert-banner.yellow { background: rgba(246,236,14,0.1); border: 1px solid rgba(246,236,14,0.3); color: var(--yellow); }
-.alert-banner.show { display: block; }
-
-/* === APPROVAL CARDS === */
-.approval-card { background: var(--gray-900); border: 1px solid var(--gray-700); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
-.approval-card .approval-type { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--yellow); margin-bottom: 8px; }
-.approval-card .approval-details { font-size: 14px; color: var(--gray-200); margin-bottom: 12px; line-height: 1.6; }
-.approval-card .approval-meta { font-size: 12px; color: var(--gray-500); margin-bottom: 12px; }
-.approval-btns { display: flex; gap: 8px; }
-
-/* === TASK CARDS === */
-.task-card { background: var(--gray-800); border: 1px solid var(--gray-700); border-radius: 10px; padding: 16px; margin-bottom: 10px; }
-.task-card.high { border-left: 3px solid var(--red); }
-.task-card.medium { border-left: 3px solid var(--yellow); }
-.task-card.low { border-left: 3px solid var(--gray-500); }
-.task-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.task-title { font-size: 14px; font-weight: 600; color: var(--white); }
-.task-desc { font-size: 13px; color: var(--gray-400); margin-bottom: 12px; line-height: 1.5; }
-.task-footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.task-btns { display: flex; gap: 6px; margin-top: 10px; }
-
-/* === ACTIVITY FEED === */
-.activity-entry { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-800); }
-.activity-entry:last-child { border-bottom: none; }
-.activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-.activity-content { flex: 1; }
-.activity-action { font-size: 13px; font-weight: 600; color: var(--white); }
-.activity-desc { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
-.activity-meta { display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap; }
-.activity-time { font-size: 11px; color: var(--gray-500); }
-
-/* === FILTER TABS === */
-.filter-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; }
-.filter-tab { background: var(--gray-800); border: 1px solid var(--gray-700); color: var(--gray-400); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-.filter-tab.active { background: var(--yellow); border-color: var(--yellow); color: var(--black); }
-.filter-tab:hover:not(.active) { color: var(--white); border-color: var(--gray-500); }
-
-/* === TOAST === */
-#toastContainer { position: fixed; bottom: 80px; right: 20px; z-index: 9000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-.toast { padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; max-width: 340px; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; }
-.toast.show { opacity: 1; transform: translateY(0); }
-.toast.success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: var(--green); }
-.toast.error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.3);  color: var(--red); }
-.toast.warning { background: rgba(246,236,14,0.1);  border: 1px solid rgba(246,236,14,0.3);  color: var(--yellow); }
-.toast.info    { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);  color: var(--blue); }
-
-/* === FLOATING CHAT BUTTON === */
-#floatChatBtn { position: fixed; bottom: 20px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--yellow); border: none; font-size: 22px; cursor: pointer; z-index: 8000; box-shadow: 0 4px 20px rgba(246,236,14,0.3); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
-#floatChatBtn:hover { transform: scale(1.1); }
-
-/* === MODAL === */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 8500; display: none; align-items: center; justify-content: center; padding: 20px; }
-.modal-overlay.open { display: flex; }
-.modal { background: var(--gray-800); border: 1px solid var(--gray-700); border-radius: 16px; padding: 24px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; }
-.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.modal-title { font-size: 16px; font-weight: 700; }
-.modal-close { background: none; border: none; color: var(--gray-400); font-size: 20px; cursor: pointer; padding: 4px; }
-.modal-close:hover { color: var(--white); }
-
-/* === FORM ELEMENTS === */
-.form-group { margin-bottom: 14px; }
-.form-label { font-size: 12px; font-weight: 600; color: var(--gray-400); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
-.form-input, .form-select, .form-textarea {
-  width: 100%; background: var(--gray-900); border: 1px solid var(--gray-700);
-  border-radius: 8px; color: var(--white); padding: 10px 14px; font-size: 13px;
-  font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.15s;
-}
-.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--yellow); }
-.form-select option { background: var(--gray-900); }
-.form-textarea { min-height: 80px; resize: vertical; }
-
-/* === SKELETON === */
-.skeleton { background: linear-gradient(90deg, var(--gray-800) 25%, var(--gray-700) 50%, var(--gray-800) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
-@keyframes shimmer { to { background-position: -200% 0; } }
-
-/* === STAGE BADGES === */
-.stage-quote_built { background: rgba(115,115,115,0.2); color: #737373; }
-.stage-quote_sent  { background: rgba(59,130,246,0.15); color: #60a5fa; }
-.stage-reserved    { background: rgba(168,85,247,0.15); color: #c084fc; }
-.stage-contract_sent { background: rgba(249,115,22,0.15); color: #fb923c; }
-.stage-delivery_scheduled { background: rgba(246,236,14,0.15); color: #f6ec0e; }
-.stage-in_progress { background: rgba(34,197,94,0.15); color: #4ade80; }
-.stage-returned    { background: rgba(20,184,166,0.15); color: #2dd4bf; }
-.stage-completed   { background: rgba(21,128,61,0.2); color: #86efac; }
-.stage-cancelled   { background: rgba(239,68,68,0.15); color: #f87171; }
-
-/* === OPS CARDS === */
-.ops-card { background: var(--gray-900); border: 1px solid var(--gray-700); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
-.ops-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.ops-address { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--gray-300); text-decoration: none; margin: 6px 0; }
-.ops-address:hover { color: var(--yellow); }
-
-/* === SECTION TITLE === */
-.section-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
-.section-title a { font-size: 12px; color: var(--yellow); text-decoration: none; }
-.section-title a:hover { text-decoration: underline; }
-
-/* === RESPONSIVE === */
-@media (max-width: 768px) {
-  .page { padding: 12px; }
-  .split { grid-template-columns: 1fr; }
-  .card { padding: 14px; }
-  .chat-container { height: 420px; }
+.mobile-tabs{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-secondary);border-top:1px solid var(--border);z-index:200;padding:8px 0 12px;}
+.mobile-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;color:var(--text-muted);font-size:9px;}
+.mobile-tab.active{color:var(--accent);}
+.mobile-tab-emoji{font-size:18px;}
+@media(min-width:769px)and(max-width:1024px){
+  .sidebar{width:48px;}
+  .sidebar .nav-item span:last-child,.sidebar-logo-text,.sidebar-logo-sub,.sidebar-status .status-text,.sidebar-logout{display:none;}
+  .sidebar-logo{justify-content:center;}
+  .nav-item{justify-content:center;padding:12px;}
+  .main{margin-left:48px;}
 }
 </style>
 </head>
@@ -291,1451 +322,1322 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 
 <!-- LOCK SCREEN -->
 <div id="lockScreen">
-  <div class="lock-logo">&#x1F98D; <span>GORILLA</span> RENTAL</div>
-  <div class="lock-subtitle">Command Center</div>
-  <div class="lock-form">
-    <div class="lock-label">ENTER ACCESS CODE</div>
-    <input type="password" class="lock-input" id="lockInput" maxlength="4" inputmode="numeric" autocomplete="off" placeholder="••••">
-    <div class="lock-error" id="lockError"></div>
-    <button class="lock-btn" onclick="checkCode()">UNLOCK</button>
+  <div class="ls-emoji">🦍</div>
+  <div style="text-align:center">
+    <div class="ls-title">Gorilla Rental</div>
+    <div class="ls-sub">AI Operations Center</div>
   </div>
+  <div style="height:16px"></div>
+  <div class="ls-label">Enter Access Code</div>
+  <div class="ls-digits" id="lsDigits">
+    <input class="ls-digit" id="d0" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]">
+    <input class="ls-digit" id="d1" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]">
+    <input class="ls-digit" id="d2" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]">
+    <input class="ls-digit" id="d3" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]">
+  </div>
+  <div class="ls-error" id="lsError">Incorrect code</div>
+  <div class="ls-footer">Gorilla Rental Internal System</div>
 </div>
 
-<!-- MAIN APP -->
+<!-- APP -->
 <div id="app">
-
-  <!-- TOP NAV -->
-  <nav class="topnav">
-    <div class="nav-brand">&#x1F98D; GORILLA</div>
-    <button class="nav-tab active" onclick="showPage('dashboard', this)">&#x1F3E0; Dashboard</button>
-    <button class="nav-tab" onclick="showPage('company', this)">&#x1F3E2; Company</button>
-    <button class="nav-tab" onclick="showPage('quote', this)">&#x1F4AC; Quote</button>
-    <button class="nav-tab" onclick="showPage('admin', this)">&#x1F4CB; Admin</button>
-    <button class="nav-tab" onclick="showPage('ops', this)">&#x1F69A; Ops</button>
-    <button class="nav-tab" onclick="showPage('finance', this)">&#x1F4B0; Finance</button>
-    <button class="nav-tab" onclick="showPage('marketing', this)">&#x1F4E3; Marketing</button>
-    <button class="nav-tab" onclick="showPage('knowledge', this)">&#x1F9E0; Knowledge</button>
-    <button class="nav-tab" onclick="showPage('tasks', this)" id="tasksTab">&#x2705; Tasks</button>
-    <button class="nav-tab" onclick="showPage('activity', this)">&#x1F4CA; Activity</button>
+<div class="layout">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="sidebar-logo-emoji">🦍</span>
+    <div><div class="sidebar-logo-text">GORILLA RENTAL</div><div class="sidebar-logo-sub">AI OPERATIONS</div></div>
+  </div>
+  <nav id="sideNav">
+    <div class="nav-item active" data-page="dashboard"><span class="nav-emoji">🏠</span><span>Dashboard</span></div>
+    <div class="nav-item" data-page="company"><span class="nav-emoji">🏢</span><span>Company</span></div>
+    <div class="nav-item" data-page="quote"><span class="nav-emoji">💬</span><span>Quote</span></div>
+    <div class="nav-item" data-page="admin"><span class="nav-emoji">📋</span><span>Admin</span></div>
+    <div class="nav-item" data-page="ops"><span class="nav-emoji">🚚</span><span>Ops</span></div>
+    <div class="nav-item" data-page="finance"><span class="nav-emoji">💰</span><span>Finance</span></div>
+    <div class="nav-item" data-page="marketing"><span class="nav-emoji">📣</span><span>Marketing</span></div>
+    <div class="nav-item" data-page="knowledge"><span class="nav-emoji">🧠</span><span>Knowledge</span></div>
+    <div class="nav-item" data-page="tasks"><span class="nav-emoji">✅</span><span>Tasks</span></div>
+    <div class="nav-item" data-page="activity"><span class="nav-emoji">📊</span><span>Activity</span></div>
   </nav>
+  <div class="sidebar-status">
+    <span class="status-dot"></span><span class="status-text">System Online · <span id="lastSync">--</span></span>
+  </div>
+  <div class="sidebar-logout" onclick="logout()">Logout</div>
+</aside>
 
-  <!-- ══════════════ PAGE: DASHBOARD ══════════════ -->
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-right">
+      <div class="notif-btn" onclick="toggleQA()">🔔 <span id="notifCount">0</span><span class="notif-badge" id="notifBadge" style="display:none">0</span></div>
+      <div style="position:relative">
+        <button class="qa-btn" onclick="toggleQAMenu()">⚡ Quick Actions ▾</button>
+        <div class="qa-dropdown" id="qaMenu">
+          <div class="qa-item" onclick="quickNewQuote()">➕ New Quote</div>
+          <div class="qa-item" onclick="quickSweep()">📧 Reminder Sweep</div>
+          <div class="qa-item" onclick="quickLearn()">🧠 Learn Now</div>
+          <div class="qa-item" onclick="quickBriefing()">🌅 Morning Briefing</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGES -->
+  <!-- PAGE: DASHBOARD -->
   <div class="page active" id="page-dashboard">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    <div id="dash-alerts"></div>
+    <div class="stats-grid" id="dash-stats">
+      <div class="stat-card"><div class="stat-label">Total Pipeline</div><div class="stat-value" id="s-pipeline">--</div><div class="stat-sub">all jobs</div></div>
+      <div class="stat-card" id="sc-active"><div class="stat-label">Active Rentals</div><div class="stat-value" id="s-active">--</div><div class="stat-sub">in progress</div></div>
+      <div class="stat-card" id="sc-48h"><div class="stat-label">Ending 48h</div><div class="stat-value" id="s-48h">--</div><div class="stat-sub">need attention</div></div>
+      <div class="stat-card" id="sc-overdue"><div class="stat-label">Overdue</div><div class="stat-value" id="s-overdue">--</div><div class="stat-sub">past end date</div></div>
+      <div class="stat-card yellow"><div class="stat-label">Month Revenue</div><div class="stat-value" id="s-revenue">$--</div><div class="stat-sub">pipeline value</div></div>
+      <div class="stat-card" id="sc-tasks"><div class="stat-label">Pending Tasks</div><div class="stat-value" id="s-tasks">--</div><div class="stat-sub">to do</div></div>
+    </div>
+    <div class="qa-row">
+      <div class="qab primary" onclick="goPage('quote')">➕ New Quote</div>
+      <div class="qab" onclick="quickSweep()">📧 Sweep Reminders</div>
+      <div class="qab" onclick="goPage('knowledge')">🧠 Learn</div>
+      <div class="qab" onclick="goPage('finance')">📊 Finance Report</div>
+      <div class="qab" onclick="quickBriefing()">🌅 Briefing</div>
+      <div class="qab" onclick="loadDashboard()">🔄 Refresh</div>
+    </div>
+    <div class="section-header"><div class="section-title">Pipeline</div><div class="section-sub" id="dash-pipeline-sub">Loading...</div></div>
+    <div class="table-wrap mb16">
+      <table id="pipelineTable">
+        <thead><tr><th>Job ID</th><th>Customer</th><th>Equipment</th><th>Stage</th><th>Total</th><th>Start</th><th>End</th><th>Actions</th></tr></thead>
+        <tbody id="pipelineTbody"><tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="grid-2">
       <div>
-        <div style="font-size:22px;font-weight:800;color:var(--yellow);">&#x1F98D; GORILLA RENTAL HQ</div>
-        <div style="font-size:12px;color:var(--gray-500);margin-top:2px;" id="dashLastUpdated">Refreshing...</div>
+        <div class="section-header"><div class="section-title">🚚 Deliveries Today</div></div>
+        <div id="dash-deliveries" class="jobs-grid"></div>
       </div>
-      <div style="text-align:right;">
-        <div style="font-size:18px;font-weight:700;" id="dashClock">--:-- --</div>
-        <div style="font-size:12px;color:var(--gray-400);" id="dashDate"></div>
-        <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:4px;">
-          <div style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);"></div>
-          <span style="font-size:11px;color:var(--green);font-weight:600;">SYSTEM ONLINE</span>
-        </div>
+      <div>
+        <div class="section-header"><div class="section-title">📥 Pickups Today</div></div>
+        <div id="dash-pickups" class="jobs-grid"></div>
       </div>
     </div>
-
-    <!-- Alert Banner -->
-    <div class="alert-banner red" id="alertBannerRed" onclick="showPage('finance', document.querySelectorAll('.nav-tab')[5])"></div>
-    <div class="alert-banner yellow" id="alertBannerYellow" onclick="showPage('finance', document.querySelectorAll('.nav-tab')[5])"></div>
-
-    <!-- Stats Row -->
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-value" id="statPipeline">—</div><div class="stat-label">Pipeline Jobs</div></div>
-      <div class="stat-card"><div class="stat-value" id="statActive">—</div><div class="stat-label">Active Rentals</div></div>
-      <div class="stat-card"><div class="stat-value" id="statEnding48">—</div><div class="stat-label">Ending 48h</div></div>
-      <div class="stat-card"><div class="stat-value" id="statRevenue">—</div><div class="stat-label">Month Revenue</div></div>
-      <div class="stat-card"><div class="stat-value" id="statTasks">—</div><div class="stat-label">Pending Tasks</div></div>
+    <div class="mt20">
+      <div class="section-header"><div class="section-title">✅ Pending Tasks (Top 3)</div><div class="qab" onclick="goPage('tasks')">View All</div></div>
+      <div id="dash-tasks"></div>
     </div>
-
-    <!-- Quick Actions -->
-    <div class="actions-row">
-      <button class="btn btn-yellow" onclick="showPage('quote', document.querySelectorAll('.nav-tab')[2])">&#x2795; New Quote</button>
-      <button class="btn btn-gray" onclick="apiAction('POST','/finance/sweep','Reminder sweep started','Sweep failed','dashSweepBtn')" id="dashSweepBtn">&#x1F4E7; Reminder Sweep</button>
-      <button class="btn btn-gray" onclick="apiAction('POST','/knowledge/sweep','Learning sweep started','Sweep failed','dashLearnBtn')" id="dashLearnBtn">&#x1F4DA; Learn Now</button>
-      <button class="btn btn-gray" onclick="apiAction('POST','/admin/briefing','Morning briefing sent','Failed','dashBriefBtn')" id="dashBriefBtn">&#x1F4CB; Morning Briefing</button>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-      <div>
-        <!-- Pipeline -->
-        <div class="card">
-          <div class="section-title">Recent Pipeline <a onclick="showPage('quote', document.querySelectorAll('.nav-tab')[2]);return false;" href="#">View All &rarr;</a></div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Job ID</th><th>Customer</th><th>Stage</th><th>Total</th><th>Action</th></tr></thead>
-              <tbody id="dashPipelineBody"><tr><td colspan="5"><div class="skeleton" style="height:12px;width:100%;"></div></td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Pending Tasks Preview -->
-        <div class="card">
-          <div class="section-title">High Priority Tasks <a onclick="showPage('tasks', document.querySelectorAll('.nav-tab')[8]);return false;" href="#">View All &rarr;</a></div>
-          <div id="dashTasksPreview"><div class="skeleton" style="height:60px;border-radius:8px;"></div></div>
-        </div>
-      </div>
-
-      <div>
-        <!-- Today's Ops -->
-        <div class="card">
-          <div class="section-title">Today's Operations</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div>
-              <div style="font-size:12px;font-weight:600;color:var(--gray-400);margin-bottom:8px;">&#x1F4E6; DELIVERIES</div>
-              <div id="dashDeliveries"><div class="skeleton" style="height:80px;border-radius:8px;"></div></div>
-            </div>
-            <div>
-              <div style="font-size:12px;font-weight:600;color:var(--gray-400);margin-bottom:8px;">&#x1F4E5; PICKUPS</div>
-              <div id="dashPickups"><div class="skeleton" style="height:80px;border-radius:8px;"></div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="card">
-          <div class="section-title">Recent Activity <a onclick="showPage('activity', document.querySelectorAll('.nav-tab')[9]);return false;" href="#">View All &rarr;</a></div>
-          <div id="dashActivity"><div class="skeleton" style="height:120px;border-radius:8px;"></div></div>
-        </div>
-      </div>
+    <div class="mt20">
+      <div class="section-header"><div class="section-title">📊 Recent Activity</div><div class="qab" onclick="goPage('activity')">View All</div></div>
+      <div id="dash-activity"></div>
     </div>
   </div>
 
-  <!-- ══════════════ PAGE: COMPANY ══════════════ -->
+  <!-- PAGE: COMPANY -->
   <div class="page" id="page-company">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
-      <div style="font-size:20px;font-weight:800;color:var(--yellow);">&#x1F3E2; Company Snapshot</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <span id="snapshotAge" style="font-size:12px;color:var(--gray-400);align-self:center;"></span>
-        <button class="btn btn-yellow" onclick="runOnboarding()" id="onboardBtn">&#x1F504; Refresh Data</button>
-      </div>
+    <div class="flex gap8 mb16">
+      <button class="btn primary" onclick="loadCompany()">🔄 Refresh</button>
+      <button class="btn" onclick="runOnboarding()">🔁 Re-run Onboarding</button>
     </div>
-
-    <!-- Stats row -->
-    <div class="stats-row" style="margin-bottom:20px;" id="companyStats">
-      <div class="stat-card"><div class="stat-value" id="cStatEquip">—</div><div class="stat-label">Equipment Units</div></div>
-      <div class="stat-card"><div class="stat-value" id="cStatJobs">—</div><div class="stat-label">Pipeline Jobs</div></div>
-      <div class="stat-card"><div class="stat-value" id="cStatIncome" style="color:#4caf50;">—</div><div class="stat-label">Total Income</div></div>
-      <div class="stat-card"><div class="stat-value" id="cStatExpenses" style="color:#f44336;">—</div><div class="stat-label">Total Expenses</div></div>
-      <div class="stat-card"><div class="stat-value" id="cStatNet">—</div><div class="stat-label">Net Profit</div></div>
+    <div id="company-content">
+      <div class="card"><div class="skel" style="height:24px;width:200px"></div><div class="skel mt8"></div><div class="skel mt8" style="width:60%"></div></div>
     </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <!-- Equipment Fleet -->
-      <div class="card">
-        <div class="section-title">&#x1F3D7; Equipment Fleet</div>
-        <div style="overflow-x:auto;">
-          <table class="data-table" id="equipmentTable">
-            <thead><tr><th>Name</th><th>SKU</th><th>Daily</th><th>Weekly</th><th>Monthly</th></tr></thead>
-            <tbody id="equipmentBody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Financial Summary -->
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div class="section-title" style="margin:0;">&#x1F4B3; Financial Overview</div>
-          <select id="cashflowMonth" onchange="loadCashflow()" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:4px 8px;font-size:12px;">
-            <option value="">All Time</option>
+    <div class="mt20">
+      <div class="section-header">
+        <div class="section-title">💰 Cashflow</div>
+        <div class="flex gap8 items-center">
+          <select id="cashflowMonth" class="filter-select" onchange="loadCashflow()">
+            <option value="2026-03">March 2026</option>
+            <option value="2026-02">February 2026</option>
+            <option value="2026-01">January 2026</option>
           </select>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
-          <div style="background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.3);border-radius:8px;padding:12px;text-align:center;">
-            <div style="font-size:18px;font-weight:700;color:#4caf50;" id="cfIncome">—</div>
-            <div style="font-size:11px;color:var(--gray-400);">Income</div>
-          </div>
-          <div style="background:rgba(244,67,54,0.1);border:1px solid rgba(244,67,54,0.3);border-radius:8px;padding:12px;text-align:center;">
-            <div style="font-size:18px;font-weight:700;color:#f44336;" id="cfExpenses">—</div>
-            <div style="font-size:11px;color:var(--gray-400);">Expenses</div>
-          </div>
-          <div style="background:rgba(246,236,14,0.1);border:1px solid rgba(246,236,14,0.3);border-radius:8px;padding:12px;text-align:center;">
-            <div style="font-size:18px;font-weight:700;color:var(--yellow);" id="cfNet">—</div>
-            <div style="font-size:11px;color:var(--gray-400);">Net</div>
-          </div>
-        </div>
-        <div id="cashflowTable" style="overflow-x:auto;max-height:300px;overflow-y:auto;">
-          <table class="data-table">
-            <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Type</th></tr></thead>
-            <tbody id="cashflowBody"><tr><td colspan="5" class="empty-state">Loading cashflow...</td></tr></tbody>
-          </table>
-        </div>
-        <div style="margin-top:12px;">
-          <button class="btn btn-yellow" onclick="showAddEntryModal()" style="font-size:12px;">&#x2795; Add Entry</button>
+          <button class="btn primary" onclick="openAddCashflow()">+ Add Entry</button>
         </div>
       </div>
-    </div>
-
-    <!-- Pipeline by stage -->
-    <div class="card" style="margin-top:16px;">
-      <div class="section-title">&#x1F4CB; Pipeline Overview</div>
-      <div id="pipelineStages" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;"></div>
-    </div>
-
-    <!-- Add Cashflow Entry Modal -->
-    <div class="modal-overlay" id="addEntryModal">
-      <div class="modal" style="max-width:400px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-          <div style="font-weight:700;font-size:16px;">&#x2795; Add Cashflow Entry</div>
-          <button onclick="document.getElementById('addEntryModal').classList.remove('open')" style="background:none;border:none;color:var(--gray-400);font-size:20px;cursor:pointer;">&times;</button>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          <input type="date" id="entryDate" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
-          <input type="text" id="entryDesc" placeholder="Description" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
-          <input type="text" id="entryCat" placeholder="Category (e.g. Equipment, Labor)" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
-          <input type="number" id="entryAmount" placeholder="Amount (e.g. 500)" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
-          <select id="entryType" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
-          </select>
-          <input type="text" id="entryJobId" placeholder="Job ID (optional)" style="background:var(--gray-800);color:var(--white);border:1px solid var(--gray-700);border-radius:6px;padding:8px;font-size:14px;">
-          <button class="btn btn-yellow" onclick="submitCashflowEntry()">Save Entry</button>
-        </div>
+      <div class="grid-3 mb16">
+        <div class="card"><div class="stat-label">Income</div><div class="stat-value" style="color:var(--success)" id="cf-income">$--</div></div>
+        <div class="card"><div class="stat-label">Expenses</div><div class="stat-value" style="color:var(--danger)" id="cf-expenses">$--</div></div>
+        <div class="card"><div class="stat-label">Net Profit</div><div class="stat-value" id="cf-net">$--</div></div>
       </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th>Amount</th><th>Job</th></tr></thead>
+        <tbody id="cashflowTbody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+    <div class="mt20">
+      <div class="section-header"><div class="section-title">🚜 Equipment Fleet</div></div>
+      <div class="grid-3" id="fleet-grid"></div>
     </div>
   </div>
 
-  <!-- ══════════════ PAGE: QUOTE AGENT ══════════════ -->
+  <!-- PAGE: QUOTE -->
   <div class="page" id="page-quote">
-    <div class="split">
-      <div class="split-left">
-        <div class="agent-status"><div class="status-dot"></div><div class="status-text">QUOTE AGENT ONLINE</div></div>
-        <div class="card">
-          <div class="card-title">&#x1F4CA; Quote Stats</div>
-          <div id="quoteStats" style="font-size:13px;color:var(--gray-300);line-height:1.8;">Loading...</div>
+    <div class="two-panel">
+      <div>
+        <div class="card mb12">
+          <div class="flex items-center gap8 mb12"><span class="chat-status"></span><span class="font-600">QUOTE AGENT ONLINE</span></div>
+          <div class="grid-2" id="quote-stats" style="gap:8px">
+            <div><div class="stat-label">Total Quotes</div><div class="font-bold text-accent" id="qs-total">--</div></div>
+            <div><div class="stat-label">Pipeline Value</div><div class="font-bold text-accent" id="qs-value">$--</div></div>
+            <div><div class="stat-label">Quote Sent</div><div class="font-bold" id="qs-sent">--</div></div>
+            <div><div class="stat-label">Built</div><div class="font-bold" id="qs-built">--</div></div>
+          </div>
         </div>
         <div class="card">
-          <div class="card-title">&#x1F550; Recent Activity</div>
-          <div id="quoteActivity">Loading...</div>
+          <div class="section-title mb8">Recent Activity</div>
+          <div id="quote-activity"></div>
         </div>
       </div>
       <div>
-        <div class="card-title" style="margin-bottom:12px;">&#x1F4AC; Quote Agent Chat</div>
-        <div class="chat-container">
-          <div class="chat-messages" id="chatQuote">
-            <div class="msg agent">&#x1F44B; Hey! I'm the Quote Agent. Tell me about your customer and what equipment they need — I'll build a full quote with Booqable pricing.<div class="msg-time">Ready</div></div>
-          </div>
-          <div class="chat-presets">
-            <button class="preset-btn" onclick="sendChat('quote','New Quote')">New Quote</button>
-            <button class="preset-btn" onclick="sendChat('quote','Check pipeline status')">Check Pipeline</button>
-            <button class="preset-btn" onclick="sendChat('quote','Build a quote for a contractor needing a 45ft boom lift for 1 week')">Sample Quote</button>
-          </div>
-          <div class="chat-input-row">
-            <textarea class="chat-input" id="inputQuote" placeholder="Describe the customer and equipment needed..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('quote')}"></textarea>
-            <button class="chat-send" onclick="sendChat('quote')">Send</button>
-          </div>
+        <div class="preset-row" id="quote-presets">
+          <div class="preset" onclick="sendChat('quote','Build me a new quote')">➕ New Quote</div>
+          <div class="preset" onclick="sendChat('quote','Show me the current pipeline')">📋 View Pipeline</div>
+          <div class="preset" onclick="sendChat('quote','What are our current equipment prices?')">💰 Check Prices</div>
+          <div class="preset" onclick="sendChat('quote','Resend the latest quote')">📧 Resend Quote</div>
         </div>
-        <div class="card" style="margin-top:20px;">
-          <div class="section-title">Quote Pipeline</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Job ID</th><th>Customer</th><th>Equipment</th><th>Total</th><th>Stage</th><th>Date</th></tr></thead>
-              <tbody id="quotePipelineBody"><tr><td colspan="6" style="text-align:center;color:var(--gray-500);">Loading...</td></tr></tbody>
-            </table>
+        <div class="chat-wrap" id="chat-quote">
+          <div class="chat-header"><span class="chat-status"></span>Quote Agent</div>
+          <div class="chat-msgs" id="msgs-quote"></div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="input-quote" placeholder="Build a quote for..." onkeydown="if(event.key==='Enter')sendChat('quote',this.value)">
+            <button class="chat-send" onclick="sendChat('quote',document.getElementById('input-quote').value)">Send</button>
           </div>
         </div>
       </div>
     </div>
+    <div class="mt20">
+      <div class="section-header"><div class="section-title">Recent Quotes</div><button class="btn" onclick="loadQuotePipeline()">🔄 Refresh</button></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Job ID</th><th>Customer</th><th>Equipment</th><th>Stage</th><th>Total</th><th>Created</th><th>Actions</th></tr></thead>
+        <tbody id="quoteTbody"></tbody></table>
+      </div>
+    </div>
   </div>
 
-  <!-- ══════════════ PAGE: ADMIN AGENT ══════════════ -->
+  <!-- PAGE: ADMIN -->
   <div class="page" id="page-admin">
-    <div class="split">
-      <div class="split-left">
-        <div class="agent-status"><div class="status-dot"></div><div class="status-text">ADMIN AGENT ONLINE</div></div>
-        <div class="card">
-          <div class="card-title">&#x23F3; Pending Approvals <span class="badge badge-red" id="approvalCount">0</span></div>
-          <div id="approvalsList">Loading...</div>
+    <div class="two-panel">
+      <div>
+        <div class="card mb12">
+          <div class="flex items-center gap8 mb12"><span class="chat-status"></span><span class="font-600">ADMIN AGENT ONLINE</span></div>
         </div>
-        <div class="card">
-          <div class="card-title">&#x1F550; Recent Activity</div>
-          <div id="adminActivity">Loading...</div>
+        <div class="card mb12">
+          <div class="section-title mb12">⏳ Pending Approvals</div>
+          <div id="approvals-list"><div class="text-muted text-sm">Loading...</div></div>
         </div>
       </div>
       <div>
-        <div class="card-title" style="margin-bottom:12px;">&#x1F4CB; Admin Agent Chat</div>
-        <div class="chat-container">
-          <div class="chat-messages" id="chatAdmin">
-            <div class="msg agent">&#x1F4CB; Admin Agent ready. I handle reservations, contracts, invoices, and payment approvals.<div class="msg-time">Ready</div></div>
-          </div>
-          <div class="chat-presets">
-            <button class="preset-btn" onclick="sendChat('admin','Create reservation')">Create Reservation</button>
-            <button class="preset-btn" onclick="sendChat('admin','Send contract')">Send Contract</button>
-            <button class="preset-btn" onclick="sendChat('admin','Show pending approvals')">Approvals</button>
-            <button class="preset-btn" onclick="sendChat('admin','Create invoice')">Create Invoice</button>
-          </div>
-          <div class="chat-input-row">
-            <textarea class="chat-input" id="inputAdmin" placeholder="Manage reservations, contracts, payments..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('admin')}"></textarea>
-            <button class="chat-send" onclick="sendChat('admin')">Send</button>
-          </div>
+        <div class="preset-row">
+          <div class="preset" onclick="sendChat('admin','Create a reservation for the latest quote')">📋 Create Reservation</div>
+          <div class="preset" onclick="sendChat('admin','Send the rental contract')">📄 Send Contract</div>
+          <div class="preset" onclick="sendChat('admin','Send a payment link')">💰 Payment Link</div>
+          <div class="preset" onclick="sendChat('admin','What is the job status?')">📊 Job Status</div>
         </div>
-        <div class="card" style="margin-top:20px;">
-          <div class="section-title">Reservations</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Job ID</th><th>Customer</th><th>Start</th><th>End</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody id="reservationsBody"><tr><td colspan="7" style="text-align:center;color:var(--gray-500);">Loading...</td></tr></tbody>
-            </table>
+        <div class="chat-wrap" id="chat-admin">
+          <div class="chat-header"><span class="chat-status"></span>Admin Agent</div>
+          <div class="chat-msgs" id="msgs-admin"></div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="input-admin" placeholder="Create reservation, send contract..." onkeydown="if(event.key==='Enter')sendChat('admin',this.value)">
+            <button class="chat-send" onclick="sendChat('admin',document.getElementById('input-admin').value)">Send</button>
           </div>
         </div>
       </div>
     </div>
+    <div class="mt20">
+      <div class="section-header"><div class="section-title">Reservations</div><button class="btn" onclick="loadAdminReservations()">🔄 Refresh</button></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Job ID</th><th>Customer</th><th>Start</th><th>End</th><th>Total</th><th>Balance</th><th>Status</th></tr></thead>
+        <tbody id="reservationsTbody"><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr></tbody>
+      </table></div>
+    </div>
   </div>
 
-  <!-- ══════════════ PAGE: OPS AGENT ══════════════ -->
+  <!-- PAGE: OPS -->
   <div class="page" id="page-ops">
-    <div class="split">
-      <div class="split-left">
-        <div class="agent-status"><div class="status-dot"></div><div class="status-text">OPS AGENT ONLINE</div></div>
-        <div class="card">
-          <div class="card-title">&#x1F4CA; Ops Stats</div>
-          <div id="opsStats" style="font-size:13px;color:var(--gray-300);line-height:1.8;">Loading...</div>
-        </div>
-        <div class="card">
-          <div class="card-title">&#x1F697; Drivers</div>
-          <div id="driversList">Loading...</div>
-        </div>
+    <div class="mb16">
+      <div class="collapsible-toggle" onclick="toggleEl('ops-chat-body')">
+        <div class="section-header"><div class="section-title">💬 Ops Chat ▾</div></div>
       </div>
-      <div>
-        <div class="card-title" style="margin-bottom:12px;">&#x1F69A; Ops Agent Chat</div>
-        <div class="chat-container">
-          <div class="chat-messages" id="chatOps">
-            <div class="msg agent">&#x1F69A; Ops Agent ready. I handle deliveries, pickups, and driver scheduling.<div class="msg-time">Ready</div></div>
-          </div>
-          <div class="chat-presets">
-            <button class="preset-btn" onclick="sendChat('ops',&quot;What are today's jobs?&quot;)">Today's Jobs</button>
-            <button class="preset-btn" onclick="sendChat('ops','Schedule a delivery')">Schedule Delivery</button>
-            <button class="preset-btn" onclick="sendChat('ops','Notify driver')">Notify Driver</button>
-          </div>
-          <div class="chat-input-row">
-            <textarea class="chat-input" id="inputOps" placeholder="Schedule deliveries, pickups, notify drivers..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('ops')}"></textarea>
-            <button class="chat-send" onclick="sendChat('ops')">Send</button>
-          </div>
+      <div class="collapsible-body" id="ops-chat-body">
+        <div class="preset-row">
+          <div class="preset" onclick="sendChat('ops','What jobs do we have today?')">📅 Today's Jobs</div>
+          <div class="preset" onclick="sendChat('ops','Show upcoming deliveries')">🚚 Upcoming</div>
+          <div class="preset" onclick="sendChat('ops','Notify drivers of today jobs')">📱 Notify Drivers</div>
+          <div class="preset" onclick="sendChat('ops','Mark latest delivery complete')">✅ Mark Delivered</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
-          <div class="card">
-            <div class="section-title">&#x1F4E6; Today's Deliveries</div>
-            <div id="opsDeliveries"><div class="skeleton" style="height:100px;border-radius:8px;"></div></div>
-          </div>
-          <div class="card">
-            <div class="section-title">&#x1F4E5; Today's Pickups</div>
-            <div id="opsPickups"><div class="skeleton" style="height:100px;border-radius:8px;"></div></div>
+        <div class="chat-wrap" id="chat-ops">
+          <div class="chat-header"><span class="chat-status"></span>Ops Agent</div>
+          <div class="chat-msgs" id="msgs-ops"></div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="input-ops" placeholder="Schedule delivery, notify driver..." onkeydown="if(event.key==='Enter')sendChat('ops',this.value)">
+            <button class="chat-send" onclick="sendChat('ops',document.getElementById('input-ops').value)">Send</button>
           </div>
         </div>
       </div>
     </div>
+    <div class="grid-2 mb20">
+      <div>
+        <div class="section-header"><div class="section-title">🚚 Deliveries Today</div><button class="btn" onclick="loadOps()">🔄</button></div>
+        <div id="ops-deliveries"><div class="text-muted text-sm">None scheduled</div></div>
+      </div>
+      <div>
+        <div class="section-header"><div class="section-title">📥 Pickups Today</div></div>
+        <div id="ops-pickups"><div class="text-muted text-sm">None scheduled</div></div>
+      </div>
+    </div>
+    <div class="mb20">
+      <div class="section-header"><div class="section-title">📅 Upcoming 7 Days</div></div>
+      <div id="ops-upcoming"></div>
+    </div>
+    <div class="grid-2">
+      <div class="driver-card"><div class="driver-name">🚚 Andrei</div><div class="driver-phone">+1 (447) 474-4549</div><div id="driver-andrei-jobs" class="text-sm text-muted">Loading assignments...</div><div class="mt8"><a href="tel:+14474744549" class="btn">📞 Call</a></div></div>
+      <div class="driver-card"><div class="driver-name">🚚 Nazar</div><div class="driver-phone">+1 (786) 000-0000</div><div id="driver-nazar-jobs" class="text-sm text-muted">Loading assignments...</div><div class="mt8"><a href="tel:+17860000000" class="btn">📞 Call</a></div></div>
+    </div>
   </div>
 
-  <!-- ══════════════ PAGE: FINANCE AGENT ══════════════ -->
+  <!-- PAGE: FINANCE -->
   <div class="page" id="page-finance">
-    <div class="split">
-      <div class="split-left">
-        <div class="agent-status"><div class="status-dot"></div><div class="status-text">FINANCE AGENT ONLINE</div></div>
-        <div class="card">
-          <div class="card-title">&#x1F4B0; Finance Stats</div>
-          <div id="financeStats" style="font-size:13px;color:var(--gray-300);line-height:1.8;">Loading...</div>
+    <div class="stats-grid mb16">
+      <div class="stat-card green"><div class="stat-label">Active Rentals</div><div class="stat-value" id="fin-active">--</div></div>
+      <div class="stat-card" id="fin-sc-48h"><div class="stat-label">Ending 48h</div><div class="stat-value" id="fin-48h">--</div></div>
+      <div class="stat-card" id="fin-sc-overdue"><div class="stat-label">Overdue</div><div class="stat-value" id="fin-overdue">--</div></div>
+      <div class="stat-card yellow"><div class="stat-label">Month Revenue</div><div class="stat-value" id="fin-revenue">$--</div></div>
+      <div class="stat-card"><div class="stat-label">Active Value</div><div class="stat-value" id="fin-active-rev">$--</div></div>
+      <div class="stat-card"><div class="stat-label">Pipeline Value</div><div class="stat-value" id="fin-pipeline-rev">$--</div></div>
+    </div>
+    <div class="two-panel">
+      <div>
+        <div class="preset-row">
+          <div class="preset" onclick="sendChat('finance','Run a reminder sweep for all active rentals')">⚡ Reminder Sweep</div>
+          <div class="preset" onclick="sendChat('finance','Give me a revenue report for this month')">📊 Revenue Report</div>
+          <div class="preset" onclick="sendChat('finance','Check all active rentals')">🔍 Check Active</div>
+          <div class="preset" onclick="sendChat('finance','Extend rental')">📅 Extend Rental</div>
         </div>
-        <div class="card">
-          <div class="card-title">&#x1F550; Recent Activity</div>
-          <div id="financeActivity">Loading...</div>
+        <div class="chat-wrap" id="chat-finance">
+          <div class="chat-header"><span class="chat-status"></span>Finance Agent</div>
+          <div class="chat-msgs" id="msgs-finance"></div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="input-finance" placeholder="Send reminder, extend rental..." onkeydown="if(event.key==='Enter')sendChat('finance',this.value)">
+            <button class="chat-send" onclick="sendChat('finance',document.getElementById('input-finance').value)">Send</button>
+          </div>
         </div>
       </div>
       <div>
-        <div class="card-title" style="margin-bottom:12px;">&#x1F4B0; Finance Agent Chat</div>
-        <div class="chat-container">
-          <div class="chat-messages" id="chatFinance">
-            <div class="msg agent">&#x1F4B0; Finance Agent ready. I handle reminders, overdue rentals, and revenue reporting.<div class="msg-time">Ready</div></div>
-          </div>
-          <div class="chat-presets">
-            <button class="preset-btn" onclick="sendChat('finance','Run reminder sweep')">Reminder Sweep</button>
-            <button class="preset-btn" onclick="sendChat('finance','Check active rentals')">Active Rentals</button>
-            <button class="preset-btn" onclick="sendChat('finance','Revenue report this month')">Revenue Report</button>
-          </div>
-          <div class="chat-input-row">
-            <textarea class="chat-input" id="inputFinance" placeholder="Check rentals, send reminders, revenue reports..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('finance')}"></textarea>
-            <button class="chat-send" onclick="sendChat('finance')">Send</button>
-          </div>
-        </div>
-        <div class="card" style="margin-top:20px;">
-          <div class="section-title">Active Rentals</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Job ID</th><th>Customer</th><th>End Date</th><th>Days Left</th><th>Balance</th><th>Status</th></tr></thead>
-              <tbody id="financeRentalsBody"><tr><td colspan="6" style="text-align:center;color:var(--gray-500);">Loading...</td></tr></tbody>
-            </table>
-          </div>
+        <div class="section-header"><div class="section-title">Active Rentals</div><button class="btn" onclick="loadFinance()">🔄 Refresh</button></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Job ID</th><th>Customer</th><th>End Date</th><th>Hours Left</th><th>Total</th><th>Actions</th></tr></thead>
+          <tbody id="financeTbody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr></tbody></table>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ══════════════ PAGE: MARKETING AGENT ══════════════ -->
+  <!-- PAGE: MARKETING -->
   <div class="page" id="page-marketing">
-    <div class="split">
-      <div class="split-left">
-        <div class="agent-status"><div class="status-dot"></div><div class="status-text">MARKETING AGENT ONLINE</div></div>
-        <div class="card">
-          <div class="card-title">&#x1F4CA; Marketing Stats</div>
-          <div id="marketingStats" style="font-size:13px;color:var(--gray-300);line-height:1.8;">Loading...</div>
+    <div class="stats-grid mb16">
+      <div class="stat-card"><div class="stat-label">Total Leads</div><div class="stat-value" id="mkt-total">--</div></div>
+      <div class="stat-card red"><div class="stat-label">New Leads</div><div class="stat-value" id="mkt-new">--</div></div>
+      <div class="stat-card"><div class="stat-label">Contacted</div><div class="stat-value" id="mkt-contacted">--</div></div>
+      <div class="stat-card green"><div class="stat-label">Converted</div><div class="stat-value" id="mkt-converted">--</div></div>
+      <div class="stat-card yellow"><div class="stat-label">Conversion Rate</div><div class="stat-value" id="mkt-rate">--%</div></div>
+      <div class="stat-card"><div class="stat-label">Posts Generated</div><div class="stat-value" id="mkt-posts">--</div></div>
+    </div>
+    <div class="two-panel">
+      <div>
+        <div class="preset-row">
+          <div class="preset" onclick="sendChat('marketing','Capture a new lead')">📥 New Lead</div>
+          <div class="preset" onclick="sendChat('marketing','Generate a Facebook post for our 45ft boom lift')">📱 Gen Post</div>
+          <div class="preset" onclick="sendChat('marketing','Create outreach email for a contractor')">📧 Outreach</div>
+          <div class="preset" onclick="sendChat('marketing','Show marketing stats')">📊 Stats</div>
         </div>
-        <div class="card">
-          <div class="card-title">&#x1F550; Recent Activity</div>
-          <div id="marketingActivity">Loading...</div>
+        <div class="chat-wrap" id="chat-marketing">
+          <div class="chat-header"><span class="chat-status"></span>Marketing Agent</div>
+          <div class="chat-msgs" id="msgs-marketing"></div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="input-marketing" placeholder="Generate post, capture lead..." onkeydown="if(event.key==='Enter')sendChat('marketing',this.value)">
+            <button class="chat-send" onclick="sendChat('marketing',document.getElementById('input-marketing').value)">Send</button>
+          </div>
         </div>
       </div>
       <div>
-        <div class="card-title" style="margin-bottom:12px;">&#x1F4E3; Marketing Agent Chat</div>
-        <div class="chat-container">
-          <div class="chat-messages" id="chatMarketing">
-            <div class="msg agent">&#x1F4E3; Marketing Agent ready. I handle leads, outreach, and content generation.<div class="msg-time">Ready</div></div>
-          </div>
-          <div class="chat-presets">
-            <button class="preset-btn" onclick="sendChat('marketing','New lead')">New Lead</button>
-            <button class="preset-btn" onclick="sendChat('marketing','Generate a social media post about our boom lifts')">Generate Post</button>
-            <button class="preset-btn" onclick="sendChat('marketing','Show lead stats')">Lead Stats</button>
-          </div>
-          <div class="chat-input-row">
-            <textarea class="chat-input" id="inputMarketing" placeholder="Manage leads, generate posts, send outreach..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('marketing')}"></textarea>
-            <button class="chat-send" onclick="sendChat('marketing')">Send</button>
-          </div>
+        <div class="section-header"><div class="section-title">Leads</div><button class="btn" onclick="loadMarketing()">🔄 Refresh</button></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Name</th><th>Source</th><th>Equipment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="leadsTbody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">No leads yet</td></tr></tbody></table>
         </div>
-        <div class="card" style="margin-top:20px;">
-          <div class="section-title">Leads</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Name</th><th>Phone</th><th>Equipment</th><th>Source</th><th>Status</th><th>Date</th></tr></thead>
-              <tbody id="leadsBody"><tr><td colspan="6" style="text-align:center;color:var(--gray-500);">Loading...</td></tr></tbody>
-            </table>
-          </div>
+      </div>
+    </div>
+    <div class="grid-2 mt20">
+      <div class="card">
+        <div class="section-title mb12">📱 Social Post Generator</div>
+        <div class="flex gap8 mb8">
+          <select id="postType" class="filter-select">
+            <option value="equipment">Equipment Promo</option>
+            <option value="promo">General Promo</option>
+            <option value="safety">Safety Post</option>
+            <option value="seasonal">Seasonal</option>
+          </select>
+          <button class="btn primary" onclick="generatePost()">Generate</button>
         </div>
+        <div id="post-output" class="text-sm text-muted">Click Generate to create a post...</div>
+      </div>
+      <div class="card">
+        <div class="section-title mb12">🏗️ Equipment Listing</div>
+        <div class="flex gap8 mb8">
+          <select id="listingSku" class="filter-select">
+            <option value="BL001">Boom Lift 45ft</option>
+            <option value="BL002">Boom Lift 65ft</option>
+            <option value="BL003">Boom Lift 60ft</option>
+            <option value="BL007">Boom Lift 125ft</option>
+            <option value="BL010">Boom Lift 85ft</option>
+            <option value="BL011">Genie S-40</option>
+          </select>
+          <button class="btn primary" onclick="generateListing()">Generate</button>
+        </div>
+        <div id="listing-output" class="text-sm text-muted">Click Generate to create a listing...</div>
       </div>
     </div>
   </div>
 
-  <!-- ══════════════ PAGE: KNOWLEDGE AGENT ══════════════ -->
+  <!-- PAGE: KNOWLEDGE -->
   <div class="page" id="page-knowledge">
-    <div class="split">
-      <div class="split-left">
-        <div class="agent-status"><div class="status-dot"></div><div class="status-text">KNOWLEDGE AGENT ONLINE</div></div>
+    <div class="two-panel wide">
+      <div>
+        <div class="card mb12">
+          <div class="section-title mb12">📊 Knowledge Stats</div>
+          <div id="kb-stats" class="grid-2" style="gap:8px">
+            <div><div class="stat-label">Total Entries</div><div class="font-bold text-accent" id="kb-total">--</div></div>
+            <div><div class="stat-label">Last Updated</div><div class="font-bold" id="kb-updated">--</div></div>
+          </div>
+        </div>
+        <div class="card mb12">
+          <div class="section-title mb12">🔗 Quick Learn</div>
+          <div class="form-group">
+            <label class="form-label">URL to Learn From</label>
+            <input class="form-input" id="learnUrl" placeholder="https://...">
+          </div>
+          <button class="btn primary w100" onclick="quickLearnUrl()">Learn Now</button>
+        </div>
         <div class="card">
-          <div class="card-title">&#x1F4CA; Knowledge Stats</div>
-          <div id="knowledgeStats" style="font-size:13px;color:var(--gray-300);line-height:1.8;">Loading...</div>
-        </div>
-        <div class="card" style="margin-top:0;">
-          <div class="card-title">&#x2795; Add Knowledge</div>
-          <div class="filter-tabs" style="margin-bottom:12px;">
-            <button class="filter-tab active" onclick="switchLearnTab('url',this)">URL</button>
-            <button class="filter-tab" onclick="switchLearnTab('manual',this)">Manual</button>
-            <button class="filter-tab" onclick="switchLearnTab('youtube',this)">YouTube</button>
+          <div class="section-title mb12">✏️ Manual Teach</div>
+          <div class="form-group">
+            <input class="form-input mb8" id="teachTitle" placeholder="Title">
+            <textarea class="form-input" id="teachContent" placeholder="Content to teach..." rows="4" style="resize:vertical"></textarea>
           </div>
-          <div id="learnTabUrl">
-            <div class="form-group"><input class="form-input" id="learnUrl" placeholder="https://..."></div>
-            <button class="btn btn-yellow btn-sm" onclick="learnFromUrl()">Learn Now</button>
-          </div>
-          <div id="learnTabManual" style="display:none;">
-            <div class="form-group"><input class="form-input" id="teachTitle" placeholder="Title"></div>
-            <div class="form-group"><textarea class="form-textarea" id="teachContent" placeholder="What should the AI know?"></textarea></div>
-            <button class="btn btn-yellow btn-sm" onclick="teachManual()">Teach</button>
-          </div>
-          <div id="learnTabYoutube" style="display:none;">
-            <div class="form-group"><input class="form-input" id="learnYtUrl" placeholder="https://youtube.com/watch?v=..."></div>
-            <button class="btn btn-yellow btn-sm" onclick="learnFromYoutube()">Learn from Video</button>
-          </div>
+          <select class="form-input mb8" id="teachCategory">
+            <option value="general">General</option>
+            <option value="equipment">Equipment</option>
+            <option value="pricing">Pricing</option>
+            <option value="safety">Safety</option>
+            <option value="competitor">Competitor</option>
+            <option value="business">Business</option>
+          </select>
+          <button class="btn primary w100" onclick="teachKnowledge()">Add to Knowledge Base</button>
         </div>
       </div>
       <div>
-        <div class="card-title" style="margin-bottom:12px;">&#x1F527; Ask the Expert</div>
-        <div class="chat-container">
-          <div class="chat-messages" id="chatKnowledge">
-            <div class="msg agent">&#x1F9E0; Knowledge Agent ready. Ask me anything about aerial work platforms, safety regulations, equipment specs, or competitor intel.<div class="msg-time">Ready</div></div>
+        <div class="tab-row">
+          <div class="tab active" onclick="switchKbTab('query',this)">🔍 General Query</div>
+          <div class="tab" onclick="switchKbTab('engineering',this)">⚙️ Engineering Query</div>
+        </div>
+        <div id="kb-query-panel">
+          <div class="preset-row">
+            <div class="preset" onclick="sendKbQuery('general','What equipment should I use for a 5-story building?')">🏗️ Equipment Specs</div>
+            <div class="preset" onclick="sendKbQuery('general','What are the OSHA rules for aerial lifts?')">⚠️ OSHA Rules</div>
+            <div class="preset" onclick="sendKbQuery('general','What are competitor prices in South Florida?')">💰 Competitor Prices</div>
+            <div class="preset" onclick="sendKbQuery('general','Recommend equipment for a roofing job')">🎯 Job Recommendation</div>
           </div>
-          <div class="chat-presets">
-            <button class="preset-btn" onclick="sendChat('knowledge','What are the OSHA requirements for aerial lifts?')">OSHA Requirements</button>
-            <button class="preset-btn" onclick="sendChat('knowledge','What is the difference between a boom lift and a scissor lift?')">Equipment Specs</button>
-            <button class="preset-btn" onclick="sendChat('knowledge','What are competitor prices in South Florida?')">Competitor Prices</button>
-          </div>
-          <div class="chat-input-row">
-            <textarea class="chat-input" id="inputKnowledge" placeholder="Ask about equipment, safety, competitors, regulations..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat('knowledge')}"></textarea>
-            <button class="chat-send" onclick="sendChat('knowledge')">Send</button>
+          <div class="chat-wrap" id="chat-knowledge">
+            <div class="chat-header"><span class="chat-status"></span>Knowledge Agent — <span id="kb-mode">General Query</span></div>
+            <div class="chat-msgs" id="msgs-knowledge"></div>
+            <div class="chat-input-row">
+              <input class="chat-input" id="input-knowledge" placeholder="Ask anything about equipment, pricing, safety..." onkeydown="if(event.key==='Enter')sendKbQuery(kbMode,this.value)">
+              <button class="chat-send" onclick="sendKbQuery(kbMode,document.getElementById('input-knowledge').value)">Ask</button>
+            </div>
           </div>
         </div>
-        <div class="card" style="margin-top:20px;">
-          <div class="section-title">Knowledge Base</div>
-          <div class="filter-tabs">
-            <button class="filter-tab active" onclick="loadKnowledge('',this)">All</button>
-            <button class="filter-tab" onclick="loadKnowledge('competitor',this)">Competitor</button>
-            <button class="filter-tab" onclick="loadKnowledge('equipment',this)">Equipment</button>
-            <button class="filter-tab" onclick="loadKnowledge('safety',this)">Safety</button>
-            <button class="filter-tab" onclick="loadKnowledge('business',this)">Business</button>
+        <div class="mt16">
+          <div class="section-header">
+            <div class="section-title">Knowledge Base</div>
+            <div class="flex gap8">
+              <select class="filter-select" id="kb-cat-filter" onchange="loadKnowledge()">
+                <option value="">All Categories</option>
+                <option value="equipment">Equipment</option>
+                <option value="pricing">Pricing</option>
+                <option value="safety">Safety</option>
+                <option value="competitor">Competitor</option>
+                <option value="business">Business</option>
+                <option value="industry_news">Industry News</option>
+              </select>
+              <button class="btn" onclick="loadKnowledge()">🔄 Refresh</button>
+            </div>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Source</th><th>Category</th><th>Summary</th><th>Date</th></tr></thead>
-              <tbody id="knowledgeBody"><tr><td colspan="4" style="text-align:center;color:var(--gray-500);">Loading...</td></tr></tbody>
-            </table>
-          </div>
+          <div id="kb-entries"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ══════════════ PAGE: TASKS ══════════════ -->
+  <!-- PAGE: TASKS -->
   <div class="page" id="page-tasks">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
-      <div style="font-size:18px;font-weight:700;">&#x2705; Task Manager</div>
-      <button class="btn btn-yellow" onclick="openCreateTask()">&#x2795; New Task</button>
+    <div class="flex gap8 mb16 items-center" style="flex-wrap:wrap">
+      <div><span class="pill" style="background:rgba(59,130,246,.2);color:#93c5fd">Pending: <span id="t-pending">--</span></span></div>
+      <div><span class="pill" style="background:rgba(239,68,68,.2);color:#fca5a5">High: <span id="t-high">--</span></span></div>
+      <div style="flex:1"></div>
+      <button class="btn primary" onclick="openCreateTask()">➕ New Task</button>
     </div>
-    <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
-      <div class="stat-card"><div class="stat-value" id="taskStatTotal">—</div><div class="stat-label">Total Tasks</div></div>
-      <div class="stat-card"><div class="stat-value red" id="taskStatHigh">—</div><div class="stat-label">High Priority</div></div>
-      <div class="stat-card"><div class="stat-value" id="taskStatPending">—</div><div class="stat-label">Pending</div></div>
-      <div class="stat-card"><div class="stat-value" id="taskStatDone">—</div><div class="stat-label">Completed</div></div>
+    <div class="filter-row">
+      <select class="filter-select" id="tf-status" onchange="loadTasks()"><option value="">All Status</option><option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="dismissed">Dismissed</option></select>
+      <select class="filter-select" id="tf-agent" onchange="loadTasks()"><option value="">All Agents</option><option value="quote">Quote</option><option value="admin">Admin</option><option value="ops">Ops</option><option value="finance">Finance</option><option value="marketing">Marketing</option><option value="knowledge">Knowledge</option><option value="system">System</option></select>
+      <select class="filter-select" id="tf-priority" onchange="loadTasks()"><option value="">All Priority</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+      <input class="filter-input" id="tf-search" placeholder="Search tasks..." oninput="filterTasks()">
     </div>
-    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
-      <div>
-        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px;">STATUS</div>
-        <div class="filter-tabs" style="margin-bottom:0;">
-          <button class="filter-tab active" onclick="filterTasks('status','',this)">All</button>
-          <button class="filter-tab" onclick="filterTasks('status','pending',this)">Pending</button>
-          <button class="filter-tab" onclick="filterTasks('status','in_progress',this)">In Progress</button>
-          <button class="filter-tab" onclick="filterTasks('status','completed',this)">Done</button>
-        </div>
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px;">PRIORITY</div>
-        <div class="filter-tabs" style="margin-bottom:0;">
-          <button class="filter-tab active" onclick="filterTasks('priority','',this)">All</button>
-          <button class="filter-tab" onclick="filterTasks('priority','high',this)">&#x1F534; High</button>
-          <button class="filter-tab" onclick="filterTasks('priority','medium',this)">&#x1F7E1; Medium</button>
-          <button class="filter-tab" onclick="filterTasks('priority','low',this)">&#x1F7E2; Low</button>
-        </div>
-      </div>
+    <div id="tasks-list"></div>
+    <div class="stats-grid mt20">
+      <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="ts-total">--</div></div>
+      <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="ts-pending">--</div></div>
+      <div class="stat-card red"><div class="stat-label">High Priority</div><div class="stat-value" id="ts-high">--</div></div>
+      <div class="stat-card green"><div class="stat-label">Completed Today</div><div class="stat-value" id="ts-done-today">--</div></div>
+      <div class="stat-card purple"><div class="stat-label">Created by AI</div><div class="stat-value" id="ts-ai">--</div></div>
+      <div class="stat-card"><div class="stat-label"></div><div class="stat-value"></div></div>
     </div>
-    <div id="tasksList">Loading tasks...</div>
   </div>
 
-  <!-- ══════════════ PAGE: ACTIVITY LOG ══════════════ -->
+  <!-- PAGE: ACTIVITY -->
   <div class="page" id="page-activity">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
-      <div style="font-size:18px;font-weight:700;">&#x1F4CA; Activity Log</div>
-      <button class="btn btn-ghost" onclick="exportCSV()">&#x2B07;&#xFE0F; Export CSV</button>
+    <div class="stats-grid mb16">
+      <div class="stat-card"><div class="stat-label">Total Today</div><div class="stat-value" id="act-total">--</div></div>
+      <div class="stat-card red"><div class="stat-label">Errors Today</div><div class="stat-value" id="act-errors">--</div></div>
+      <div class="stat-card yellow"><div class="stat-label">Most Active</div><div class="stat-value text-sm font-600" id="act-agent">--</div></div>
+      <div class="stat-card"><div class="stat-label">Last Action</div><div class="stat-value text-sm font-600" id="act-last">--</div></div>
+      <div class="stat-card"></div>
+      <div class="stat-card"><button class="btn" onclick="exportActivityCSV()">📥 Export CSV</button></div>
     </div>
-    <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
-      <div class="stat-card"><div class="stat-value" id="actStatTotal">—</div><div class="stat-label">Actions Today</div></div>
-      <div class="stat-card"><div class="stat-value red" id="actStatErrors">—</div><div class="stat-label">Errors Today</div></div>
-      <div class="stat-card"><div class="stat-value" id="actStatAgent">—</div><div class="stat-label">Most Active Agent</div></div>
-    </div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
-      <div>
-        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px;">AGENT</div>
-        <div class="filter-tabs" style="margin-bottom:0;">
-          <button class="filter-tab active" onclick="filterActivity('agent','all',this)">All</button>
-          <button class="filter-tab" onclick="filterActivity('agent','quote',this)">Quote</button>
-          <button class="filter-tab" onclick="filterActivity('agent','admin',this)">Admin</button>
-          <button class="filter-tab" onclick="filterActivity('agent','ops',this)">Ops</button>
-          <button class="filter-tab" onclick="filterActivity('agent','finance',this)">Finance</button>
-          <button class="filter-tab" onclick="filterActivity('agent','marketing',this)">Marketing</button>
-          <button class="filter-tab" onclick="filterActivity('agent','knowledge',this)">Knowledge</button>
-        </div>
+    <div class="filter-row">
+      <div id="agent-filter-btns" class="flex gap8" style="flex-wrap:wrap">
+        <div class="tab active" onclick="setActAgent('',this)">All</div>
+        <div class="tab" onclick="setActAgent('quote',this)" style="border-color:rgba(59,130,246,.4);color:#93c5fd">Quote</div>
+        <div class="tab" onclick="setActAgent('admin',this)" style="border-color:rgba(168,85,247,.4);color:#d8b4fe">Admin</div>
+        <div class="tab" onclick="setActAgent('ops',this)" style="border-color:rgba(246,236,14,.4);color:#f6ec0e">Ops</div>
+        <div class="tab" onclick="setActAgent('finance',this)" style="border-color:rgba(34,197,94,.4);color:#86efac">Finance</div>
+        <div class="tab" onclick="setActAgent('marketing',this)" style="border-color:rgba(236,72,153,.4);color:#f9a8d4">Marketing</div>
+        <div class="tab" onclick="setActAgent('knowledge',this)" style="border-color:rgba(20,184,166,.4);color:#5eead4">Knowledge</div>
       </div>
-      <div>
-        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px;">TIME RANGE</div>
-        <div class="filter-tabs" style="margin-bottom:0;">
-          <button class="filter-tab" onclick="filterActivity('hours','24',this)">24h</button>
-          <button class="filter-tab active" onclick="filterActivity('hours','168',this)">7 days</button>
-          <button class="filter-tab" onclick="filterActivity('hours','720',this)">30 days</button>
-        </div>
-      </div>
+      <input class="filter-input" id="act-search" placeholder="Search activity..." oninput="renderActivity()">
+      <select class="filter-select" id="act-hours" onchange="loadActivity()"><option value="24">Last 24h</option><option value="168" selected>Last 7 days</option><option value="720">Last 30 days</option></select>
     </div>
+    <div id="activity-timeline" class="card mb16"></div>
     <div class="card">
-      <div id="activityFeed">Loading...</div>
+      <div class="section-title mb12">Activity by Hour (Today)</div>
+      <div class="hour-chart" id="hourChart"></div>
+      <div class="flex" style="justify-content:space-between;margin-top:4px">
+        <span class="text-sm text-muted">12am</span>
+        <span class="text-sm text-muted">6am</span>
+        <span class="text-sm text-muted">12pm</span>
+        <span class="text-sm text-muted">6pm</span>
+        <span class="text-sm text-muted">11pm</span>
+      </div>
     </div>
   </div>
 
-</div><!-- end #app -->
+</main>
+</div>
 
-<!-- Toast Container -->
+<!-- MOBILE TABS -->
+<div class="mobile-tabs">
+  <div class="mobile-tab active" onclick="goPage('dashboard')"><span class="mobile-tab-emoji">🏠</span>Home</div>
+  <div class="mobile-tab" onclick="goPage('quote')"><span class="mobile-tab-emoji">💬</span>Quote</div>
+  <div class="mobile-tab" onclick="goPage('ops')"><span class="mobile-tab-emoji">🚚</span>Ops</div>
+  <div class="mobile-tab" onclick="goPage('finance')"><span class="mobile-tab-emoji">💰</span>Finance</div>
+  <div class="mobile-tab" onclick="goPage('tasks')"><span class="mobile-tab-emoji">✅</span>Tasks</div>
+</div>
+
+<!-- TOAST CONTAINER -->
 <div id="toastContainer"></div>
 
-<!-- Floating Chat Button -->
-<button id="floatChatBtn" onclick="openFloatChat()" title="Quick Chat">&#x1F98D;</button>
-
-<!-- Float Chat Modal -->
-<div class="modal-overlay" id="floatChatModal">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header">
-      <div class="modal-title">Quick Chat</div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <select class="form-select" id="floatChatAgent" style="width:140px;padding:6px 10px;">
-          <option value="quote">&#x1F4AC; Quote</option>
-          <option value="admin">&#x1F4CB; Admin</option>
-          <option value="ops">&#x1F69A; Ops</option>
-          <option value="finance">&#x1F4B0; Finance</option>
-          <option value="marketing">&#x1F4E3; Marketing</option>
-          <option value="knowledge">&#x1F9E0; Knowledge</option>
-        </select>
-        <button class="modal-close" onclick="closeModal('floatChatModal')">&#x2715;</button>
-      </div>
-    </div>
-    <div class="chat-container" style="height:360px;">
-      <div class="chat-messages" id="chatFloat">
-        <div class="msg agent">Ready to help! Select an agent above.<div class="msg-time">Ready</div></div>
-      </div>
-      <div class="chat-input-row">
-        <textarea class="chat-input" id="inputFloat" placeholder="Ask anything..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendFloatChat()}"></textarea>
-        <button class="chat-send" onclick="sendFloatChat()">Send</button>
-      </div>
-    </div>
+<!-- FLOAT CHAT -->
+<button id="floatChatBtn" onclick="toggleFloatChat()">🦍</button>
+<div id="floatChatPanel">
+  <div class="float-panel-header">
+    <div class="float-panel-title">🦍 Gorilla AI</div>
+    <select class="float-agent-select" id="floatAgent">
+      <option value="auto">Auto Route</option>
+      <option value="quote">Quote</option>
+      <option value="admin">Admin</option>
+      <option value="ops">Ops</option>
+      <option value="finance">Finance</option>
+      <option value="marketing">Marketing</option>
+    </select>
+  </div>
+  <div class="float-msgs" id="float-msgs"></div>
+  <div class="float-input-row">
+    <input class="float-input" id="float-input" placeholder="Ask anything..." onkeydown="if(event.key==='Enter')sendFloatChat()">
+    <button class="float-send" onclick="sendFloatChat()">→</button>
   </div>
 </div>
 
-<!-- Create Task Modal -->
-<div class="modal-overlay" id="createTaskModal">
+<!-- JOB DETAIL MODAL -->
+<div class="modal-overlay" id="jobModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">&#x2795; Create Task</div>
-      <button class="modal-close" onclick="closeModal('createTaskModal')">&#x2715;</button>
+      <div class="modal-title" id="jobModal-title">Job Details</div>
+      <button class="modal-close" onclick="closeModal('jobModal')">✕</button>
     </div>
-    <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="newTaskTitle" placeholder="Task title"></div>
-    <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="newTaskDesc" placeholder="Details..."></textarea></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="form-group"><label class="form-label">Priority</label>
-        <select class="form-select" id="newTaskPriority">
-          <option value="high">&#x1F534; High</option>
-          <option value="medium" selected>&#x1F7E1; Medium</option>
-          <option value="low">&#x1F7E2; Low</option>
-        </select>
-      </div>
-      <div class="form-group"><label class="form-label">Agent</label>
-        <select class="form-select" id="newTaskAgent">
-          <option value="manual">Manual</option>
-          <option value="quote">Quote</option>
-          <option value="admin">Admin</option>
-          <option value="ops">Ops</option>
-          <option value="finance">Finance</option>
-          <option value="marketing">Marketing</option>
-          <option value="knowledge">Knowledge</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="form-group"><label class="form-label">Job ID (optional)</label><input class="form-input" id="newTaskJobId" placeholder="GR-2026-XXXX"></div>
-      <div class="form-group"><label class="form-label">Due Date</label><input class="form-input" id="newTaskDue" type="date"></div>
-    </div>
-    <button class="btn btn-yellow" style="width:100%;" onclick="submitCreateTask()">Create Task</button>
+    <div id="jobModal-body"></div>
   </div>
 </div>
 
-<script>
-const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://openclaw-qrxf.onrender.com';
+<!-- CREATE TASK MODAL -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Create Task</div>
+      <button class="modal-close" onclick="closeModal('taskModal')">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="task-title" placeholder="Task title"></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="task-desc" rows="3" placeholder="Details..."></textarea></div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group"><label class="form-label">Priority</label><select class="form-input" id="task-priority"><option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option></select></div>
+      <div class="form-group"><label class="form-label">Agent</label><select class="form-input" id="task-agent"><option value="system">System</option><option value="quote">Quote</option><option value="admin">Admin</option><option value="ops">Ops</option><option value="finance">Finance</option><option value="marketing">Marketing</option></select></div>
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group"><label class="form-label">Job ID</label><input class="form-input" id="task-job" placeholder="GR-2026-XXXX"></div>
+      <div class="form-group"><label class="form-label">Due Date</label><input class="form-input" id="task-due" type="date"></div>
+    </div>
+    <button class="btn primary w100" onclick="submitCreateTask()">Create Task</button>
+  </div>
+</div>
 
-// ══════════════════════════════════════
-// LOCK SCREEN
-// ══════════════════════════════════════
-function checkCode() {
-  const val = document.getElementById('lockInput').value;
-  const err = document.getElementById('lockError');
-  if (val === '1988') {
-    localStorage.setItem('gr_access_granted', 'true');
-    document.getElementById('lockScreen').style.display = 'none';
-    document.getElementById('app').classList.add('visible');
-    initApp();
-  } else {
-    const inp = document.getElementById('lockInput');
-    inp.classList.add('shake');
-    err.textContent = 'Incorrect code';
-    inp.value = '';
-    setTimeout(() => { inp.classList.remove('shake'); err.textContent = ''; }, 1500);
-  }
-}
-document.getElementById('lockInput').addEventListener('keydown', e => { if(e.key==='Enter') checkCode(); });
-if (localStorage.getItem('gr_access_granted') === 'true') {
-  document.getElementById('lockScreen').style.display = 'none';
-  document.getElementById('app').classList.add('visible');
+<!-- ADD CASHFLOW MODAL -->
+<div class="modal-overlay" id="cashflowModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Cashflow Entry</div>
+      <button class="modal-close" onclick="closeModal('cashflowModal')">✕</button>
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="cf-date" type="date"></div>
+      <div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" id="cf-amount" type="number" placeholder="0.00"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="cf-desc" placeholder="Description"></div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group"><label class="form-label">Category</label><select class="form-input" id="cf-category"><option>Rental Income</option><option>Extra Charges</option><option>Fuel</option><option>Repairs</option><option>Supplies</option><option>Insurance</option><option>Other Expense</option></select></div>
+      <div class="form-group"><label class="form-label">Type</label><select class="form-input" id="cf-type"><option value="income">Income</option><option value="expense">Expense</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Job ID (optional)</label><input class="form-input" id="cf-job" placeholder="GR-2026-XXXX"></div>
+    <button class="btn primary w100" onclick="submitCashflow()">Add Entry</button>
+  </div>
+</div>
+</div><!-- #app -->
+<script>
+const API = window.location.hostname==='localhost'?'http://localhost:3000':'https://gorillahq.up.railway.app';
+const state={currentPage:'dashboard',chatHistories:{},refreshInterval:null,notifications:[],lastRefresh:null,actLogs:[],allTasks:[],actAgent:''};
+const AGENT_COLORS={quote:'#3b82f6',admin:'#a855f7',ops:'#f6ec0e',finance:'#22c55e',marketing:'#ec4899',knowledge:'#14b8a6',system:'#666666'};
+const STAGE_CONFIG={
+  quote_built:{color:'#555555',label:'Quote Built'},quote_sent:{color:'#3b82f6',label:'Quote Sent'},
+  reserved:{color:'#a855f7',label:'Reserved'},contract_sent:{color:'#f97316',label:'Contract Sent'},
+  delivery_scheduled:{color:'#f6ec0e',label:'Delivery Sched.',textColor:'#000'},
+  in_progress:{color:'#22c55e',label:'In Progress'},returned:{color:'#14b8a6',label:'Returned'},
+  completed:{color:'#166534',label:'Completed'},cancelled:{color:'#ef4444',label:'Cancelled'}
+};
+let kbMode='general';
+
+// ── AUTH ──────────────────────────────────────────────────────
+(function(){
+  if(localStorage.getItem('gr_auth')==='1988'){unlock();}
+})();
+
+function unlock(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('app').style.display='block';
   initApp();
 }
+function logout(){localStorage.removeItem('gr_auth');location.reload();}
 
-// ══════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════
-function showPage(name, tabEl) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  if (tabEl) tabEl.classList.add('active');
-  pageLoaders[name]?.();
-}
+// Lock screen digit inputs
+const digits=['d0','d1','d2','d3'];
+digits.forEach((id,i)=>{
+  const el=document.getElementById(id);
+  el.addEventListener('input',e=>{
+    const v=el.value.replace(/\D/g,'');
+    el.value=v.slice(-1);
+    if(v&&i<3)document.getElementById(digits[i+1]).focus();
+    if(i===3&&el.value)checkCode();
+  });
+  el.addEventListener('keydown',e=>{
+    if(e.key==='Backspace'&&!el.value&&i>0)document.getElementById(digits[i-1]).focus();
+  });
+});
+document.getElementById('d0').focus();
 
-const pageLoaders = {
-  dashboard: loadDashboard,
-  company:   loadCompanyPage,
-  quote:     loadQuotePage,
-  admin:     loadAdminPage,
-  ops:       loadOpsPage,
-  finance:   loadFinancePage,
-  marketing: loadMarketingPage,
-  knowledge: loadKnowledgePage,
-  tasks:     loadTasksPage,
-  activity:  loadActivityPage,
-};
-
-// ══════════════════════════════════════
-// API HELPERS
-// ══════════════════════════════════════
-async function apiFetch(method, path, body) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(API + path, opts);
-  return res.json();
-}
-
-async function apiAction(method, path, successMsg, errMsg, btnId) {
-  const btn = btnId ? document.getElementById(btnId) : null;
-  if (btn) { btn.disabled = true; btn.textContent = '...'; }
-  try {
-    const d = await apiFetch(method, path);
-    toast(d.ok ? successMsg : (d.error || errMsg), d.ok ? 'success' : 'error');
-  } catch { toast(errMsg, 'error'); }
-  finally {
-    if (btn) { setTimeout(() => { btn.disabled = false; btn.textContent = btn.dataset.label || successMsg.split(' ').slice(0,2).join(' '); }, 2000); }
+function checkCode(){
+  const code=digits.map(id=>document.getElementById(id).value).join('');
+  if(code==='1988'){localStorage.setItem('gr_auth','1988');unlock();}
+  else{
+    const w=document.getElementById('lsDigits');
+    w.classList.add('shake');
+    digits.forEach(id=>{document.getElementById(id).classList.add('error');document.getElementById(id).value='';});
+    document.getElementById('lsError').style.display='block';
+    setTimeout(()=>{w.classList.remove('shake');digits.forEach(id=>document.getElementById(id).classList.remove('error'));},600);
+    document.getElementById('d0').focus();
   }
 }
 
-// ══════════════════════════════════════
-// TOAST
-// ══════════════════════════════════════
-function toast(msg, type = 'success') {
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.textContent = msg;
-  document.getElementById('toastContainer').appendChild(el);
-  setTimeout(() => el.classList.add('show'), 10);
-  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 4000);
+// ── API ───────────────────────────────────────────────────────
+async function api(method,endpoint,body=null){
+  try{
+    const opts={method,headers:{'Content-Type':'application/json'}};
+    if(body)opts.body=JSON.stringify(body);
+    const res=await fetch(`${API}${endpoint}`,opts);
+    const data=await res.json();
+    if(!data.ok&&data.error)showToast(data.error,'error');
+    return data;
+  }catch(e){showToast(`Connection error: ${e.message}`,'error');return{ok:false,error:e.message};}
 }
 
-// ══════════════════════════════════════
-// TIME
-// ══════════════════════════════════════
-function timeAgo(iso) {
-  if (!iso) return '—';
-  const d = Math.floor((Date.now() - new Date(iso)) / 1000);
-  if (d < 60) return d + 's ago';
-  if (d < 3600) return Math.floor(d/60) + 'm ago';
-  if (d < 86400) return Math.floor(d/3600) + 'h ago';
-  return Math.floor(d/86400) + 'd ago';
+// ── INIT ──────────────────────────────────────────────────────
+function initApp(){
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.addEventListener('click',()=>goPage(el.dataset.page));
+  });
+  goPage('dashboard');
+  state.refreshInterval=setInterval(()=>{if(state.currentPage==='dashboard')loadDashboard();},30000);
+  setInterval(updateClock,60000);updateClock();
 }
-function fmt(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+function updateClock(){
+  document.getElementById('lastSync').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function stageBadge(s) {
-  const labels = { quote_built:'Quote Built', quote_sent:'Quote Sent', reserved:'Reserved', contract_sent:'Contract', delivery_scheduled:'Delivery Sched.', in_progress:'Active', returned:'Returned', completed:'Completed', cancelled:'Cancelled' };
-  return `<span class="badge stage-${esc(s)}">${labels[s]||s}</span>`;
+// ── NAVIGATION ────────────────────────────────────────────────
+const PAGE_TITLES={dashboard:'Dashboard',company:'Company',quote:'Quote Agent',admin:'Admin Agent',ops:'Ops Agent',finance:'Finance Agent',marketing:'Marketing Agent',knowledge:'Knowledge Agent',tasks:'Tasks',activity:'Activity Log'};
+
+function goPage(page){
+  state.currentPage=page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
+  const pg=document.getElementById(`page-${page}`);
+  if(pg)pg.classList.add('active');
+  document.querySelectorAll(`[data-page="${page}"]`).forEach(n=>n.classList.add('active'));
+  document.getElementById('pageTitle').textContent=PAGE_TITLES[page]||page;
+  // Load page data
+  const loaders={dashboard:loadDashboard,company:loadCompany,quote:loadQuotePage,admin:loadAdminPage,ops:loadOps,finance:loadFinance,marketing:loadMarketing,knowledge:loadKnowledge,tasks:loadTasks,activity:loadActivity};
+  if(loaders[page])loaders[page]();
 }
-function agentColor(a) { return {quote:'var(--blue)',admin:'var(--purple)',ops:'var(--yellow)',finance:'var(--green)',marketing:'var(--pink)',knowledge:'var(--teal)',system:'var(--gray-400)'}[a]||'var(--gray-400)'; }
-function priorityBadge(p) { return {high:'<span class="badge badge-red">&#x1F534; HIGH</span>',medium:'<span class="badge badge-yellow">&#x1F7E1; MED</span>',low:'<span class="badge badge-gray">&#x1F7E2; LOW</span>'}[p]||''; }
 
-// ══════════════════════════════════════
-// CHAT ENGINE
-// ══════════════════════════════════════
-const chatHistories = {};
-async function sendChat(agent, preset) {
-  const inputEl = document.getElementById('input' + agent.charAt(0).toUpperCase() + agent.slice(1));
-  const msg = preset || inputEl?.value?.trim();
-  if (!msg) return;
-  if (inputEl) inputEl.value = '';
-  if (!chatHistories[agent]) chatHistories[agent] = [];
+// ── TOAST ─────────────────────────────────────────────────────
+function showToast(msg,type='info',dur=4000){
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;t.textContent=msg;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(()=>t.remove(),dur);
+}
 
-  const container = document.getElementById('chat' + agent.charAt(0).toUpperCase() + agent.slice(1));
-  appendMsg(container, msg, 'user');
-  const thinking = appendMsg(container, '<span class="thinking-dots">Thinking</span>', 'thinking');
+// ── MODAL ─────────────────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-  try {
-    chatHistories[agent].push({ role: 'user', content: msg });
-    const endpointMap = { quote: '/quote/chat', admin: '/admin/chat', ops: '/ops/chat', finance: '/finance/chat', marketing: '/marketing/chat', knowledge: '/knowledge/query' };
-    const endpoint = endpointMap[agent] || '/chat';
-    const isKnowledge = agent === 'knowledge';
-    const body = isKnowledge ? { question: msg } : { message: msg, history: chatHistories[agent].slice(-10) };
-    const d = await apiFetch('POST', endpoint, body);
-    thinking.remove();
-    const reply = d.text || d.reply || d.response || d.answer || d.message || d.error || 'No response';
-    chatHistories[agent].push({ role: 'assistant', content: reply });
-    appendMsg(container, reply + `<div class="msg-time">${new Date().toLocaleTimeString()}</div>`, 'agent');
-  } catch(e) {
-    thinking.remove();
-    appendMsg(container, 'Error: ' + e.message, 'agent');
+// ── CHAT ──────────────────────────────────────────────────────
+async function sendChat(agent,message){
+  if(!message||!message.trim())return;
+  const inputEl=document.getElementById(`input-${agent}`);
+  if(inputEl)inputEl.value='';
+  if(!state.chatHistories[agent])state.chatHistories[agent]=[];
+  appendMsg(agent,message,'user');
+  showThinking(agent);
+  state.chatHistories[agent].push({role:'user',content:message});
+  const endpoint=`/${agent}/chat`;
+  const data=await api('POST',endpoint,{message,history:state.chatHistories[agent].slice(-10)});
+  hideThinking(agent);
+  if(data.text){
+    appendMsg(agent,data.text,'agent');
+    state.chatHistories[agent].push({role:'assistant',content:data.text});
   }
+  if(data.action){showToast(`Action: ${data.action.action}`,'success');setTimeout(()=>goPage(state.currentPage),1000);}
+  if(data.error&&!data.text)appendMsg(agent,`Error: ${data.error}`,'agent');
 }
 
-async function sendFloatChat() {
-  const agent = document.getElementById('floatChatAgent').value;
-  const inputEl = document.getElementById('inputFloat');
-  const msg = inputEl.value.trim();
-  if (!msg) return;
-  inputEl.value = '';
-  if (!chatHistories['float']) chatHistories['float'] = [];
-
-  const container = document.getElementById('chatFloat');
-  appendMsg(container, msg, 'user');
-  const thinking = appendMsg(container, '<span class="thinking-dots">Thinking</span>', 'thinking');
-
-  try {
-    const d = await apiFetch('POST', '/chat', { message: msg, agent, history: chatHistories['float'].slice(-10) });
-    thinking.remove();
-    const reply = d.text || d.reply || d.response || d.answer || d.message || d.error || 'No response';
-    chatHistories['float'].push({ role: 'user', content: msg }, { role: 'assistant', content: reply });
-    appendMsg(container, reply + `<div class="msg-time">${new Date().toLocaleTimeString()}</div>`, 'agent');
-  } catch(e) { thinking.remove(); appendMsg(container, 'Error: ' + e.message, 'agent'); }
+function appendMsg(agent,text,role){
+  const container=document.getElementById(`msgs-${agent}`);
+  if(!container)return;
+  const div=document.createElement('div');
+  div.className=`msg ${role}`;div.textContent=text;
+  container.appendChild(div);
+  container.scrollTop=container.scrollHeight;
 }
 
-function appendMsg(container, html, type) {
-  const el = document.createElement('div');
-  el.className = 'msg ' + type;
-  el.innerHTML = html;
-  container.appendChild(el);
-  container.scrollTop = container.scrollHeight;
-  return el;
+function showThinking(agent){
+  const c=document.getElementById(`msgs-${agent}`);if(!c)return;
+  const d=document.createElement('div');d.className='msg thinking';d.id=`thinking-${agent}`;
+  d.innerHTML='<span class="thinking-dots"><span>●</span><span>●</span><span>●</span></span>';
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function hideThinking(agent){const el=document.getElementById(`thinking-${agent}`);if(el)el.remove();}
+
+// ── FLOAT CHAT ────────────────────────────────────────────────
+function toggleFloatChat(){document.getElementById('floatChatPanel').classList.toggle('open');}
+async function sendFloatChat(){
+  const input=document.getElementById('float-input');
+  const msg=input.value.trim();if(!msg)return;
+  input.value='';
+  const agent=document.getElementById('floatAgent').value;
+  const c=document.getElementById('float-msgs');
+  const um=document.createElement('div');um.className='msg user';um.textContent=msg;c.appendChild(um);
+  const tm=document.createElement('div');tm.className='msg thinking';tm.id='float-thinking';
+  tm.innerHTML='<span class="thinking-dots"><span>●</span><span>●</span><span>●</span></span>';
+  c.appendChild(tm);c.scrollTop=c.scrollHeight;
+  const endpoint=agent==='auto'?'/chat':`/${agent}/chat`;
+  const data=await api('POST',endpoint,{message:msg});
+  document.getElementById('float-thinking')?.remove();
+  const am=document.createElement('div');am.className='msg agent';am.textContent=data.text||data.error||'No response';
+  c.appendChild(am);c.scrollTop=c.scrollHeight;
 }
 
-// ══════════════════════════════════════
-// DASHBOARD
-// ══ COMPANY PAGE ═══════════════════════
-let companySnapshot = null;
+// ── QUICK ACTIONS ─────────────────────────────────────────────
+function toggleQAMenu(){document.getElementById('qaMenu').classList.toggle('open');}
+function toggleQA(){goPage('activity');}
+document.addEventListener('click',e=>{if(!e.target.closest('.qa-btn')&&!e.target.closest('#qaMenu'))document.getElementById('qaMenu').classList.remove('open');});
+async function quickSweep(){showToast('Running reminder sweep...','info');const d=await api('POST','/finance/sweep');showToast(d.ok?`Sweep done: ${d.sent48h?.length||0} sent`:'Sweep failed',d.ok?'success':'error');}
+async function quickLearn(){const url=prompt('URL to learn from:');if(url){showToast('Learning...','info');const d=await api('POST','/knowledge/learn',{url,priority:'high'});showToast(d.ok?'Learned!':'Failed',d.ok?'success':'error');}}
+async function quickBriefing(){showToast('Sending morning briefing...','info');const d=await api('POST','/admin/briefing');showToast(d.ok?'Briefing sent!':'Failed',d.ok?'success':'error');}
+function quickNewQuote(){goPage('quote');}
 
-async function loadCompanyPage() {
-  try {
-    const d = await apiFetch('GET', '/admin/snapshot');
-    if (!d.ok || !d.snapshot) {
-      document.getElementById('cStatEquip').textContent = '—';
-      showToast('No snapshot yet. Click Refresh Data to run onboarding.', 'warning');
-      return;
-    }
-    companySnapshot = d.snapshot;
-    renderCompanySnapshot(d.snapshot);
-    loadCashflow();
-  } catch(e) { showToast('Error loading snapshot: ' + e.message, 'error'); }
-}
+// ── HELPERS ───────────────────────────────────────────────────
+function fmtMoney(n){return'$'+(n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function fmtDate(d){if(!d)return'--';try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return d;}}
+function fmtTime(d){if(!d)return'--';try{return new Date(d).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}catch{return '';}}
+function fmtAgo(d){if(!d)return'--';const diff=Date.now()-new Date(d);const m=Math.floor(diff/60000);if(m<1)return'just now';if(m<60)return`${m}m ago`;const h=Math.floor(m/60);if(h<24)return`${h}h ago`;return`${Math.floor(h/24)}d ago`;}
+function stagePill(s){const c=STAGE_CONFIG[s]||{color:'#555',label:s};return`<span class="pill pill-${s}" style="background:${c.color}22;color:${c.color};border:1px solid ${c.color}44">${c.label||s}</span>`;}
+function agentBadge(agent){const c=AGENT_COLORS[agent]||'#666';return`<span class="agent-badge" style="background:${c}22;color:${c}">${agent}</span>`;}
+function priorityBadge(p){const colors={high:'#ef4444',medium:'#f59e0b',low:'#22c55e'};const c=colors[p]||'#666';const e={high:'🔴',medium:'🟡',low:'🟢'};return`<span style="font-size:11px;color:${c};font-weight:700">${e[p]||'⚪'} ${(p||'').toUpperCase()}</span>`;}
+function toggleEl(id){const el=document.getElementById(id);el.classList.toggle('open');}
 
-function renderCompanySnapshot(s) {
-  // Age
-  const age = s.lastUpdated ? `Updated ${timeAgo(s.lastUpdated)}` : '';
-  document.getElementById('snapshotAge').textContent = age;
-
+// ── DASHBOARD ─────────────────────────────────────────────────
+async function loadDashboard(){
+  state.lastRefresh=new Date();
+  const [dash,tasksData]=await Promise.all([api('GET','/api/dashboard'),api('GET','/api/tasks?status=pending')]);
+  if(!dash.ok)return;
+  const d=dash;
   // Stats
-  document.getElementById('cStatEquip').textContent = s.equipment?.total || 0;
-  document.getElementById('cStatJobs').textContent = s.pipeline?.total || 0;
-  const inc = s.financials?.totalIncome || 0;
-  const exp = s.financials?.totalExpenses || 0;
-  const net = inc - exp;
-  document.getElementById('cStatIncome').textContent = '$' + inc.toLocaleString('en-US', {maximumFractionDigits:0});
-  document.getElementById('cStatExpenses').textContent = '$' + exp.toLocaleString('en-US', {maximumFractionDigits:0});
-  const netEl = document.getElementById('cStatNet');
-  netEl.textContent = (net >= 0 ? '+' : '') + '$' + Math.abs(net).toLocaleString('en-US', {maximumFractionDigits:0});
-  netEl.style.color = net >= 0 ? '#4caf50' : '#f44336';
-
-  // Equipment table
-  const tbody = document.getElementById('equipmentBody');
-  if (s.equipment?.units?.length) {
-    tbody.innerHTML = s.equipment.units.map(e => `
-      <tr>
-        <td style="font-weight:600;">${e.name}</td>
-        <td><span class="badge" style="background:var(--gray-700);">${e.sku}</span></td>
-        <td>${e.daily ? '$'+e.daily : '—'}</td>
-        <td>${e.weekly ? '$'+e.weekly : '—'}</td>
-        <td>${e.monthly ? '$'+e.monthly : '—'}</td>
-      </tr>`).join('');
-  } else {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No equipment data</td></tr>';
-  }
-
-  // Pipeline stages
-  const stagesEl = document.getElementById('pipelineStages');
-  if (s.pipeline?.byStage && Object.keys(s.pipeline.byStage).length) {
-    const colors = { quote_built:'#555', quote_sent:'#2196F3', reserved:'#9C27B0', contract_sent:'#FF9800', delivery_scheduled:'#f6ec0e', in_progress:'#4CAF50', returned:'#009688', completed:'#1B5E20', cancelled:'#F44336' };
-    stagesEl.innerHTML = Object.entries(s.pipeline.byStage).map(([stage, count]) => {
-      const c = colors[stage] || '#555';
-      const textC = stage === 'delivery_scheduled' ? '#111' : '#fff';
-      return `<span style="background:${c};color:${textC};padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;">${stage.replace(/_/g,' ')}: ${count}</span>`;
-    }).join('');
-  } else {
-    stagesEl.innerHTML = '<span style="color:var(--gray-400);">No pipeline jobs yet</span>';
-  }
-
-  // Populate month selector
-  const monthSel = document.getElementById('cashflowMonth');
-  const existingMonths = new Set([...monthSel.options].map(o => o.value));
-  if (s.financials?.monthlyBreakdown) {
-    Object.keys(s.financials.monthlyBreakdown).sort().reverse().forEach(m => {
-      if (m && !existingMonths.has(m)) {
-        const opt = document.createElement('option');
-        opt.value = m; opt.textContent = m;
-        monthSel.appendChild(opt);
-      }
-    });
-  }
+  document.getElementById('s-pipeline').textContent=d.pipeline?.total||0;
+  const active=d.rentals?.active||0;
+  const sc_active=document.getElementById('sc-active');
+  sc_active.querySelector('.stat-value').textContent=active;
+  sc_active.className='stat-card'+(active>0?' yellow':'');
+  const end48=d.rentals?.endingIn48h||0;
+  const sc_48=document.getElementById('sc-48h');
+  sc_48.querySelector('.stat-value').textContent=end48;
+  sc_48.className='stat-card'+(end48>0?' red':'');
+  const ov=d.rentals?.overdue||0;
+  const sc_ov=document.getElementById('sc-overdue');
+  sc_ov.querySelector('.stat-value').textContent=ov;
+  sc_ov.className='stat-card'+(ov>0?' red':'');
+  document.getElementById('s-revenue').textContent=fmtMoney(d.finance?.pipelineRevenue||0);
+  const tCount=tasksData.tasks?.filter(t=>t.status==='pending').length||0;
+  const sc_t=document.getElementById('sc-tasks');
+  sc_t.querySelector('.stat-value').textContent=tCount;
+  sc_t.className='stat-card'+(tCount>0?' red':'');
+  // Alerts
+  const alerts=document.getElementById('dash-alerts');
+  alerts.innerHTML='';
+  if(ov>0)alerts.innerHTML+=`<div class="alert alert-red">🚨 ${ov} rental${ov>1?'s':''} OVERDUE — ${(d.rentals.overdueJobs||[]).map(j=>j.jobId).join(', ')}</div>`;
+  if(end48>0)alerts.innerHTML+=`<div class="alert alert-yellow">⚠️ ${end48} rental${end48>1?'s':''} ending in 48h</div>`;
+  const pendingApprovals=await api('GET','/admin/approvals');
+  if(pendingApprovals.approvals?.length>0)alerts.innerHTML+=`<div class="alert alert-blue">📋 ${pendingApprovals.approvals.length} pending approval${pendingApprovals.approvals.length>1?'s':''}</div>`;
+  // Pipeline table
+  const pipeline=d.pipeline?.recent||[];
+  document.getElementById('dash-pipeline-sub').textContent=`${d.pipeline?.total||0} total jobs`;
+  const tbody=document.getElementById('pipelineTbody');
+  if(!pipeline.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px">No jobs in pipeline</td></tr>';return;}
+  tbody.innerHTML=pipeline.map(j=>`<tr>
+    <td><span class="text-accent font-bold cursor-pointer" onclick="openJobModal('${j.jobId}')" style="cursor:pointer">${j.jobId}</span></td>
+    <td>${j.customerName||'--'}</td>
+    <td class="text-sm text-muted">${(j.equipment||[]).map(e=>e.name).join(', ')||'--'}</td>
+    <td>${stagePill(j.stage)}</td>
+    <td class="font-600">${fmtMoney(j.total)}</td>
+    <td class="text-sm">${j.startDate||'--'}</td>
+    <td class="text-sm">${j.endDate||'--'}</td>
+    <td><div class="flex gap8"><button class="btn" onclick="openJobModal('${j.jobId}')">👁️</button></div></td>
+  </tr>`).join('');
+  // Deliveries/pickups
+  const todayJobs=d.ops?.today||[];
+  const deliveries=todayJobs.filter(j=>j.type==='delivery');
+  const pickups=todayJobs.filter(j=>j.type==='pickup');
+  renderJobCards('dash-deliveries',deliveries,'No deliveries today');
+  renderJobCards('dash-pickups',pickups,'No pickups today');
+  // Tasks preview
+  const tasks=(tasksData.tasks||[]).filter(t=>t.status==='pending').slice(0,3);
+  const tEl=document.getElementById('dash-tasks');
+  if(!tasks.length){tEl.innerHTML='<div class="text-muted text-sm">No pending tasks</div>';return;}
+  tEl.innerHTML=tasks.map(t=>`<div class="task-card"><div class="task-header"><div class="task-title">${t.title}</div>${priorityBadge(t.priority)}</div><div class="text-sm text-muted">${t.description||''}</div><div class="flex gap8 mt8">${agentBadge(t.agent)}<span class="text-sm text-muted">${fmtAgo(t.createdAt)}</span><button class="btn success" onclick="completeTask('${t.id}')">✅ Complete</button></div></div>`).join('');
+  // Recent activity
+  const actData=await api('GET','/api/activity?limit=5');
+  renderActivityList('dash-activity',actData.logs||[]);
 }
 
-async function loadCashflow() {
-  const month = document.getElementById('cashflowMonth')?.value || '';
-  const url = month ? `/admin/cashflow/summary?month=${month}` : '/admin/cashflow';
-  try {
-    const d = await apiFetch('GET', url);
-    const tbody = document.getElementById('cashflowBody');
-    if (month && d.summary) {
-      const { income, expenses, net, entries } = d.summary;
-      document.getElementById('cfIncome').textContent = '$' + (income||0).toLocaleString('en-US',{maximumFractionDigits:0});
-      document.getElementById('cfExpenses').textContent = '$' + (expenses||0).toLocaleString('en-US',{maximumFractionDigits:0});
-      document.getElementById('cfNet').textContent = (net>=0?'+':'')+  '$' + Math.abs(net||0).toLocaleString('en-US',{maximumFractionDigits:0});
-      renderCashflowRows(entries || [], tbody);
-    } else if (Array.isArray(d)) {
-      renderCashflowRows(d, tbody);
-      updateCashflowTotals(d);
-    } else if (companySnapshot?.financials) {
-      const cf = companySnapshot.financials;
-      document.getElementById('cfIncome').textContent = '$' + (cf.totalIncome||0).toLocaleString('en-US',{maximumFractionDigits:0});
-      document.getElementById('cfExpenses').textContent = '$' + (cf.totalExpenses||0).toLocaleString('en-US',{maximumFractionDigits:0});
-      const net = (cf.totalIncome||0)-(cf.totalExpenses||0);
-      document.getElementById('cfNet').textContent = (net>=0?'+':'')+'$'+Math.abs(net).toLocaleString('en-US',{maximumFractionDigits:0});
-      renderCashflowRows(cf.recentTransactions || [], tbody);
-    }
-  } catch(e) {
-    document.getElementById('cashflowBody').innerHTML = `<tr><td colspan="5" class="empty-state">SharePoint not connected yet</td></tr>`;
-  }
+function renderJobCards(containerId,jobs,emptyMsg){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  if(!jobs.length){el.innerHTML=`<div class="text-muted text-sm">${emptyMsg}</div>`;return;}
+  el.innerHTML=jobs.map(j=>`<div class="job-card">
+    <div class="job-card-header"><span class="job-id">${j.jobId}</span><span class="job-type ${j.type}">${j.type==='delivery'?'🚚 Delivery':'📥 Pickup'}</span></div>
+    <div class="job-customer">${j.customerName}</div>
+    <div class="job-detail">📍 ${j.deliveryAddress||'--'}</div>
+    <div class="job-detail">⏰ ${j.scheduledTime||'--'} · 🚚 ${j.driverName||'--'}</div>
+    <div class="job-detail">${(j.equipment||[]).map(e=>e.name).join(', ')||'--'}</div>
+    <div class="job-actions">
+      <div class="jab" onclick="openJobModal('${j.jobId}')">👁️ View</div>
+      <div class="jab green">✅ Complete</div>
+    </div>
+  </div>`).join('');
 }
 
-function renderCashflowRows(rows, tbody) {
-  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No transactions found</td></tr>'; return; }
-  tbody.innerHTML = rows.map(r => {
-    const isIncome = (r.type||'').toLowerCase() === 'income';
-    const color = isIncome ? '#4caf50' : '#f44336';
-    return `<tr>
-      <td style="white-space:nowrap;">${r.date||'—'}</td>
-      <td>${r.description||'—'}</td>
-      <td><span class="badge" style="background:var(--gray-700);font-size:11px;">${r.category||'—'}</span></td>
-      <td style="color:${color};font-weight:600;">${isIncome?'+':'-'}$${Math.abs(r.amount||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-      <td><span class="badge" style="background:${isIncome?'rgba(76,175,80,0.2)':'rgba(244,67,54,0.2)'};color:${color};">${r.type||'—'}</span></td>
+function renderActivityList(containerId,logs){
+  const el=document.getElementById(containerId);if(!el)return;
+  if(!logs.length){el.innerHTML='<div class="text-muted text-sm">No recent activity</div>';return;}
+  el.innerHTML=logs.map(l=>`<div class="activity-item">
+    <div class="activity-dot" style="background:${AGENT_COLORS[l.agent]||'#666'}"></div>
+    <div class="activity-body">
+      <div class="activity-header">${agentBadge(l.agent)}<span class="activity-time">${fmtAgo(l.timestamp)}</span></div>
+      <div class="activity-desc">${l.description||l.action}</div>
+    </div>
+  </div>`).join('');
+}
+
+// ── JOB MODAL ─────────────────────────────────────────────────
+async function openJobModal(jobId){
+  document.getElementById('jobModal-title').textContent=`Job ${jobId}`;
+  openModal('jobModal');
+  const data=await api('GET',`/admin/status/${jobId}`);
+  const j=data.job||{};const r=data.reservation||{};
+  document.getElementById('jobModal-body').innerHTML=`
+    <div class="flex gap8 mb12">${stagePill(j.stage)}<span class="font-bold text-accent">${fmtMoney(j.total)}</span></div>
+    <div class="grid-2 mb12" style="gap:8px">
+      <div><div class="stat-label">Customer</div><div class="font-600">${j.customerName||'--'}</div></div>
+      <div><div class="stat-label">Phone</div><div>${j.customerPhone||'--'}</div></div>
+      <div><div class="stat-label">Email</div><div class="text-sm">${j.customerEmail||'--'}</div></div>
+      <div><div class="stat-label">Address</div><div class="text-sm">${j.deliveryAddress||'--'}</div></div>
+      <div><div class="stat-label">Start</div><div>${j.startDate||'--'}</div></div>
+      <div><div class="stat-label">End</div><div>${j.endDate||'--'}</div></div>
+    </div>
+    <div class="section-title mb8">Equipment</div>
+    ${(j.equipment||[]).map(e=>`<div class="text-sm mb4">• ${e.name} × ${e.quantity} — ${fmtMoney(e.total)}</div>`).join('')||'<div class="text-muted text-sm">No equipment</div>'}
+    ${r.depositLink?`<div class="mt12"><a href="${r.depositLink}" target="_blank" class="btn">💳 Deposit Link</a></div>`:''}
+    ${r.balanceLink?`<div class="mt8"><a href="${r.balanceLink}" target="_blank" class="btn">💳 Balance Link</a></div>`:''}
+    <div class="mt12 text-sm text-muted">Created: ${fmtDate(j.createdAt)}</div>
+  `;
+}
+
+// ── COMPANY ───────────────────────────────────────────────────
+async function loadCompany(){
+  const [snap,cf]=await Promise.all([api('GET','/admin/snapshot'),loadCashflow(true)]);
+  if(!snap.ok){document.getElementById('company-content').innerHTML='<div class="card text-muted">No snapshot yet. <button class="btn" onclick="runOnboarding()">Run Onboarding</button></div>';return;}
+  const s=snap.snapshot;
+  const co=s.company||{};const eq=s.equipment||{};
+  document.getElementById('company-content').innerHTML=`
+    <div class="card">
+      <div class="section-title mb12">🦍 ${co.name||'Gorilla Rental'}</div>
+      <div class="grid-2" style="gap:8px">
+        <div><div class="stat-label">Phone</div><div>${co.phone||'--'}</div></div>
+        <div><div class="stat-label">Email</div><div>${co.email||'--'}</div></div>
+        <div><div class="stat-label">Website</div><div>${co.website||'--'}</div></div>
+        <div><div class="stat-label">Location</div><div>${co.location||'South Florida'}</div></div>
+      </div>
+    </div>`;
+  // Fleet grid
+  const units=eq.units||[];
+  document.getElementById('fleet-grid').innerHTML=units.map(u=>`<div class="card">
+    <div class="font-bold mb4">${u.name}</div>
+    <div class="text-sm text-muted mb8">SKU: ${u.sku}</div>
+    <div class="text-sm">Daily: ${u.dailyLabel||'--'}</div>
+    <div class="text-sm">Weekly: ${u.weeklyLabel||'--'}</div>
+    <div class="text-sm">Monthly: ${u.monthlyLabel||'--'}</div>
+    <div class="mt8"><span class="pill" style="background:rgba(34,197,94,.2);color:#86efac">Available</span></div>
+  </div>`).join('');
+}
+
+async function loadCashflow(skipRender=false){
+  const month=document.getElementById('cashflowMonth')?.value||new Date().toISOString().slice(0,7);
+  const [sum,rows]=await Promise.all([api('GET',`/admin/cashflow/summary?month=${month}`),api('GET','/admin/cashflow')]);
+  if(skipRender)return;
+  const netEl=document.getElementById('cf-net');
+  document.getElementById('cf-income').textContent=fmtMoney(sum.income||0);
+  document.getElementById('cf-expenses').textContent=fmtMoney(sum.expenses||0);
+  const net=sum.net||0;netEl.textContent=fmtMoney(net);netEl.style.color=net>=0?'var(--success)':'var(--danger)';
+  const entries=(rows.rows||[]).filter(r=>String(r.date||'').slice(0,7)===month).reverse();
+  const tb=document.getElementById('cashflowTbody');
+  if(!entries.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">No entries this month</td></tr>';return;}
+  tb.innerHTML=entries.map(e=>`<tr>
+    <td>${e.date||'--'}</td><td>${e.description||'--'}</td><td>${e.category||'--'}</td>
+    <td><span class="pill ${e.type==='income'?'':'pill-cancelled'}" style="background:${e.type==='income'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${e.type==='income'?'#86efac':'#fca5a5'}">${e.type}</span></td>
+    <td class="font-600" style="color:${e.type==='income'?'var(--success)':'var(--danger)'}">${fmtMoney(e.amount)}</td>
+    <td class="text-sm text-muted">${e.jobId||'--'}</td>
+  </tr>`).join('');
+}
+
+async function runOnboarding(){showToast('Starting onboarding...','info');await api('POST','/admin/onboard');showToast('Onboarding started (1-2 min)','success');}
+function openAddCashflow(){document.getElementById('cf-date').value=new Date().toISOString().slice(0,10);openModal('cashflowModal');}
+async function submitCashflow(){
+  const entry={date:document.getElementById('cf-date').value,description:document.getElementById('cf-desc').value,category:document.getElementById('cf-category').value,amount:parseFloat(document.getElementById('cf-amount').value)||0,type:document.getElementById('cf-type').value,jobId:document.getElementById('cf-job').value||null};
+  const d=await api('POST','/admin/cashflow/entry',entry);
+  if(d.ok){closeModal('cashflowModal');showToast('Entry added','success');loadCashflow();}
+}
+
+// ── QUOTE ─────────────────────────────────────────────────────
+async function loadQuotePage(){
+  await loadQuotePipeline();
+  const actData=await api('GET','/api/activity?agent=quote&limit=5');
+  renderActivityList('quote-activity',actData.logs||[]);
+}
+async function loadQuotePipeline(){
+  const data=await api('GET','/quote/pipeline');
+  const pipeline=data.pipeline||[];
+  document.getElementById('qs-total').textContent=pipeline.length;
+  document.getElementById('qs-value').textContent=fmtMoney(pipeline.reduce((s,j)=>s+(j.total||0),0));
+  document.getElementById('qs-sent').textContent=pipeline.filter(j=>j.stage==='quote_sent').length;
+  document.getElementById('qs-built').textContent=pipeline.filter(j=>j.stage==='quote_built').length;
+  const tb=document.getElementById('quoteTbody');
+  if(!pipeline.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">No quotes yet</td></tr>';return;}
+  tb.innerHTML=[...pipeline].reverse().map(j=>`<tr>
+    <td><span class="text-accent font-bold" style="cursor:pointer" onclick="openJobModal('${j.jobId}')">${j.jobId}</span></td>
+    <td>${j.customerName||'--'}</td>
+    <td class="text-sm text-muted">${(j.equipment||[]).map(e=>e.name).join(', ')||'--'}</td>
+    <td>${stagePill(j.stage)}</td>
+    <td class="font-600">${fmtMoney(j.total)}</td>
+    <td class="text-sm">${fmtDate(j.createdAt)}</td>
+    <td><div class="flex gap8"><button class="btn" onclick="openJobModal('${j.jobId}')">👁️</button></div></td>
+  </tr>`).join('');
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────
+async function loadAdminPage(){
+  await Promise.all([loadAdminReservations(),loadAdminApprovals()]);
+}
+async function loadAdminReservations(){
+  const data=await api('GET','/admin/reservations');
+  const reservations=data.reservations||[];
+  const tb=document.getElementById('reservationsTbody');
+  if(!reservations.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">No reservations yet</td></tr>';return;}
+  tb.innerHTML=[...reservations].reverse().map(r=>`<tr>
+    <td><span class="text-accent font-bold" style="cursor:pointer" onclick="openJobModal('${r.jobId}')">${r.jobId}</span></td>
+    <td>${r.customerName||'--'}</td><td>${r.startDate||'--'}</td><td>${r.endDate||'--'}</td>
+    <td class="font-600">${fmtMoney(r.total)}</td><td class="font-600" style="color:var(--warning)">${fmtMoney(r.balanceDue)}</td>
+    <td><span class="pill pill-reserved">${r.status||'reserved'}</span></td>
+  </tr>`).join('');
+}
+async function loadAdminApprovals(){
+  const data=await api('GET','/admin/approvals');
+  const approvals=data.approvals||[];
+  const el=document.getElementById('approvals-list');
+  if(!approvals.length){el.innerHTML='<div class="text-muted text-sm">No pending approvals ✅</div>';return;}
+  el.innerHTML=approvals.map(a=>`<div class="approval-card">
+    <div class="font-600">${a.message?.slice(0,80)||a.id}...</div>
+    <div class="approval-meta">${a.id} · ${fmtAgo(a.createdAt)}</div>
+    <div class="approval-actions">
+      <button class="btn success" onclick="respondApproval('${a.id}','YES')">✅ Approve</button>
+      <button class="btn danger" onclick="respondApproval('${a.id}','NO')">❌ Deny</button>
+    </div>
+  </div>`).join('');
+  document.getElementById('notifCount').textContent=approvals.length;
+  const badge=document.getElementById('notifBadge');badge.textContent=approvals.length;badge.style.display=approvals.length?'block':'none';
+}
+async function respondApproval(approvalId,response){
+  const d=await api('POST','/admin/approval/respond',{approvalId,response});
+  showToast(d.ok?`${response==='YES'?'Approved':'Denied'}`:'Failed',d.ok?'success':'error');
+  loadAdminApprovals();
+}
+
+// ── OPS ───────────────────────────────────────────────────────
+async function loadOps(){
+  const [todayData,upcomingData]=await Promise.all([api('GET','/ops/today'),api('GET','/ops/upcoming')]);
+  const today=todayData.jobs||[];const upcoming=upcomingData.jobs||[];
+  const deliveries=today.filter(j=>j.type==='delivery');
+  const pickups=today.filter(j=>j.type==='pickup');
+  renderJobCards('ops-deliveries',deliveries,'No deliveries today');
+  renderJobCards('ops-pickups',pickups,'No pickups today');
+  // Upcoming grouped by date
+  const byDate={};
+  upcoming.forEach(j=>{(byDate[j.scheduledDate]=byDate[j.scheduledDate]||[]).push(j);});
+  const upEl=document.getElementById('ops-upcoming');
+  if(!upcoming.length){upEl.innerHTML='<div class="text-muted text-sm">No upcoming jobs</div>';return;}
+  upEl.innerHTML=Object.entries(byDate).map(([date,jobs])=>`
+    <div class="date-group-header">${new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
+    ${jobs.map(j=>`<div class="job-card mb8">
+      <div class="job-card-header"><span class="job-id">${j.jobId}</span><span class="job-type ${j.type}">${j.type==='delivery'?'🚚':'📥'} ${j.type}</span></div>
+      <div class="job-customer">${j.customerName}</div>
+      <div class="job-detail">📍 ${j.deliveryAddress||'--'} · ⏰ ${j.scheduledTime||'TBD'}</div>
+      <div class="job-detail">${(j.equipment||[]).map(e=>e.name).join(', ')||'--'}</div>
+    </div>`).join('')}
+  `).join('');
+  // Driver assignments
+  const andreiJobs=today.filter(j=>j.driverName==='Andrei');
+  const nazarJobs=today.filter(j=>j.driverName==='Nazar');
+  document.getElementById('driver-andrei-jobs').textContent=andreiJobs.length?`${andreiJobs.length} job(s) today`:'No jobs today';
+  document.getElementById('driver-nazar-jobs').textContent=nazarJobs.length?`${nazarJobs.length} job(s) today`:'No jobs today';
+}
+
+// ── FINANCE ───────────────────────────────────────────────────
+async function loadFinance(){
+  const [activeData,reportData]=await Promise.all([api('GET','/finance/active'),api('GET','/finance/report?period=month')]);
+  const a=activeData;const r=reportData.report||{};
+  document.getElementById('fin-active').textContent=a.total||0;
+  const end48=a.endingIn48h?.length||0;
+  const finSc48=document.getElementById('fin-sc-48h');
+  finSc48.querySelector('.stat-value').textContent=end48;
+  finSc48.className='stat-card'+(end48>0?' yellow':'');
+  const ov=a.overdue?.length||0;
+  const finScOv=document.getElementById('fin-sc-overdue');
+  finScOv.querySelector('.stat-value').textContent=ov;
+  finScOv.className='stat-card'+(ov>0?' red':'');
+  document.getElementById('fin-revenue').textContent=fmtMoney(r.totalRevenue||0);
+  document.getElementById('fin-active-rev').textContent=fmtMoney(r.activeRevenue||0);
+  document.getElementById('fin-pipeline-rev').textContent=fmtMoney(r.pipelineRevenue||0);
+  const allActive=[...(a.active||[]),...(a.endingIn48h||[]),...(a.endingIn24h||[]),...(a.overdue||[])];
+  const tb=document.getElementById('financeTbody');
+  if(!allActive.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">No active rentals</td></tr>';return;}
+  tb.innerHTML=allActive.map(j=>{
+    const isOverdue=j.hoursRemaining<0;const isEnding=j.hoursRemaining>=0&&j.hoursRemaining<=48;
+    return`<tr class="${isOverdue?'overdue':isEnding?'ending-soon':''}">
+      <td><span class="text-accent font-bold">${j.jobId}</span></td>
+      <td>${j.customerName}</td><td>${j.endDate||'--'}</td>
+      <td style="color:${isOverdue?'var(--danger)':isEnding?'var(--warning)':'var(--text-primary)'}">${isOverdue?`${Math.abs(j.hoursRemaining)}h LATE`:`${j.hoursRemaining}h`}</td>
+      <td class="font-600">${fmtMoney(j.total)}</td>
+      <td><div class="flex gap8">
+        <button class="btn" onclick="sendChat('finance','Send 48h reminder for ${j.jobId}')">📧 Remind</button>
+        <button class="btn" onclick="sendChat('finance','Extend rental ${j.jobId}')">📅 Extend</button>
+      </div></td>
     </tr>`;
   }).join('');
 }
 
-function updateCashflowTotals(rows) {
-  let income = 0, expenses = 0;
-  for (const r of rows) {
-    if ((r.type||'').toLowerCase() === 'income') income += Math.abs(r.amount||0);
-    else expenses += Math.abs(r.amount||0);
-  }
-  document.getElementById('cfIncome').textContent = '$' + income.toLocaleString('en-US',{maximumFractionDigits:0});
-  document.getElementById('cfExpenses').textContent = '$' + expenses.toLocaleString('en-US',{maximumFractionDigits:0});
-  const net = income - expenses;
-  document.getElementById('cfNet').textContent = (net>=0?'+':'')+'$'+Math.abs(net).toLocaleString('en-US',{maximumFractionDigits:0});
+// ── MARKETING ─────────────────────────────────────────────────
+async function loadMarketing(){
+  const [leadsData,statsData]=await Promise.all([api('GET','/marketing/leads'),api('GET','/marketing/stats')]);
+  const stats=statsData.stats||{};
+  document.getElementById('mkt-total').textContent=stats.totalLeads||0;
+  document.getElementById('mkt-new').textContent=stats.newLeads||0;
+  document.getElementById('mkt-contacted').textContent=stats.contactedLeads||0;
+  document.getElementById('mkt-converted').textContent=stats.convertedLeads||0;
+  document.getElementById('mkt-rate').textContent=stats.conversionRate||'0%';
+  document.getElementById('mkt-posts').textContent=stats.postsGenerated||0;
+  const leads=leadsData.leads||[];
+  const tb=document.getElementById('leadsTbody');
+  if(!leads.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">No leads yet</td></tr>';return;}
+  tb.innerHTML=leads.map(l=>`<tr>
+    <td class="font-600">${l.name||'--'}</td><td>${l.source||'--'}</td>
+    <td class="text-sm text-muted">${l.equipment||'--'}</td>
+    <td><span class="pill lead-${l.status||'new'}">${l.status||'new'}</span></td>
+    <td class="text-sm">${fmtDate(l.createdAt)}</td>
+    <td><div class="flex gap8">
+      <button class="btn" onclick="goPage('quote')">→ Quote</button>
+    </div></td>
+  </tr>`).join('');
 }
 
-function showAddEntryModal() {
-  document.getElementById('entryDate').value = new Date().toISOString().slice(0,10);
-  document.getElementById('addEntryModal').classList.add('open');
+async function generatePost(){
+  const type=document.getElementById('postType').value;
+  const el=document.getElementById('post-output');
+  el.textContent='Generating...';el.style.color='var(--text-muted)';
+  const d=await api('POST','/marketing/post',{type});
+  if(d.ok){el.textContent=d.post||'No content';el.style.color='var(--text-primary)';}
+  else{el.textContent='Failed to generate';el.style.color='var(--danger)';}
 }
 
-async function submitCashflowEntry() {
-  const entry = {
-    date:        document.getElementById('entryDate').value,
-    description: document.getElementById('entryDesc').value,
-    category:    document.getElementById('entryCat').value,
-    amount:      parseFloat(document.getElementById('entryAmount').value) || 0,
-    type:        document.getElementById('entryType').value,
-    jobId:       document.getElementById('entryJobId').value,
-  };
-  try {
-    await apiFetch('POST', '/admin/cashflow/entry', entry);
-    document.getElementById('addEntryModal').classList.remove('open');
-    showToast('Entry saved to SharePoint cashflow!', 'success');
-    loadCashflow();
-  } catch(e) { showToast('Error saving entry: ' + e.message, 'error'); }
+async function generateListing(){
+  const sku=document.getElementById('listingSku').value;
+  const el=document.getElementById('listing-output');
+  el.textContent='Generating...';el.style.color='var(--text-muted)';
+  const d=await api('POST','/marketing/listing',{sku});
+  if(d.ok){el.textContent=d.listing||'No content';el.style.color='var(--text-primary)';}
+  else{el.textContent='Failed to generate';el.style.color='var(--danger)';}
 }
 
-async function runOnboarding() {
-  const btn = document.getElementById('onboardBtn');
-  btn.textContent = '⏳ Running...';
-  btn.disabled = true;
-  try {
-    await apiFetch('POST', '/admin/onboard');
-    showToast('Onboarding started — refreshing in 15s...', 'info');
-    setTimeout(() => { loadCompanyPage(); btn.textContent = '🔄 Refresh Data'; btn.disabled = false; }, 15000);
-  } catch(e) { showToast('Error: ' + e.message, 'error'); btn.textContent = '🔄 Refresh Data'; btn.disabled = false; }
+// ── KNOWLEDGE ─────────────────────────────────────────────────
+async function loadKnowledge(){
+  const cat=document.getElementById('kb-cat-filter')?.value||'';
+  const data=await api('GET',`/knowledge${cat?`?category=${cat}`:''}`);
+  const entries=data.entries||[];
+  document.getElementById('kb-total').textContent=entries.length;
+  document.getElementById('kb-updated').textContent=data.lastUpdated?fmtDate(data.lastUpdated):'--';
+  const el=document.getElementById('kb-entries');
+  if(!entries.length){el.innerHTML='<div class="text-muted text-sm">No knowledge entries yet</div>';return;}
+  el.innerHTML=[...entries].reverse().slice(0,30).map(e=>`<div class="kb-item" onclick="toggleKbItem(this)">
+    <div class="kb-item-header">
+      <div class="kb-title">${e.title||'Untitled'}</div>
+      <span class="pill" style="background:${AGENT_COLORS.knowledge}22;color:var(--teal)">${e.category}</span>
+    </div>
+    <div class="text-sm text-muted">${fmtDate(e.learnedAt)} · ${e.type}</div>
+    <div class="kb-summary">${e.summary||''}</div>
+  </div>`).join('');
 }
 
-// ══════════════════════════════════════
-let dashInterval;
-async function loadDashboard() {
-  try {
-    const [dash, tasksData, actData] = await Promise.all([
-      apiFetch('GET', '/api/dashboard'),
-      apiFetch('GET', '/api/tasks?status=pending'),
-      apiFetch('GET', '/api/activity?limit=5'),
-    ]);
+function toggleKbItem(el){el.querySelector('.kb-summary').classList.toggle('expanded');}
 
-    // Stats
-    document.getElementById('statPipeline').textContent = dash.pipeline?.total ?? '—';
-    document.getElementById('statActive').textContent   = dash.rentals?.active ?? '—';
-    const e48 = dash.rentals?.endingIn48h ?? 0;
-    const e48El = document.getElementById('statEnding48');
-    e48El.textContent = e48;
-    if (e48 > 0) e48El.classList.add('red');
-    const rev = dash.finance?.monthRevenue ?? 0;
-    document.getElementById('statRevenue').textContent = '$' + rev.toLocaleString();
-    const pt = tasksData.tasks?.length ?? 0;
-    const ptEl = document.getElementById('statTasks');
-    ptEl.textContent = pt;
-    if (pt > 0) ptEl.classList.add('red');
-
-    // Alert banners
-    const overdue = dash.rentals?.overdueJobs ?? [];
-    const ending = dash.rentals?.endingIn48hJobs ?? [];
-    if (overdue.length > 0) {
-      const b = document.getElementById('alertBannerRed');
-      b.textContent = `\u26A0\uFE0F ${overdue.length} overdue rental(s): ${overdue.map(j=>j.jobId||j.id).join(', ')} — Click to manage`;
-      b.classList.add('show');
-    }
-    if (ending.length > 0) {
-      const b = document.getElementById('alertBannerYellow');
-      b.textContent = `\u23F0 ${ending.length} rental(s) ending in 48h: ${ending.map(j=>j.jobId||j.id).join(', ')} — Click to manage`;
-      b.classList.add('show');
-    }
-
-    // Pipeline table
-    const pipeline = dash.pipeline?.recent ?? [];
-    document.getElementById('dashPipelineBody').innerHTML = pipeline.length ? pipeline.map(j => `
-      <tr>
-        <td><span class="badge badge-yellow">${esc(j.id||j.jobId||'—')}</span></td>
-        <td>${esc(j.customerName||'—')}</td>
-        <td>${stageBadge(j.stage||'quote_built')}</td>
-        <td style="color:var(--yellow);font-weight:600;">$${(j.total||0).toLocaleString()}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="openJobDetail('${esc(j.id||j.jobId)}')">&#x1F441;&#xFE0F; View</button></td>
-      </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);">No pipeline jobs yet</td></tr>';
-
-    // Today's ops
-    const today = dash.ops?.today ?? [];
-    const deliveries = today.filter(j => j.type === 'delivery');
-    const pickups    = today.filter(j => j.type === 'pickup');
-    renderOpsCards('dashDeliveries', deliveries);
-    renderOpsCards('dashPickups', pickups);
-
-    // Tasks preview
-    const highTasks = (tasksData.tasks || []).filter(t => t.priority === 'high').slice(0, 3);
-    document.getElementById('dashTasksPreview').innerHTML = highTasks.length
-      ? highTasks.map(t => renderTaskCard(t, true)).join('')
-      : '<div style="color:var(--gray-500);font-size:13px;">No high priority tasks</div>';
-
-    // Activity
-    const acts = actData.logs ?? [];
-    document.getElementById('dashActivity').innerHTML = acts.length
-      ? acts.map(a => renderActivityEntry(a)).join('')
-      : '<div style="color:var(--gray-500);font-size:13px;">No recent activity</div>';
-
-    document.getElementById('dashLastUpdated').textContent = 'Last updated: just now';
-  } catch(e) { console.error('Dashboard error:', e); }
+function switchKbTab(mode,tabEl){
+  kbMode=mode;
+  document.querySelectorAll('.tab-row .tab').forEach(t=>t.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.getElementById('kb-mode').textContent=mode==='general'?'General Query':'Engineering Query';
 }
 
-function renderOpsCards(containerId, jobs) {
-  const el = document.getElementById(containerId);
-  if (!jobs.length) { el.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:12px 0;">None today</div>'; return; }
-  el.innerHTML = jobs.map(j => `
-    <div class="ops-card">
-      <div class="ops-card-header">
-        <span class="badge badge-yellow">${esc(j.jobId||j.id)}</span>
-        <span style="font-size:12px;color:var(--gray-400);">${esc(j.scheduledTime||'TBD')}</span>
-      </div>
-      <div style="font-weight:600;margin-bottom:4px;">${esc(j.customerName||'—')}</div>
-      <a class="ops-address" href="https://maps.google.com/?q=${encodeURIComponent(j.deliveryAddress||j.address||'')}" target="_blank">&#x1F4CD; ${esc(j.deliveryAddress||j.address||'No address')}</a>
-      <div style="font-size:12px;color:var(--gray-400);">Driver: ${esc(j.driverName||j.driver||'TBD')}</div>
-    </div>`).join('');
+async function sendKbQuery(mode,question){
+  if(!question||!question.trim())return;
+  const inputEl=document.getElementById('input-knowledge');if(inputEl)inputEl.value='';
+  const agent='knowledge';
+  appendMsg(agent,question,'user');
+  showThinking(agent);
+  const endpoint=mode==='engineering'?'/knowledge/engineering':'/knowledge/query';
+  const data=await api('POST',endpoint,{question});
+  hideThinking(agent);
+  if(data.answer)appendMsg(agent,data.answer,'agent');
+  else if(data.error)appendMsg(agent,`Error: ${data.error}`,'agent');
 }
 
-// ══════════════════════════════════════
-// QUOTE PAGE
-// ══════════════════════════════════════
-async function loadQuotePage() {
-  try {
-    const [pipeData, actData] = await Promise.all([
-      apiFetch('GET', '/quote/pipeline').catch(() => ({ pipeline: [] })),
-      apiFetch('GET', '/api/activity?agent=quote&limit=5').catch(() => ({ logs: [] })),
-    ]);
-    const jobs = pipeData.pipeline || pipeData.jobs || [];
-    document.getElementById('quotePipelineBody').innerHTML = jobs.length
-      ? jobs.map(j => `<tr>
-          <td><span class="badge badge-yellow">${esc(j.id||j.jobId)}</span></td>
-          <td>${esc(j.customerName||'—')}</td>
-          <td>${esc(j.equipment?.[0]?.name||'—')}</td>
-          <td style="color:var(--yellow);">$${(j.total||0).toLocaleString()}</td>
-          <td>${stageBadge(j.stage)}</td>
-          <td style="color:var(--gray-400);">${fmt(j.createdAt)}</td>
-        </tr>`).join('')
-      : '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);">No quotes yet</td></tr>';
-    document.getElementById('quoteStats').innerHTML = `
-      Total: <b>${jobs.length}</b><br>
-      Sent: <b>${jobs.filter(j=>j.stage!=='quote_built').length}</b><br>
-      Pipeline Value: <b style="color:var(--yellow);">$${jobs.reduce((s,j)=>s+(j.total||0),0).toLocaleString()}</b>`;
-    document.getElementById('quoteActivity').innerHTML = renderActivityList(actData.logs || []);
-  } catch(e) { console.error(e); }
+async function quickLearnUrl(){
+  const url=document.getElementById('learnUrl')?.value?.trim();
+  if(!url){showToast('Enter a URL first','warning');return;}
+  showToast('Learning...','info');
+  const d=await api('POST','/knowledge/learn',{url,priority:'high'});
+  showToast(d.ok?'Learned successfully!':'Failed to learn',d.ok?'success':'error');
+  if(d.ok)loadKnowledge();
 }
 
-// ══════════════════════════════════════
-// ADMIN PAGE
-// ══════════════════════════════════════
-async function loadAdminPage() {
-  try {
-    const [appData, resData, actData] = await Promise.all([
-      apiFetch('GET', '/admin/approvals').catch(() => ({ approvals: [] })),
-      apiFetch('GET', '/admin/reservations').catch(() => ({ reservations: [] })),
-      apiFetch('GET', '/api/activity?agent=admin&limit=5').catch(() => ({ logs: [] })),
-    ]);
-    const approvals = appData.approvals || [];
-    document.getElementById('approvalCount').textContent = approvals.length;
-    document.getElementById('approvalsList').innerHTML = approvals.length
-      ? approvals.map(a => `
-        <div class="approval-card">
-          <div class="approval-type">${esc(a.metadata?.type||'approval')} — ${esc(a.id)}</div>
-          <div class="approval-details">${esc(a.message?.slice(0,150)||'No details')}${a.message?.length>150?'...':''}</div>
-          <div class="approval-meta">Created ${timeAgo(a.createdAt)}</div>
-          <div class="approval-btns">
-            <button class="btn btn-green btn-sm" onclick="respondApproval('${esc(a.id)}','YES',this)">&#x2705; Approve</button>
-            <button class="btn btn-red btn-sm" onclick="respondApproval('${esc(a.id)}','NO',this)">&#x274C; Deny</button>
-          </div>
-        </div>`).join('')
-      : '<div style="color:var(--gray-500);font-size:13px;">No pending approvals</div>';
-
-    const reservations = resData.reservations || [];
-    document.getElementById('reservationsBody').innerHTML = reservations.length
-      ? reservations.map(r => `<tr>
-          <td><span class="badge badge-yellow">${esc(r.jobId||r.id)}</span></td>
-          <td>${esc(r.customerName||'—')}</td>
-          <td>${fmt(r.startDate)}</td>
-          <td>${fmt(r.endDate)}</td>
-          <td style="color:var(--yellow);">$${(r.total||0).toLocaleString()}</td>
-          <td>${stageBadge(r.stage||'reserved')}</td>
-          <td><button class="btn btn-ghost btn-sm" onclick="openJobDetail('${esc(r.jobId||r.id)}')">View</button></td>
-        </tr>`).join('')
-      : '<tr><td colspan="7" style="text-align:center;color:var(--gray-500);">No reservations</td></tr>';
-    document.getElementById('adminActivity').innerHTML = renderActivityList(actData.logs || []);
-  } catch(e) { console.error(e); }
+async function teachKnowledge(){
+  const title=document.getElementById('teachTitle')?.value?.trim();
+  const content=document.getElementById('teachContent')?.value?.trim();
+  const category=document.getElementById('teachCategory')?.value;
+  if(!title||!content){showToast('Title and content required','warning');return;}
+  showToast('Teaching...','info');
+  const d=await api('POST','/knowledge/teach',{title,content,category});
+  showToast(d.ok?'Added to knowledge base!':'Failed',d.ok?'success':'error');
+  if(d.ok){document.getElementById('teachTitle').value='';document.getElementById('teachContent').value='';loadKnowledge();}
 }
 
-async function respondApproval(id, response, btn) {
-  btn.disabled = true;
-  try {
-    const d = await apiFetch('POST', '/admin/approval/respond', { approvalId: id, response });
-    toast(response === 'YES' ? 'Approved \u2705' : 'Denied \u274C', response === 'YES' ? 'success' : 'error');
-    loadAdminPage();
-  } catch(e) { toast('Error: ' + e.message, 'error'); btn.disabled = false; }
+// ── TASKS ─────────────────────────────────────────────────────
+async function loadTasks(){
+  const status=document.getElementById('tf-status')?.value||'';
+  const agent=document.getElementById('tf-agent')?.value||'';
+  const priority=document.getElementById('tf-priority')?.value||'';
+  let url='/api/tasks?';
+  if(status)url+=`status=${status}&`;if(agent)url+=`agent=${agent}&`;if(priority)url+=`priority=${priority}&`;
+  const data=await api('GET',url);
+  state.allTasks=data.tasks||[];
+  renderTasksList(state.allTasks);
+  // Stats
+  document.getElementById('t-pending').textContent=state.allTasks.filter(t=>t.status==='pending').length;
+  document.getElementById('t-high').textContent=state.allTasks.filter(t=>t.priority==='high'&&t.status==='pending').length;
+  document.getElementById('ts-total').textContent=data.total||0;
+  document.getElementById('ts-pending').textContent=state.allTasks.filter(t=>t.status==='pending').length;
+  document.getElementById('ts-high').textContent=state.allTasks.filter(t=>t.priority==='high').length;
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('ts-done-today').textContent=state.allTasks.filter(t=>t.completedAt?.startsWith(today)).length;
+  document.getElementById('ts-ai').textContent=state.allTasks.filter(t=>t.createdBy&&t.createdBy!=='system'&&t.createdBy!=='user').length;
 }
 
-// ══════════════════════════════════════
-// OPS PAGE
-// ══════════════════════════════════════
-async function loadOpsPage() {
-  try {
-    const [todayData, upcomingData] = await Promise.all([
-      apiFetch('GET', '/ops/today').catch(() => ({ jobs: [] })),
-      apiFetch('GET', '/ops/upcoming').catch(() => ({ jobs: [] })),
-    ]);
-    const today = todayData.jobs || todayData.today || [];
-    const deliveries = today.filter(j => j.type === 'delivery');
-    const pickups    = today.filter(j => j.type === 'pickup');
-    renderOpsCards('opsDeliveries', deliveries);
-    renderOpsCards('opsPickups', pickups);
-    document.getElementById('opsStats').innerHTML = `
-      Today's Jobs: <b>${today.length}</b><br>
-      Upcoming 7 Days: <b>${(upcomingData.jobs||[]).length}</b>`;
-    document.getElementById('driversList').innerHTML = `
-      <div style="padding:8px 0;border-bottom:1px solid var(--gray-700);">
-        <b>Andrei</b> <span style="color:var(--gray-400);font-size:12px;">· +15619286999</span><br>
-        <span style="font-size:12px;color:var(--gray-500);">${deliveries.length} delivery, ${pickups.length} pickup today</span>
-      </div>`;
-  } catch(e) { console.error(e); }
+function filterTasks(){
+  const search=document.getElementById('tf-search')?.value?.toLowerCase()||'';
+  const filtered=state.allTasks.filter(t=>(t.title+t.description).toLowerCase().includes(search));
+  renderTasksList(filtered);
 }
 
-// ══════════════════════════════════════
-// FINANCE PAGE
-// ══════════════════════════════════════
-async function loadFinancePage() {
-  try {
-    const [activeData, actData] = await Promise.all([
-      apiFetch('GET', '/finance/active').catch(() => ({ rentals: [] })),
-      apiFetch('GET', '/api/activity?agent=finance&limit=5').catch(() => ({ logs: [] })),
-    ]);
-    const rentals = activeData.rentals || activeData.active || [];
-    const now = Date.now();
-    document.getElementById('financeRentalsBody').innerHTML = rentals.length
-      ? rentals.map(r => {
-          const end = r.endDate ? new Date(r.endDate) : null;
-          const daysLeft = end ? Math.ceil((end - now) / 86400000) : null;
-          const rowColor = daysLeft !== null && daysLeft < 0 ? 'background:rgba(239,68,68,0.06);' : daysLeft !== null && daysLeft < 2 ? 'background:rgba(246,236,14,0.06);' : '';
-          return `<tr style="${rowColor}">
-            <td><span class="badge badge-yellow">${esc(r.jobId||r.id)}</span></td>
-            <td>${esc(r.customerName||'—')}</td>
-            <td>${fmt(r.endDate)}</td>
-            <td style="color:${daysLeft<0?'var(--red)':daysLeft<2?'var(--yellow)':'var(--green)'};">${daysLeft !== null ? (daysLeft < 0 ? Math.abs(daysLeft) + ' overdue' : daysLeft + ' days') : '—'}</td>
-            <td style="color:var(--yellow);">$${((r.total||0)-(r.depositPaid||0)).toLocaleString()}</td>
-            <td>${daysLeft<0?'<span class="badge badge-red">OVERDUE</span>':daysLeft<2?'<span class="badge badge-yellow">ENDING</span>':'<span class="badge badge-green">ACTIVE</span>'}</td>
-          </tr>`;}).join('')
-      : '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);">No active rentals</td></tr>';
-    const overdueCt = rentals.filter(r => r.endDate && new Date(r.endDate) < new Date()).length;
-    const ending48 = rentals.filter(r => { const d = r.endDate ? (new Date(r.endDate) - now) / 86400000 : null; return d !== null && d >= 0 && d < 2; }).length;
-    document.getElementById('financeStats').innerHTML = `
-      Active Rentals: <b>${rentals.length}</b><br>
-      Ending in 48h: <b style="color:var(--yellow);">${ending48}</b><br>
-      Overdue: <b style="color:var(--red);">${overdueCt}</b>`;
-    document.getElementById('financeActivity').innerHTML = renderActivityList(actData.logs || []);
-  } catch(e) { console.error(e); }
-}
-
-// ══════════════════════════════════════
-// MARKETING PAGE
-// ══════════════════════════════════════
-async function loadMarketingPage() {
-  try {
-    const [leadsData, actData] = await Promise.all([
-      apiFetch('GET', '/marketing/leads').catch(() => ({ leads: [] })),
-      apiFetch('GET', '/api/activity?agent=marketing&limit=5').catch(() => ({ logs: [] })),
-    ]);
-    const leads = leadsData.leads || [];
-    document.getElementById('leadsBody').innerHTML = leads.length
-      ? leads.map(l => `<tr>
-          <td>${esc(l.name||'—')}</td>
-          <td>${l.phone?`<a href="tel:${esc(l.phone)}" style="color:var(--yellow);">${esc(l.phone)}</a>`:'—'}</td>
-          <td>${esc(l.equipment||'—')}</td>
-          <td>${esc(l.source||'—')}</td>
-          <td><span class="badge ${l.status==='converted'?'badge-green':l.status==='contacted'?'badge-yellow':'badge-red'}">${esc(l.status||'new')}</span></td>
-          <td style="color:var(--gray-400);">${fmt(l.createdAt)}</td>
-        </tr>`).join('')
-      : '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);">No leads yet</td></tr>';
-    document.getElementById('marketingStats').innerHTML = `
-      Total Leads: <b>${leads.length}</b><br>
-      New: <b style="color:var(--red);">${leads.filter(l=>l.status==='new'||!l.status).length}</b><br>
-      Converted: <b style="color:var(--green);">${leads.filter(l=>l.status==='converted').length}</b>`;
-    document.getElementById('marketingActivity').innerHTML = renderActivityList(actData.logs || []);
-  } catch(e) { console.error(e); }
-}
-
-// ══════════════════════════════════════
-// KNOWLEDGE PAGE
-// ══════════════════════════════════════
-async function loadKnowledgePage() {
-  loadKnowledge('', document.querySelector('#page-knowledge .filter-tab.active'));
-  try {
-    const d = await apiFetch('GET', '/knowledge');
-    const entries = d.entries || [];
-    const weekAgo = Date.now() - 7*86400000;
-    document.getElementById('knowledgeStats').innerHTML = `
-      Total Entries: <b>${entries.length}</b><br>
-      New This Week: <b style="color:var(--yellow);">${entries.filter(e=>new Date(e.learnedAt)>weekAgo).length}</b><br>
-      Last Updated: <b>${entries.length?timeAgo(entries[entries.length-1].learnedAt):'Never'}</b>`;
-  } catch(e) { console.error(e); }
-}
-async function loadKnowledge(category, tabEl) {
-  if (tabEl) { document.querySelectorAll('#page-knowledge .filter-tab').forEach(t=>t.classList.remove('active')); tabEl.classList.add('active'); }
-  try {
-    const url = '/knowledge' + (category ? '?category=' + category : '');
-    const d = await apiFetch('GET', url);
-    const entries = (d.entries||[]).slice(0,50);
-    document.getElementById('knowledgeBody').innerHTML = entries.length
-      ? entries.map(e => `<tr>
-          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">${esc(e.title||e.url||e.fileName||'Manual')}</td>
-          <td><span class="badge badge-teal">${esc(e.category||'general')}</span></td>
-          <td style="max-width:300px;color:var(--gray-400);font-size:12px;">${esc((e.summary||'').slice(0,100))}${(e.summary||'').length>100?'...':''}</td>
-          <td style="color:var(--gray-400);">${timeAgo(e.learnedAt)}</td>
-        </tr>`).join('')
-      : '<tr><td colspan="4" style="text-align:center;color:var(--gray-500);">No entries yet — add a URL to start learning</td></tr>';
-  } catch(e) { console.error(e); }
-}
-function switchLearnTab(tab, el) {
-  ['url','manual','youtube'].forEach(t => { document.getElementById('learnTab'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t===tab?'block':'none'; });
-  document.querySelectorAll('#page-knowledge .split-left .filter-tab').forEach(t=>t.classList.remove('active'));
-  if(el) el.classList.add('active');
-}
-async function learnFromUrl() {
-  const url = document.getElementById('learnUrl').value.trim();
-  if (!url) { toast('Enter a URL first', 'warning'); return; }
-  toast('Learning from URL...', 'info');
-  const d = await apiFetch('POST', '/knowledge/learn', { url, priority: 'high' }).catch(e => ({ error: e.message }));
-  toast(d.ok ? '\u2705 Learned successfully!' : 'Error: ' + (d.error||'Failed'), d.ok ? 'success' : 'error');
-  if (d.ok) { document.getElementById('learnUrl').value = ''; loadKnowledgePage(); }
-}
-async function teachManual() {
-  const title = document.getElementById('teachTitle').value.trim();
-  const content = document.getElementById('teachContent').value.trim();
-  if (!title || !content) { toast('Title and content required', 'warning'); return; }
-  toast('Teaching...', 'info');
-  const d = await apiFetch('POST', '/knowledge/teach', { title, content }).catch(e => ({ error: e.message }));
-  toast(d.ok ? '\u2705 Taught successfully!' : 'Error: ' + (d.error||'Failed'), d.ok ? 'success' : 'error');
-  if (d.ok) { document.getElementById('teachTitle').value = ''; document.getElementById('teachContent').value = ''; loadKnowledgePage(); }
-}
-async function learnFromYoutube() {
-  const url = document.getElementById('learnYtUrl').value.trim();
-  if (!url) { toast('Enter YouTube URL', 'warning'); return; }
-  toast('Fetching video transcript...', 'info');
-  const d = await apiFetch('POST', '/knowledge/youtube', { url }).catch(e => ({ error: e.message }));
-  toast(d.ok ? '\u2705 Learned from video!' : 'Error: ' + (d.error||'Failed'), d.ok ? 'success' : 'error');
-  if (d.ok) { document.getElementById('learnYtUrl').value = ''; loadKnowledgePage(); }
-}
-
-// ══════════════════════════════════════
-// TASKS PAGE
-// ══════════════════════════════════════
-let taskFilters = { status: '', priority: '' };
-async function loadTasksPage() {
-  try {
-    const params = new URLSearchParams();
-    if (taskFilters.status) params.set('status', taskFilters.status);
-    if (taskFilters.priority) params.set('priority', taskFilters.priority);
-    const d = await apiFetch('GET', '/api/tasks?' + params.toString());
-    const tasks = d.tasks || [];
-    const all = await apiFetch('GET', '/api/tasks');
-    const allTasks = all.tasks || [];
-    document.getElementById('taskStatTotal').textContent = allTasks.length;
-    document.getElementById('taskStatHigh').textContent = allTasks.filter(t=>t.priority==='high').length;
-    document.getElementById('taskStatPending').textContent = allTasks.filter(t=>t.status==='pending').length;
-    document.getElementById('taskStatDone').textContent = allTasks.filter(t=>t.status==='completed').length;
-    // Update nav badge
-    const pending = allTasks.filter(t=>t.status==='pending').length;
-    document.getElementById('tasksTab').textContent = pending > 0 ? `\u2705 Tasks (${pending})` : '\u2705 Tasks';
-    document.getElementById('tasksList').innerHTML = tasks.length
-      ? tasks.map(t => renderTaskCard(t, false)).join('')
-      : '<div style="text-align:center;color:var(--gray-500);padding:40px;">No tasks found</div>';
-  } catch(e) { console.error(e); }
-}
-function filterTasks(type, value, el) {
-  taskFilters[type] = value;
-  const group = el.closest('.filter-tabs');
-  group.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  loadTasksPage();
-}
-function renderTaskCard(t, compact) {
-  const dueStr = t.dueDate ? (new Date(t.dueDate) < new Date() ? `<span style="color:var(--red);">Due: ${fmt(t.dueDate)} \u26A0\uFE0F</span>` : `Due: ${fmt(t.dueDate)}`) : '';
-  return `<div class="task-card ${t.priority}">
+function renderTasksList(tasks){
+  const el=document.getElementById('tasks-list');
+  if(!tasks.length){el.innerHTML='<div class="text-muted text-sm">No tasks found</div>';return;}
+  el.innerHTML=tasks.map(t=>`<div class="task-card">
     <div class="task-header">
-      <div class="task-title">${esc(t.title)}</div>
+      <div class="task-title">${t.title}</div>
       ${priorityBadge(t.priority)}
     </div>
-    ${t.description?`<div class="task-desc">${esc(compact?t.description.slice(0,80)+(t.description.length>80?'...':''):t.description)}</div>`:''}
-    <div class="task-footer">
-      <span class="badge badge-gray">${esc(t.agent||'system')}</span>
-      ${t.jobId?`<span class="badge badge-yellow">${esc(t.jobId)}</span>`:''}
-      <span style="font-size:11px;color:var(--gray-500);">${timeAgo(t.createdAt)}</span>
-      ${dueStr}
+    <div class="text-sm text-muted mb8">${t.description||''}</div>
+    <div class="flex gap8 items-center">
+      ${agentBadge(t.agent)}
+      ${t.jobId?`<span class="text-sm text-accent">${t.jobId}</span>`:''}
+      <span class="text-sm text-muted">${fmtAgo(t.createdAt)}</span>
+      ${t.dueDate?`<span class="text-sm" style="color:var(--warning)">Due: ${fmtDate(t.dueDate)}</span>`:''}
     </div>
-    ${!compact && t.status === 'pending' ? `<div class="task-btns">
-      <button class="btn btn-green btn-sm" onclick="updateTask('${t.id}','complete')">\u2705 Complete</button>
-      <button class="btn btn-gray btn-sm" onclick="updateTask('${t.id}','dismiss')">\u274C Dismiss</button>
-    </div>` : ''}
-  </div>`;
-}
-async function updateTask(id, action) {
-  const ep = action === 'complete' ? `/api/tasks/${id}/complete` : `/api/tasks/${id}/dismiss`;
-  const d = await apiFetch('POST', ep, {}).catch(e => ({ error: e.message }));
-  toast(d.ok ? (action==='complete' ? '\u2705 Task completed!' : 'Task dismissed') : 'Error: ' + d.error, d.ok ? 'success' : 'error');
-  if (d.ok) loadTasksPage();
-}
-function openCreateTask() { document.getElementById('createTaskModal').classList.add('open'); }
-async function submitCreateTask() {
-  const title = document.getElementById('newTaskTitle').value.trim();
-  if (!title) { toast('Title required', 'warning'); return; }
-  const d = await apiFetch('POST', '/api/tasks', {
-    title, description: document.getElementById('newTaskDesc').value,
-    priority: document.getElementById('newTaskPriority').value,
-    agent: document.getElementById('newTaskAgent').value,
-    jobId: document.getElementById('newTaskJobId').value || null,
-    dueDate: document.getElementById('newTaskDue').value || null,
-    createdBy: 'manual',
-  }).catch(e => ({ error: e.message }));
-  toast(d.ok ? '\u2705 Task created!' : 'Error: ' + d.error, d.ok ? 'success' : 'error');
-  if (d.ok) { closeModal('createTaskModal'); loadTasksPage(); }
-}
-
-// ══════════════════════════════════════
-// ACTIVITY PAGE
-// ══════════════════════════════════════
-let actFilters = { agent: 'all', hours: '168' };
-async function loadActivityPage() {
-  try {
-    const params = `?agent=${actFilters.agent}&hours=${actFilters.hours}&limit=200`;
-    const d = await apiFetch('GET', '/api/activity' + params);
-    const logs = d.logs || [];
-    const today = logs.filter(l => new Date(l.timestamp) > new Date(Date.now()-86400000));
-    document.getElementById('actStatTotal').textContent = today.length;
-    document.getElementById('actStatErrors').textContent = today.filter(l=>l.status==='error').length;
-    const agentCounts = logs.reduce((acc,l) => { acc[l.agent] = (acc[l.agent]||0)+1; return acc; }, {});
-    const topAgent = Object.entries(agentCounts).sort((a,b)=>b[1]-a[1])[0];
-    document.getElementById('actStatAgent').textContent = topAgent ? topAgent[0] : '—';
-    document.getElementById('activityFeed').innerHTML = logs.length
-      ? logs.map(l => renderActivityEntry(l)).join('')
-      : '<div style="text-align:center;color:var(--gray-500);padding:40px;">No activity logged yet</div>';
-  } catch(e) { console.error(e); }
-}
-function filterActivity(type, value, el) {
-  actFilters[type] = value;
-  const group = el.closest('.filter-tabs');
-  group.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  loadActivityPage();
-}
-function renderActivityEntry(a) {
-  const statusIcon = { success:'\u2705', error:'\u274C', warning:'\u26A0\uFE0F', pending:'\u23F3' }[a.status] || '\u2705';
-  return `<div class="activity-entry">
-    <div class="activity-dot" style="background:${agentColor(a.agent)};"></div>
-    <div class="activity-content">
-      <div class="activity-action">${statusIcon} ${esc(a.action||'action')}</div>
-      <div class="activity-desc">${esc(a.description||'')}</div>
-      <div class="activity-meta">
-        <span class="badge badge-gray" style="background:rgba(0,0,0,0.3);border:1px solid ${agentColor(a.agent)}20;color:${agentColor(a.agent)};">${esc(a.agent)}</span>
-        ${a.jobId?`<span class="badge badge-yellow">${esc(a.jobId)}</span>`:''}
-        <span class="activity-time">${timeAgo(a.timestamp)}</span>
-      </div>
+    <div class="task-actions">
+      ${t.status==='pending'?`<button class="btn" onclick="updateTaskStatus('${t.id}','in_progress')">▶️ Start</button>`:''}
+      ${t.status!=='completed'?`<button class="btn success" onclick="completeTask('${t.id}')">✅ Complete</button>`:''}
+      ${t.status!=='dismissed'?`<button class="btn danger" onclick="dismissTask('${t.id}')">❌ Dismiss</button>`:''}
+      <span class="pill ${t.status==='completed'?'pill-completed':t.status==='pending'?'pill-quote_sent':''}">${t.status}</span>
     </div>
-  </div>`;
-}
-function renderActivityList(logs) {
-  if (!logs.length) return '<div style="color:var(--gray-500);font-size:13px;">No recent activity</div>';
-  return logs.slice(0,5).map(a => renderActivityEntry(a)).join('');
-}
-function exportCSV() {
-  toast('Export feature — use GET /api/activity to download all logs', 'info');
+  </div>`).join('');
 }
 
-// ══════════════════════════════════════
-// MODALS
-// ══════════════════════════════════════
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function openFloatChat() { openModal('floatChatModal'); }
-document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
-
-async function openJobDetail(jobId) {
-  if (!jobId || jobId === '—') return;
-  try {
-    const d = await apiFetch('GET', '/admin/status/' + jobId);
-    const j = d.job || d;
-    toast(`Job ${jobId}: ${j.stage || j.status || 'loaded'}`, 'info');
-  } catch(e) { toast('Could not load job details', 'error'); }
+async function completeTask(taskId){
+  const d=await api('POST',`/api/tasks/${taskId}/complete`);
+  if(d.ok){showToast('Task completed!','success');loadTasks();}
+}
+async function dismissTask(taskId){
+  const d=await api('POST',`/api/tasks/${taskId}/dismiss`);
+  if(d.ok){showToast('Task dismissed','info');loadTasks();}
+}
+async function updateTaskStatus(taskId,status){
+  const d=await api('POST',`/api/tasks/${taskId}/status`,{status});
+  if(d.ok)loadTasks();
+}
+function openCreateTask(){openModal('taskModal');}
+async function submitCreateTask(){
+  const title=document.getElementById('task-title')?.value?.trim();
+  if(!title){showToast('Title required','warning');return;}
+  const d=await api('POST','/api/tasks',{title,description:document.getElementById('task-desc')?.value,priority:document.getElementById('task-priority')?.value,agent:document.getElementById('task-agent')?.value,jobId:document.getElementById('task-job')?.value||null,dueDate:document.getElementById('task-due')?.value||null});
+  if(d.ok){closeModal('taskModal');showToast('Task created!','success');loadTasks();}
 }
 
-// ══════════════════════════════════════
-// CLOCK & INIT
-// ══════════════════════════════════════
-function updateClock() {
-  const n = new Date();
-  document.getElementById('dashClock').textContent = n.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-  document.getElementById('dashDate').textContent = n.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+// ── ACTIVITY ──────────────────────────────────────────────────
+async function loadActivity(){
+  const hours=document.getElementById('act-hours')?.value||168;
+  const data=await api('GET',`/api/activity?limit=500&hours=${hours}`);
+  state.actLogs=data.logs||[];
+  renderActivity();
+  buildHourChart();
+}
+function setActAgent(agent,tabEl){
+  state.actAgent=agent;
+  document.querySelectorAll('#agent-filter-btns .tab').forEach(t=>t.classList.remove('active'));
+  tabEl.classList.add('active');
+  renderActivity();
+}
+function renderActivity(){
+  const search=document.getElementById('act-search')?.value?.toLowerCase()||'';
+  let logs=state.actLogs;
+  if(state.actAgent)logs=logs.filter(l=>l.agent===state.actAgent);
+  if(search)logs=logs.filter(l=>(l.description+l.action+l.agent).toLowerCase().includes(search));
+  // Stats
+  const today=new Date().toISOString().slice(0,10);
+  const todayLogs=state.actLogs.filter(l=>l.timestamp?.startsWith(today));
+  document.getElementById('act-total').textContent=todayLogs.length;
+  document.getElementById('act-errors').textContent=todayLogs.filter(l=>l.status==='error').length;
+  const agentCounts={};state.actLogs.forEach(l=>{agentCounts[l.agent]=(agentCounts[l.agent]||0)+1;});
+  const topAgent=Object.entries(agentCounts).sort((a,b)=>b[1]-a[1])[0]||['--',0];
+  document.getElementById('act-agent').textContent=topAgent[0];
+  document.getElementById('act-last').textContent=logs[0]?fmtAgo(logs[0].timestamp):'--';
+  const el=document.getElementById('activity-timeline');
+  if(!logs.length){el.innerHTML='<div class="text-muted text-sm" style="padding:16px">No activity found</div>';return;}
+  el.innerHTML=logs.slice(0,100).map(l=>`<div class="activity-item">
+    <div class="activity-dot" style="background:${AGENT_COLORS[l.agent]||'#666'}"></div>
+    <div class="activity-body">
+      <div class="activity-header">${agentBadge(l.agent)}<span class="text-sm" style="color:${l.status==='error'?'var(--danger)':l.status==='success'?'var(--success)':'var(--text-muted)'}">${l.status}</span><span class="activity-time">${fmtAgo(l.timestamp)}</span></div>
+      <div class="activity-desc">${l.description||l.action}</div>
+      ${l.jobId?`<span class="text-sm text-accent">${l.jobId}</span>`:''}
+      ${Object.keys(l.metadata||{}).length?`<div class="activity-expand" onclick="this.nextSibling.style.display=this.nextSibling.style.display==='block'?'none':'block'">▶ metadata</div><div class="activity-meta">${JSON.stringify(l.metadata,null,2)}</div>`:'' }
+    </div>
+  </div>`).join('');
 }
 
-function initApp() {
-  updateClock();
-  setInterval(updateClock, 1000);
-  loadDashboard();
-  setInterval(loadDashboard, 30000);
+function buildHourChart(){
+  const today=new Date().toISOString().slice(0,10);
+  const todayLogs=state.actLogs.filter(l=>l.timestamp?.startsWith(today));
+  const hours=Array(24).fill(0);
+  todayLogs.forEach(l=>{const h=new Date(l.timestamp).getHours();hours[h]++;});
+  const max=Math.max(...hours,1);
+  const el=document.getElementById('hourChart');
+  el.innerHTML=hours.map((c,i)=>`<div class="hour-bar" title="${i}:00 — ${c} actions" style="height:${Math.max(2,Math.round(c/max*56))}px;opacity:${c?1:0.15}"></div>`).join('');
+}
+
+function exportActivityCSV(){
+  const logs=state.actLogs;
+  const csv=['ID,Agent,Action,Status,Description,JobID,Timestamp'].concat(logs.map(l=>`${l.id},${l.agent},${l.action},${l.status},"${(l.description||'').replace(/"/g,"''")}",${l.jobId||''},${l.timestamp}`)).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='activity-log.csv';a.click();
 }
 </script>
 </body>
