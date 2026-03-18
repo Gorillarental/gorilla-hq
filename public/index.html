@@ -356,6 +356,7 @@ tr.ending-soon td{background:rgba(245,158,11,.06);}
     <div class="nav-item" data-page="ops"><span class="nav-emoji">🚚</span><span>Ops</span></div>
     <div class="nav-item" data-page="finance"><span class="nav-emoji">💰</span><span>Finance</span></div>
     <div class="nav-item" data-page="marketing"><span class="nav-emoji">📣</span><span>Marketing</span></div>
+    <div class="nav-item" data-page="ghl"><span class="nav-emoji">📱</span><span>GHL CRM</span></div>
     <div class="nav-item" data-page="knowledge"><span class="nav-emoji">🧠</span><span>Knowledge</span></div>
     <div class="nav-item" data-page="tasks"><span class="nav-emoji">✅</span><span>Tasks</span></div>
     <div class="nav-item" data-page="activity"><span class="nav-emoji">📊</span><span>Activity</span></div>
@@ -697,6 +698,141 @@ tr.ending-soon td{background:rgba(245,158,11,.06);}
     </div>
   </div>
 
+  <!-- PAGE: GHL CRM -->
+  <div class="page" id="page-ghl">
+    <!-- Stats Row -->
+    <div class="stats-grid mb16" style="grid-template-columns:repeat(5,1fr)">
+      <div class="stat-card yellow"><div class="stat-label">Total Contacts</div><div class="stat-value" id="ghl-total-contacts">--</div><div class="stat-sub">in GHL</div></div>
+      <div class="stat-card green"><div class="stat-label">New Today</div><div class="stat-value" id="ghl-new-today">--</div><div class="stat-sub">added</div></div>
+      <div class="stat-card"><div class="stat-label">Open Opportunities</div><div class="stat-value" id="ghl-open-opps">--</div><div class="stat-sub">in pipeline</div></div>
+      <div class="stat-card"><div class="stat-label">Pipeline Value</div><div class="stat-value" id="ghl-pipeline-value">$--</div><div class="stat-sub">total</div></div>
+      <div class="stat-card"><div class="stat-label">Active Conversations</div><div class="stat-value" id="ghl-active-convos">--</div><div class="stat-sub">last 24h</div></div>
+    </div>
+
+    <!-- GHL Snapshot: 3 columns -->
+    <div class="grid-3 mb16">
+      <div class="card">
+        <div class="section-title mb12">👥 Contacts</div>
+        <div class="mb8"><span class="text-muted text-sm">Total:</span> <strong id="ghl-snap-total">--</strong></div>
+        <div class="mb12"><span class="text-muted text-sm">New today:</span> <strong id="ghl-snap-new">--</strong></div>
+        <div class="section-sub mb8">Top Tags</div>
+        <div id="ghl-tags-list" style="font-size:12px"></div>
+      </div>
+      <div class="card">
+        <div class="section-title mb12">💼 Pipeline</div>
+        <div class="mb8"><span class="text-muted text-sm">Open:</span> <strong id="ghl-snap-open">--</strong></div>
+        <div class="mb8"><span class="text-muted text-sm">Won:</span> <strong id="ghl-snap-won">--</strong></div>
+        <div class="mb12"><span class="text-muted text-sm">Total Value:</span> <strong id="ghl-snap-value">$--</strong></div>
+        <div class="section-sub mb8">Stages</div>
+        <div id="ghl-stages-list" style="font-size:12px"></div>
+      </div>
+      <div class="card">
+        <div class="section-title mb12">💬 Conversations</div>
+        <div class="mb12"><span class="text-muted text-sm">Active (24h):</span> <strong id="ghl-snap-active">--</strong></div>
+        <div class="section-sub mb8">Recent</div>
+        <div id="ghl-recent-convos" style="font-size:12px"></div>
+      </div>
+    </div>
+
+    <!-- Google Lead Scraper -->
+    <div class="card mb16">
+      <div class="section-header">
+        <div class="section-title">🔍 Google Lead Scraper</div>
+        <button class="btn" onclick="loadGHLScrapeHistory()">🔄 Refresh</button>
+      </div>
+      <div class="grid-3 mb16">
+        <div><div class="stat-label">Total Runs</div><div class="font-bold text-accent" id="scrape-runs">--</div></div>
+        <div><div class="stat-label">Contacts Added</div><div class="font-bold" id="scrape-total-added">--</div></div>
+        <div><div class="stat-label">Last Run</div><div class="font-bold" id="scrape-last-run">--</div></div>
+      </div>
+      <div class="filter-row mb12">
+        <select class="filter-select" id="scrape-area">
+          <option value="Fort Lauderdale">Fort Lauderdale</option>
+          <option value="Miami">Miami</option>
+          <option value="Hialeah">Hialeah</option>
+          <option value="Doral">Doral</option>
+          <option value="Coral Gables">Coral Gables</option>
+          <option value="Miami Beach">Miami Beach</option>
+          <option value="Homestead">Homestead</option>
+          <option value="Hollywood">Hollywood</option>
+          <option value="Pompano Beach">Pompano Beach</option>
+          <option value="Miramar">Miramar</option>
+          <option value="Pembroke Pines">Pembroke Pines</option>
+          <option value="Coral Springs">Coral Springs</option>
+          <option value="West Palm Beach">West Palm Beach</option>
+          <option value="Boca Raton">Boca Raton</option>
+          <option value="Delray Beach">Delray Beach</option>
+          <option value="Boynton Beach">Boynton Beach</option>
+        </select>
+        <select class="filter-select" id="scrape-category">
+          <option value="Construction">Construction</option>
+          <option value="Property">Property</option>
+          <option value="Specialty">Specialty</option>
+          <option value="Events">Events</option>
+        </select>
+        <select class="filter-select" id="scrape-max">
+          <option value="10">10 results</option>
+          <option value="20" selected>20 results</option>
+          <option value="50">50 results</option>
+          <option value="100">100 results</option>
+        </select>
+        <button class="btn primary" onclick="runGHLScrape()">▶ Run Scrape</button>
+        <button class="btn" onclick="runGHLQuickTest()">🧪 Quick Test (3)</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Areas</th><th>Categories</th><th>Found</th><th>Added</th><th>Skipped</th><th>Errors</th></tr></thead>
+          <tbody id="scrape-history-tbody"><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">No history yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Contacts Table -->
+    <div class="card mb16">
+      <div class="section-header">
+        <div class="section-title">👥 GHL Contacts</div>
+        <button class="btn" onclick="loadGHLContacts()">🔄 Refresh</button>
+      </div>
+      <div class="filter-row mb12">
+        <input class="filter-input" id="ghl-search" placeholder="Search contacts..." oninput="filterGHLContacts()">
+        <input class="filter-input" id="ghl-tag-filter" placeholder="Filter by tag...">
+        <select class="filter-select" id="ghl-county-filter" onchange="filterGHLContacts()">
+          <option value="">All Counties</option>
+          <option value="miami-dade">Miami-Dade</option>
+          <option value="broward">Broward</option>
+          <option value="palm-beach">Palm Beach</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Tags</th><th>County</th><th>Added</th><th>Actions</th></tr></thead>
+          <tbody id="ghl-contacts-tbody"><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick SMS -->
+    <div class="card">
+      <div class="section-title mb12">📲 Quick SMS</div>
+      <div class="grid-2">
+        <div>
+          <div class="form-group"><label class="form-label">To (phone)</label><input class="form-input" id="sms-to" placeholder="+1..."></div>
+          <div class="form-group">
+            <label class="form-label">From</label>
+            <select class="form-input" id="sms-from">
+              <option value="">Main +1 (954) 231-7455</option>
+              <option value="+18578327404">Chip +1 (857) 832-7404</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="sms-message" rows="4" placeholder="Type your message..."></textarea></div>
+          <button class="btn primary w100" onclick="sendGHLSMS()">📤 Send SMS</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- PAGE: KNOWLEDGE -->
   <div class="page" id="page-knowledge">
     <div class="two-panel wide">
@@ -1008,7 +1144,7 @@ function updateClock(){
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',company:'Company',quote:'Quote Agent',admin:'Admin Agent',ops:'Ops Agent',finance:'Finance Agent',marketing:'Marketing Agent',knowledge:'Knowledge Agent',tasks:'Tasks',activity:'Activity Log'};
+const PAGE_TITLES={dashboard:'Dashboard',company:'Company',quote:'Quote Agent',admin:'Admin Agent',ops:'Ops Agent',finance:'Finance Agent',marketing:'Marketing Agent',ghl:'GHL CRM',knowledge:'Knowledge Agent',tasks:'Tasks',activity:'Activity Log'};
 
 function goPage(page){
   state.currentPage=page;
@@ -1020,7 +1156,7 @@ function goPage(page){
   document.querySelectorAll(`[data-page="${page}"]`).forEach(n=>n.classList.add('active'));
   document.getElementById('pageTitle').textContent=PAGE_TITLES[page]||page;
   // Load page data
-  const loaders={dashboard:loadDashboard,company:loadCompany,quote:loadQuotePage,admin:loadAdminPage,ops:loadOps,finance:loadFinance,marketing:loadMarketing,knowledge:loadKnowledge,tasks:loadTasks,activity:loadActivity};
+  const loaders={dashboard:loadDashboard,company:loadCompany,quote:loadQuotePage,admin:loadAdminPage,ops:loadOps,finance:loadFinance,marketing:loadMarketing,ghl:loadGHL,knowledge:loadKnowledge,tasks:loadTasks,activity:loadActivity};
   if(loaders[page])loaders[page]();
 }
 
@@ -1638,6 +1774,153 @@ function exportActivityCSV(){
   const logs=state.actLogs;
   const csv=['ID,Agent,Action,Status,Description,JobID,Timestamp'].concat(logs.map(l=>`${l.id},${l.agent},${l.action},${l.status},"${(l.description||'').replace(/"/g,"''")}",${l.jobId||''},${l.timestamp}`)).join('\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='activity-log.csv';a.click();
+}
+
+// ── GHL CRM ───────────────────────────────────────────────────
+let ghlContactsAll = [];
+
+async function loadGHL() {
+  await Promise.all([loadGHLSnapshot(), loadGHLContacts(), loadGHLScrapeHistory()]);
+}
+
+async function loadGHLSnapshot() {
+  const data = await api('GET', '/ghl/snapshot');
+  const snap = data.snapshot;
+  if (!snap) return;
+  // Stats row
+  document.getElementById('ghl-total-contacts').textContent = snap.contacts?.total ?? '--';
+  document.getElementById('ghl-new-today').textContent = snap.contacts?.recent ?? '--';
+  document.getElementById('ghl-open-opps').textContent = snap.pipeline?.open ?? '--';
+  document.getElementById('ghl-pipeline-value').textContent = snap.pipeline?.totalValue != null ? fmtMoney(snap.pipeline.totalValue) : '$--';
+  document.getElementById('ghl-active-convos').textContent = snap.conversations?.active ?? '--';
+  // Snapshot panel
+  document.getElementById('ghl-snap-total').textContent = snap.contacts?.total ?? '--';
+  document.getElementById('ghl-snap-new').textContent = snap.contacts?.recent ?? '--';
+  document.getElementById('ghl-snap-open').textContent = snap.pipeline?.open ?? '--';
+  document.getElementById('ghl-snap-won').textContent = snap.pipeline?.won ?? '--';
+  document.getElementById('ghl-snap-value').textContent = snap.pipeline?.totalValue != null ? fmtMoney(snap.pipeline.totalValue) : '$--';
+  document.getElementById('ghl-snap-active').textContent = snap.conversations?.active ?? '--';
+  // Tags
+  const tags = snap.contacts?.byTag || {};
+  const topTags = Object.entries(tags).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('ghl-tags-list').innerHTML = topTags.length
+    ? topTags.map(([t,c]) => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><div style="flex:1;height:6px;background:var(--bg-secondary);border-radius:3px"><div style="width:${Math.min(100,(c/Math.max(...Object.values(tags)))*100)}%;height:100%;background:var(--accent);border-radius:3px"></div></div><span style="min-width:60px">${t.slice(0,20)}</span><span style="color:var(--text-muted)">${c}</span></div>`).join('')
+    : '<div class="text-muted text-sm">No tags</div>';
+  // Stages
+  const stages = snap.pipeline?.byStage || {};
+  document.getElementById('ghl-stages-list').innerHTML = Object.entries(stages).length
+    ? Object.entries(stages).map(([s,c]) => `<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>${s}</span><span class="text-accent font-bold">${c}</span></div>`).join('')
+    : '<div class="text-muted text-sm">No stages</div>';
+  // Recent convos
+  const recent = snap.conversations?.recent || [];
+  document.getElementById('ghl-recent-convos').innerHTML = recent.length
+    ? recent.map(c => `<div style="margin-bottom:6px;padding:6px;background:var(--bg-secondary);border-radius:6px"><div class="font-600">${c.contact||'Unknown'} ${c.unread>0?`<span style="color:var(--danger)">(${c.unread} unread)</span>`:''}</div><div class="text-muted text-sm">${(c.lastMessage||'').slice(0,50)}</div><div class="text-muted" style="font-size:10px">${fmtAgo(c.time)}</div></div>`).join('')
+    : '<div class="text-muted text-sm">No recent conversations</div>';
+}
+
+async function loadGHLContacts() {
+  const data = await api('GET', '/ghl/contacts');
+  ghlContactsAll = data.contacts || [];
+  renderGHLContacts(ghlContactsAll);
+}
+
+function renderGHLContacts(contacts) {
+  const tbody = document.getElementById('ghl-contacts-tbody');
+  if (!contacts.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">No contacts found</td></tr>'; return; }
+  tbody.innerHTML = contacts.slice(0, 100).map(c => {
+    const tags = (c.tags || []).slice(0, 3).map(t => `<span class="pill" style="background:rgba(246,236,14,.1);color:var(--accent);margin:1px">${t.slice(0,20)}</span>`).join('');
+    const county = (c.tags || []).find(t => t.startsWith('county -'))?.replace('county - ', '') || '--';
+    return `<tr>
+      <td class="font-600">${c.name || c.firstName || '--'}</td>
+      <td>${c.phone || '--'}</td>
+      <td>${c.email || '--'}</td>
+      <td>${tags}</td>
+      <td>${county}</td>
+      <td>${fmtDate(c.dateAdded)}</td>
+      <td><button class="jab" onclick="openGHLSMS('${(c.phone||'').replace(/'/g,'')}','${(c.name||'').replace(/'/g,'')}')">💬 SMS</button><button class="jab" onclick="promptGHLTag('${c.id}')">🏷 Tag</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterGHLContacts() {
+  const search = document.getElementById('ghl-search')?.value?.toLowerCase() || '';
+  const county = document.getElementById('ghl-county-filter')?.value?.toLowerCase() || '';
+  let filtered = ghlContactsAll;
+  if (search) filtered = filtered.filter(c => (c.name+c.phone+c.email+'').toLowerCase().includes(search));
+  if (county) filtered = filtered.filter(c => (c.tags||[]).some(t => t.toLowerCase().includes(county)));
+  renderGHLContacts(filtered);
+}
+
+async function loadGHLScrapeHistory() {
+  const data = await api('GET', '/scraper/history');
+  const history = data.history || [];
+  document.getElementById('scrape-runs').textContent = history.length;
+  const totalAdded = history.reduce((s,h) => s + (h.added||0), 0);
+  document.getElementById('scrape-total-added').textContent = totalAdded;
+  document.getElementById('scrape-last-run').textContent = history.length ? fmtDate(history[history.length-1].date) : '--';
+  const tbody = document.getElementById('scrape-history-tbody');
+  if (!history.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">No scrape history yet</td></tr>'; return; }
+  tbody.innerHTML = [...history].reverse().slice(0, 20).map(h => `<tr>
+    <td>${fmtDate(h.date)}</td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${h.areas||'--'}</td>
+    <td>${h.categories||'--'}</td>
+    <td>${h.found||0}</td>
+    <td style="color:var(--success)">${h.added||0}</td>
+    <td style="color:var(--text-muted)">${h.skipped||0}</td>
+    <td style="color:${h.errors?'var(--danger)':'var(--text-muted)'}">${h.errors||0}</td>
+  </tr>`).join('');
+}
+
+async function runGHLScrape() {
+  const area = document.getElementById('scrape-area')?.value;
+  const category = document.getElementById('scrape-category')?.value;
+  const maxResults = parseInt(document.getElementById('scrape-max')?.value) || 20;
+  showToast(`Starting scrape: ${area} / ${category}...`, 'info');
+  const d = await api('POST', '/scraper/run', { areas: [area], categories: [category], maxTotal: maxResults, maxPerSearch: 10 });
+  showToast(d.ok ? 'Scrape started in background! Check history for results.' : 'Failed to start scrape', d.ok ? 'success' : 'error');
+}
+
+async function runGHLQuickTest() {
+  const area = document.getElementById('scrape-area')?.value;
+  const category = document.getElementById('scrape-category')?.value;
+  showToast('Running quick test (3 results)...', 'info');
+  const d = await api('POST', '/scraper/quick', { area, category, maxResults: 3 });
+  if (d.ok) {
+    showToast(`Quick test done: ${d.found||0} found, ${d.added||0} added`, 'success');
+    loadGHLScrapeHistory();
+  } else {
+    showToast('Quick test failed: ' + (d.error||'unknown'), 'error');
+  }
+}
+
+function openGHLSMS(phone, name) {
+  const to = document.getElementById('sms-to');
+  if (to) to.value = phone;
+  showToast(`Phone set to ${phone}`, 'info');
+}
+
+async function promptGHLTag(contactId) {
+  const tag = prompt('Enter tag to add:');
+  if (!tag) return;
+  const d = await api('POST', `/ghl/contacts/${contactId}/tags`, { tags: [tag] });
+  showToast(d.ok ? `Tag "${tag}" added!` : 'Failed to add tag', d.ok ? 'success' : 'error');
+}
+
+async function sendGHLSMS() {
+  const to = document.getElementById('sms-to')?.value?.trim();
+  const message = document.getElementById('sms-message')?.value?.trim();
+  const from = document.getElementById('sms-from')?.value || null;
+  if (!to || !message) { showToast('Phone and message required', 'warning'); return; }
+  showToast('Sending SMS...', 'info');
+  const body = { to, message };
+  if (from) body.from = from;
+  const d = await api('POST', '/ghl/sms', body);
+  if (d.ok) {
+    showToast('SMS sent!', 'success');
+    document.getElementById('sms-message').value = '';
+  } else {
+    showToast('SMS failed: ' + (d.error || 'unknown'), 'error');
+  }
 }
 </script>
 </body>

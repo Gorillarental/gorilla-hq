@@ -232,21 +232,39 @@ ACTIONS:
 {"action":"capture_lead","name":"...","email":"...","phone":"...","equipment":"...","source":"..."}
 {"action":"send_outreach","email":"...","name":"...","company":"...","industry":"..."}
 {"action":"get_stats"}
-{"action":"get_leads","status":"new|contacted|converted"}${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
+{"action":"get_leads","status":"new|contacted|converted"}
+SCRAPER ACTIONS (use these to find new leads):
+{"action": "scrape", "area": "Fort Lauderdale", "category": "Construction", "maxResults": 20}
+{"action": "scrape_all", "maxTotal": 50}
+{"action": "scrape_history"}${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
   const messages = [...history, { role: 'user', content: message }];
   const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
   const text     = response.content[0].text;
   const matched = extractActionJSON(text);
   if (matched) {
     try {
-      const action = JSON.parse(matched); let result = null;
+      const action = JSON.parse(matched); let result = null; let responseText = text;
       if (action.action === 'generate_post')     result = await generateSocialPost(action.type || 'equipment', action);
       else if (action.action === 'generate_listing') result = await generateEquipmentListing(action.sku);
       else if (action.action === 'capture_lead')     result = await captureLead(action);
       else if (action.action === 'send_outreach')    result = await sendOutreachEmail(action);
       else if (action.action === 'get_stats')        result = getMarketingStats();
       else if (action.action === 'get_leads')        result = await getLeads({ status: action.status });
-      return { text, action, result };
+      else if (action.action === 'scrape') {
+        const { quickScrape } = await import('./google-scraper.js');
+        result = await quickScrape(action.area || 'Fort Lauderdale', action.category || 'Construction', action.maxResults || 20);
+        responseText = `Scrape complete: ${result.added} contacts added, ${result.skipped} skipped, ${result.errors} errors.`;
+      } else if (action.action === 'scrape_all') {
+        const { scrapeAndAddToGHL } = await import('./google-scraper.js');
+        scrapeAndAddToGHL({ maxTotal: action.maxTotal || 50, maxPerSearch: 5 }).catch(e => console.error(e.message));
+        result = { message: 'Full scrape started in background' };
+        responseText = 'Full Google scrape started in background. Check /scraper/history for progress.';
+      } else if (action.action === 'scrape_history') {
+        const { getScrapeHistory } = await import('./google-scraper.js');
+        result = getScrapeHistory();
+        responseText = `Scrape history: ${result.length} runs recorded.`;
+      }
+      return { text: responseText || text, action, result };
     } catch (e) { return { text, error: e.message }; }
   }
   return { text };

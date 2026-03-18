@@ -678,11 +678,21 @@ THIS MONTH SO FAR:
   Expenses: $${(monthSummary.expenses || 0).toLocaleString()}
   Net: $${(monthSummary.net || 0).toLocaleString()}`;
 
-    await notifyAndrei(briefing).catch(e => console.error('[Admin] WhatsApp briefing failed:', e.message));
-    await sendBriefingEmail(briefing, today);
+    let ghlBriefing = '';
+    try {
+      const { generateGHLBriefing } = await import('./ghl.js');
+      ghlBriefing = await generateGHLBriefing();
+    } catch (e) {
+      ghlBriefing = 'GHL data unavailable';
+    }
+
+    const fullBriefing = briefing + '\n\n' + ghlBriefing;
+
+    await notifyAndrei(fullBriefing).catch(e => console.error('[Admin] WhatsApp briefing failed:', e.message));
+    await sendBriefingEmail(fullBriefing, today);
 
     console.log('[Admin] ✅ Morning briefing sent');
-    return briefing;
+    return fullBriefing;
   } catch (err) {
     console.error('[Admin] sendMorningBriefing error:', err.message);
     throw err;

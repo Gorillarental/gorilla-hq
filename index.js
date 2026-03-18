@@ -21,6 +21,8 @@ import { knowledgeRoutes } from './knowledge.js';
 import { loggerRoutes } from './logger.js';
 import { CONFIG } from './config.js';
 import { getPipeline, initDB } from './db.js';
+import { ghlRoutes } from './ghl.js';
+import { scraperRoutes } from './google-scraper.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app       = express();
@@ -252,6 +254,8 @@ financeRoutes(app);
 marketingRoutes(app);
 knowledgeRoutes(app);
 loggerRoutes(app);
+ghlRoutes(app);
+scraperRoutes(app);
 
 // ─── Cron helpers ──────────────────────────────────────────────
 function msUntil(hour, minute = 0) {
@@ -336,6 +340,32 @@ function startCronJobs() {
     const { dailyLearningSweep } = await import('./knowledge.js');
     await dailyLearningSweep();
   }, 'Daily Learning Sweep');
+
+  // Daily Google scrape at 5 AM
+  function getMsUntilHour5() {
+    const now = new Date();
+    const next5am = new Date(now);
+    next5am.setHours(5, 0, 0, 0);
+    if (next5am <= now) next5am.setDate(next5am.getDate() + 1);
+    return next5am - now;
+  }
+
+  setTimeout(() => {
+    console.log('[Cron] Running daily Google scrape...');
+    import('./google-scraper.js').then(({ scrapeAndAddToGHL }) =>
+      scrapeAndAddToGHL({ maxTotal: 50, maxPerSearch: 5 }).catch(e =>
+        console.error('[Cron] Scrape error:', e.message)
+      )
+    );
+    setInterval(() => {
+      console.log('[Cron] Running daily Google scrape...');
+      import('./google-scraper.js').then(({ scrapeAndAddToGHL }) =>
+        scrapeAndAddToGHL({ maxTotal: 50, maxPerSearch: 5 }).catch(e =>
+          console.error('[Cron] Scrape error:', e.message)
+        )
+      );
+    }, 24 * 60 * 60 * 1000);
+  }, getMsUntilHour5());
 
   // Weekly knowledge report — Monday 8:00 AM
   // Check if today is Monday (day 1)
