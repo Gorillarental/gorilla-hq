@@ -1,19 +1,112 @@
 [
-  { "name": "RSC Equipment Rental", "url": "https://www.rscrental.com", "region": "South Florida", "type": "competitor" },
-  { "name": "Sunbelt Rentals", "url": "https://www.sunbeltrentals.com", "region": "South Florida", "type": "competitor" },
-  { "name": "United Rentals", "url": "https://www.unitedrentals.com", "region": "South Florida", "type": "competitor" },
-  { "name": "BlueLine Rental", "url": "https://www.bluelinerental.com", "region": "South Florida", "type": "competitor" },
-  { "name": "H&E Equipment", "url": "https://www.he-equipment.com", "region": "South Florida", "type": "competitor" },
-  { "name": "Neff Rentals", "url": "https://www.neffrental.com", "region": "South Florida", "type": "competitor" },
-  { "name": "Baker Equipment", "url": "https://www.bakerequipment.com", "region": "South Florida", "type": "competitor" },
-  { "name": "BrandSafway", "url": "https://www.brandsafway.com", "region": "South Florida", "type": "competitor" },
-  { "name": "Ahern Rentals", "url": "https://www.ahernrentals.com", "region": "South Florida", "type": "competitor" },
-  { "name": "Genie Industries", "url": "https://www.genielift.com", "type": "manufacturer" },
-  { "name": "JLG Industries", "url": "https://www.jlg.com", "type": "manufacturer" },
-  { "name": "Skyjack", "url": "https://www.skyjack.com", "type": "manufacturer" },
-  { "name": "Hy-Brid Lifts", "url": "https://www.hy-brid.com", "type": "manufacturer" },
-  { "name": "OSHA Aerial Lifts", "url": "https://www.osha.gov/aerial-lifts", "type": "safety" },
-  { "name": "IPAF", "url": "https://www.ipaf.org", "type": "safety" },
-  { "name": "Construction Dive", "url": "https://www.constructiondive.com", "type": "industry_news" },
-  { "name": "Equipment World", "url": "https://www.equipmentworld.com", "type": "industry_news" }
+  {
+    "name": "RSC Equipment Rental",
+    "url": "https://www.rscrental.com",
+    "region": "South Florida",
+    "type": "competitor",
+    "lastIntel": "RSC Rental appears to be a potential new or emerging competitor that has not yet launched its website. The domain is registered but inactive, suggesting they may be in the early stages of establishing their business or rebranding. This represents a low immediate competitive threat but should be monitored for future developments. The 'RSC' name may evoke the former RSC Equipment Rental (now part of United Rentals), but this appears to be a separate entity.",
+    "lastUpdated": "2026-03-19T06:05:53.134Z"
+  },
+  {
+    "name": "Sunbelt Rentals",
+    "url": "https://www.sunbeltrentals.com",
+    "region": "South Florida",
+    "type": "competitor",
+    "lastIntel": "Sunbelt Rentals is a massive national competitor with 950+ locations and NYSE-listed financial backing, giving them significant scale advantages. They compete directly in the aerial work platform category. Their messaging emphasizes expert guidance, safety-first positioning, and the cost-saving benefits of renting over buying. They offer online browsing with add-to-cart and quote-request functionality, plus flexible pickup/delivery options. Their broad catalog (14,000+ equipment types) means they can cross-sell and serve as a one-stop-shop, which smaller specialists like Gorilla Rental cannot easily match. However, their size may mean less personalized service and slower response times in specific local markets like South Florida, which is an advantage Gorilla Rental can exploit.",
+    "lastUpdated": "2026-03-19T06:06:15.254Z"
+  },
+  {
+    "name": "United Rentals",
+    "url": "https://www.unitedrentals.com",
+    "region": "South Florida",
+    "type": "competitor",
+    "lastIntel": "United Rentals positions itself as the world's largest equipment rental company with a massive 3,300+ equipment class catalog — far broader than a niche aerial lift provider. They are investing heavily in technology (AI chatbot, mobile app, custom dashboards, notifications) and sustainability (emission-level equipment search). They offer Worksite Performance Solutions for full jobsite management, positioning as a one-stop-shop rather than a specialized provider. They also sell used equipment at seasonal events, creating a secondary revenue stream. Their scale includes operations in the US, Canada, and Europe with multilingual support (English, Spanish, French, German, Dutch). No specific pricing is listed on their homepage. Their breadth is a strength but also a weakness — Gorilla Rental can differentiate through specialized aerial lift expertise, local South Florida focus, faster/more personal service, and competitive pricing without the overhead of a massive national operation.",
+    "lastUpdated": "2026-03-19T06:06:39.600Z"
+  },
+  {
+    "name": "BlueLine Rental",
+    "url": "https://www.bluelinerental.com",
+    "region": "South Florida",
+    "type": "competitor",
+    "lastIntel": "United Rentals acquired Blue Line Rental, consolidating market share. As the world's largest equipment rental company with 3,300+ equipment classes, they represent Gorilla Rental's largest national competitor in South Florida. They heavily invest in digital tools (AI chatbot, mobile app, online dashboards, notifications) to create customer stickiness and streamline operations. They promote sustainability and emission-level equipment filtering as differentiators. Their scale allows them to offer broad industry-specific solutions (Power & HVAC, Trench Safety, Fluid Solutions, Emergency Response, Storage) that smaller competitors cannot match. Government customers receive special tax-exempt treatment. They also sell used equipment, creating an additional revenue stream. Their weaknesses for Gorilla may include less personalized local service and potentially higher pricing due to corporate overhead.",
+    "lastUpdated": "2026-03-19T06:07:04.917Z"
+  },
+  {
+    "name": "H&E Equipment",
+    "url": "https://www.he-equipment.com",
+    "region": "South Florida",
+    "type": "competitor",
+    "lastIntel": "Herc Rentals is now significantly larger after acquiring H&E Rentals, expanding their footprint to 600+ locations. They compete on breadth of equipment selection, national scale, technology (live delivery tracking, fleet telematics), and 24/7 service. They sell used equipment with warranty plans, creating an additional revenue stream and customer touchpoint. Their focus on specialized verticals like data centers and utilities shows strategic market segmentation. They do not publish specific pricing online, suggesting negotiated/custom pricing. Their massive scale and national presence is a key differentiator that Gorilla Rental cannot match, but Gorilla can compete on local South Florida expertise, personalized service, and potentially faster/more flexible response times.",
+    "lastUpdated": "2026-03-19T06:07:28.471Z"
+  },
+  {
+    "name": "Neff Rentals",
+    "url": "https://www.neffrental.com",
+    "region": "South Florida",
+    "type": "competitor",
+    "lastIntel": "Neff Rental (neffrental.com) appears to no longer have an active, legitimate website. If Neff Rental was a competitor in the South Florida aerial work platform rental market, their web presence is effectively non-existent or compromised. This represents a potential opportunity for Gorilla Rental to capture any customers who previously found Neff Rental online, as those visitors will now encounter a spam/gambling site and look elsewhere.",
+    "lastUpdated": "2026-03-19T06:07:46.186Z"
+  },
+  {
+    "name": "Baker Equipment",
+    "url": "https://www.bakerequipment.com",
+    "region": "South Florida",
+    "type": "competitor",
+    "lastIntel": "Baker Equipment is a potential competitor in the equipment space. No specific pricing, positioning, or strategy details could be extracted from the available content. Further monitoring of their website and offerings is recommended to assess competitive threat level in the South Florida aerial work platform rental market.",
+    "lastUpdated": "2026-03-19T06:07:57.655Z"
+  },
+  {
+    "name": "BrandSafway",
+    "url": "https://www.brandsafway.com",
+    "region": "South Florida",
+    "type": "competitor",
+    "lastIntel": "BrandSafway is a major global competitor in the access equipment and scaffolding space, but their primary focus is scaffolding systems and industrial services rather than boom lift and scissor lift rentals specifically. Their scale (340 locations, 25 countries) makes them a large enterprise competitor, but they are more scaffolding-focused than aerial work platform-focused. Their value proposition centers on 'lowest installed project cost' and safety — Gorilla Rental can differentiate by emphasizing specialized boom/scissor lift expertise, local South Florida knowledge, faster response times, and more personalized service compared to this global corporation. No specific pricing information was found.",
+    "lastUpdated": "2026-03-19T06:08:15.167Z"
+  },
+  {
+    "name": "Ahern Rentals",
+    "url": "https://www.ahernrentals.com",
+    "region": "South Florida",
+    "type": "competitor"
+  },
+  {
+    "name": "Genie Industries",
+    "url": "https://www.genielift.com",
+    "type": "manufacturer"
+  },
+  {
+    "name": "JLG Industries",
+    "url": "https://www.jlg.com",
+    "type": "manufacturer"
+  },
+  {
+    "name": "Skyjack",
+    "url": "https://www.skyjack.com",
+    "type": "manufacturer"
+  },
+  {
+    "name": "Hy-Brid Lifts",
+    "url": "https://www.hy-brid.com",
+    "type": "manufacturer"
+  },
+  {
+    "name": "OSHA Aerial Lifts",
+    "url": "https://www.osha.gov/aerial-lifts",
+    "type": "safety"
+  },
+  {
+    "name": "IPAF",
+    "url": "https://www.ipaf.org",
+    "type": "safety"
+  },
+  {
+    "name": "Construction Dive",
+    "url": "https://www.constructiondive.com",
+    "type": "industry_news"
+  },
+  {
+    "name": "Equipment World",
+    "url": "https://www.equipmentworld.com",
+    "type": "industry_news"
+  }
 ]

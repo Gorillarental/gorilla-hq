@@ -112,7 +112,888 @@
       "learnedAt": "2026-03-17T23:38:29.049Z",
       "rawContent": "Job pipeline summary:\n\nTotal jobs: 5\nActive rentals: 0\nCompleted jobs: 0\nPipeline revenue: $20,469.10\n\nJobs by stage:\n  quote_built: 3 jobs\n  quote_sent: 2 jobs\n\nTop customers by revenue:\n  John Smith: $5,970.60\n  Kyle: $5,756.60\n  Test: $5,756.60\n  Andrei Hazazup: $2,985.30\n\nLeads: 0 total, 0 new, 0 converted",
       "type": "manual"
+    },
+    {
+      "id": "KN-1773900353131",
+      "url": "https://www.rscrental.com",
+      "title": "www.rscrental.com - Coming Soon",
+      "summary": "RSC Rental's website at rscrental.com is currently showing a 'Coming Soon' placeholder page with no actual content, products, or services listed. This suggests the company is either newly forming, rebranding, or has not yet launched its online presence.",
+      "category": "competitor",
+      "keyFacts": [
+        "RSC Rental's website (rscrental.com) is not yet live and displays only a 'Coming Soon' page",
+        "No product offerings, pricing, or service area information is currently available on their site"
+      ],
+      "competitiveIntel": "RSC Rental appears to be a potential new or emerging competitor that has not yet launched its website. The domain is registered but inactive, suggesting they may be in the early stages of establishing their business or rebranding. This represents a low immediate competitive threat but should be monitored for future developments. The 'RSC' name may evoke the former RSC Equipment Rental (now part of United Rentals), but this appears to be a separate entity.",
+      "technicalKnowledge": [],
+      "businessInsights": [
+        "A competitor with only a 'Coming Soon' page indicates Gorilla Rental has a significant digital presence advantage in the South Florida market",
+        "Monitoring this domain periodically could provide early warning if a new competitor is entering the aerial work platform rental space in the region"
+      ],
+      "actionItems": [
+        "Set a reminder to check rscrental.com periodically (e.g., monthly) to monitor if and when they launch and what services they offer",
+        "Ensure Gorilla Rental's SEO and online presence remain strong to maintain competitive advantage over late entrants to the market",
+        "Research RSC Rental through business registrations (Florida Division of Corporations) to understand if they are a new entrant in the South Florida rental equipment market"
+      ],
+      "confidenceScore": 0.3,
+      "relevanceScore": 0.25,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:05:53.131Z",
+      "rawContent": "www.rscrental.com - Coming Soon\n\nwww.rscrental.com",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900375251",
+      "url": "https://www.sunbeltrentals.com",
+      "title": "Sunbelt Rentals - Equipment & Tool Rental Company",
+      "summary": "Sunbelt Rentals is a major equipment and tool rental company with over 14,000 types of equipment across 950+ locations. They recently began trading on the NYSE under ticker 'SUNB' and offer aerial work platforms among their extensive catalog, making them a direct competitor to Gorilla Rental in South Florida.",
+      "category": "competitor",
+      "keyFacts": [
+        "Sunbelt Rentals offers over 14,000 types of equipment for rent",
+        "They operate 950+ locations across the U.S.",
+        "Sunbelt Rentals is now publicly traded on the NYSE under ticker symbol 'SUNB'",
+        "They offer aerial work platforms, scaffolding, and ladders as a product category",
+        "They provide both in-store pickup and round-trip delivery options",
+        "They allow rental extensions by phone",
+        "Their tagline emphasizes 'Own Less, Create More – the Power of Rental'",
+        "They position themselves as having 'a team of rental experts' providing 'thoughtful solutions'",
+        "They serve industrial, manufacturing, civil construction, healthcare, and facility maintenance sectors"
+      ],
+      "competitiveIntel": "Sunbelt Rentals is a massive national competitor with 950+ locations and NYSE-listed financial backing, giving them significant scale advantages. They compete directly in the aerial work platform category. Their messaging emphasizes expert guidance, safety-first positioning, and the cost-saving benefits of renting over buying. They offer online browsing with add-to-cart and quote-request functionality, plus flexible pickup/delivery options. Their broad catalog (14,000+ equipment types) means they can cross-sell and serve as a one-stop-shop, which smaller specialists like Gorilla Rental cannot easily match. However, their size may mean less personalized service and slower response times in specific local markets like South Florida, which is an advantage Gorilla Rental can exploit.",
+      "technicalKnowledge": [
+        "Sunbelt Rentals categorizes aerial work platforms alongside scaffolding and ladders",
+        "They offer specialty resources for confined space work equipment requirements",
+        "Their equipment catalog spans cooling, heating, drying, and indoor air quality equipment in addition to aerial platforms"
+      ],
+      "businessInsights": [
+        "Sunbelt's NYSE listing (SUNB) signals aggressive growth plans and access to capital markets for expansion",
+        "Their 'Own Less, Create More' messaging targets cost-conscious businesses — Gorilla Rental should develop similar ROI-focused messaging for boom and scissor lift rentals",
+        "Sunbelt's emphasis on safety-first positioning suggests safety credentials are a key differentiator in the rental industry",
+        "Their online cart and quote-request system sets customer expectations for digital rental workflows — Gorilla Rental should ensure a competitive online experience",
+        "Sunbelt promotes content marketing around cost savings (scaffolding rental, concrete flooring costs) — Gorilla Rental could create similar educational content specific to aerial work platforms in South Florida",
+        "Being a large national chain, Sunbelt may lack the hyper-local expertise and rapid response that a South Florida specialist like Gorilla Rental can offer"
+      ],
+      "actionItems": [
+        "Differentiate Gorilla Rental by emphasizing local South Florida expertise, faster delivery times, and personalized service vs. Sunbelt's national chain model",
+        "Develop competitive pricing intelligence by requesting quotes from Sunbelt for comparable boom lift and scissor lift rentals in South Florida",
+        "Create educational content around aerial work platform safety and cost savings to compete with Sunbelt's content marketing strategy",
+        "Ensure Gorilla Rental's website offers easy online quote requests and equipment browsing to match customer expectations set by Sunbelt",
+        "Monitor Sunbelt's South Florida location expansion given their new NYSE capital access",
+        "Highlight Gorilla Rental's specialization in aerial work platforms as an advantage over Sunbelt's generalist 14,000-equipment approach"
+      ],
+      "confidenceScore": 0.82,
+      "relevanceScore": 0.88,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:06:15.251Z",
+      "rawContent": "Sunbelt Rentals - Equipment & Tool Rental Company\n\nFind the Right Equipment for Your Project\n\nRent equipment from Sunbelt Rentals. With over 14,000 types of equipment and 950+ locations, we can help with your project. Browse products & get a quote today.\n\nOwn Less, Create More – the Power of Rental\nA team of rental experts guiding you to thoughtful solutions\nWe put safety first, enabling you to protect your team\nEmpowering your projects with innovative tools and equipment\nSunbelt Rentals Shares Begin Trading on New York Stock Exchange\nSunbelt Rentals is now a U.S.-listed company, trading on the New York Stock Exchange (NYSE) under the ticker symbol “SUNB”.\nBrowse our catalog, find the equipment you need, then add to cart or request a quote.\nPick up in store or get it delivered\nChoose your preference for in-store pick up or round-trip delivery.\nBring back to store or call for pick up. Let us know if you want to extend your rental.\nGet Expert Solutions for Your Industry\nIndustrial & Manufacturing Equipment Rental\nCivil Commercial Construction Equipment\nHealthcare Facility Maintenance\nRent Equipment and Tools for Any Project\nAerial Work Platforms, Scaffolding And Ladders\nCooling, Heating, Drying And Indoor Air Quality\nPut Safety First with Our Specialty Resources\nWhat Equipment Is Required for Confined Space Work?\n7 Common Sewer Bypass Estimating Mistakes – And How to Avoid Them\nShould Your Company Rent or Buy Cooling Equipment for Facility Management?\nThe Cost of Polishing Concrete Flooring\nQuickly rent your favorite equipment\nStay Up to Date with Sunbelt Rentals\nShining a Spotlight on the Power of Partnership\nThe Cost-Saving Benefits of Renting Scaffolding",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900399598",
+      "url": "https://www.unitedrentals.com",
+      "title": "United Rentals – Trusted Equipment Fleet & Worksite SolutionsUnited Rentals",
+      "summary": "United Rentals is the world's largest rental equipment company, offering 3,300+ equipment and tool classes for industrial and construction sites across the United States and Canada. They provide comprehensive worksite solutions including aerial equipment, power & HVAC, trench safety, storage, emergency response, and serve multiple industries including oil & gas, chemical, and civil infrastructure.",
+      "category": "competitor",
+      "keyFacts": [
+        "United Rentals is the world's largest rental equipment company",
+        "Offers 3,300+ equipment and tool classes",
+        "Operates across the United States and Canada, plus European presence",
+        "Provides AI-powered chatbot for customer assistance on their website",
+        "Offers mobile app for 24/7 equipment browsing, renting, and pickup requests",
+        "Has a used equipment sales program (Spring Sales Events at participating locations)",
+        "Provides United Academy certification training for safety",
+        "Offers government customer tax exemption sign-in portal",
+        "Has sustainability-focused equipment catalog allowing search by emission level",
+        "Serves multiple verticals: chemical, oil & gas, oilfield services, distribution, civil & infrastructure"
+      ],
+      "competitiveIntel": "United Rentals positions itself as the world's largest equipment rental company with a massive 3,300+ equipment class catalog — far broader than a niche aerial lift provider. They are investing heavily in technology (AI chatbot, mobile app, custom dashboards, notifications) and sustainability (emission-level equipment search). They offer Worksite Performance Solutions for full jobsite management, positioning as a one-stop-shop rather than a specialized provider. They also sell used equipment at seasonal events, creating a secondary revenue stream. Their scale includes operations in the US, Canada, and Europe with multilingual support (English, Spanish, French, German, Dutch). No specific pricing is listed on their homepage. Their breadth is a strength but also a weakness — Gorilla Rental can differentiate through specialized aerial lift expertise, local South Florida focus, faster/more personal service, and competitive pricing without the overhead of a massive national operation.",
+      "technicalKnowledge": [
+        "Equipment categories include: aerial attachments & safety accessories, skid steers & compact track loaders, straight mast rough terrain forklifts",
+        "Solutions span: Power & HVAC, Fluid Solutions, Trench Safety, Onsite Services, Storage Containers & Mobile Offices, Emergency Response",
+        "Equipment can be filtered by emission level for sustainability compliance"
+      ],
+      "businessInsights": [
+        "United Rentals is investing heavily in digital tools (AI chatbot, mobile app, custom dashboards) to improve customer experience and lock-in — Gorilla should invest in digital convenience too",
+        "Their broad 3,300+ equipment class offering means they are not specialized — Gorilla can win by being the aerial lift expert in South Florida",
+        "United Rentals claims online requests get responses 2x faster than email/fax — speed of response is a key competitive differentiator",
+        "They serve government customers with tax-exempt portals — Gorilla should consider targeting government/municipal contracts in South Florida",
+        "Their used equipment sales events suggest fleet turnover strategy — Gorilla could monitor these for acquisition opportunities",
+        "Their sustainability positioning (emission-level search) reflects growing market demand for green equipment options"
+      ],
+      "actionItems": [
+        "Emphasize Gorilla Rental's local South Florida expertise and faster, more personalized service vs. United Rentals' national corporate approach",
+        "Monitor United Rentals Spring Sales Events for potential used aerial equipment acquisition opportunities at competitive prices",
+        "Develop a simple mobile-friendly booking/contact system to compete with United Rentals' app convenience",
+        "Consider targeting government and municipal aerial lift rental contracts in South Florida with tax-exempt billing",
+        "Highlight specialization in aerial work platforms as a competitive advantage over United Rentals' generalist 3,300-class catalog",
+        "Ensure response times to customer inquiries are faster than United Rentals to win on service quality",
+        "Consider offering sustainability-focused equipment options (electric/hybrid boom and scissor lifts) to match market trends"
+      ],
+      "confidenceScore": 0.82,
+      "relevanceScore": 0.75,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:06:39.598Z",
+      "rawContent": "United Rentals – Trusted Equipment Fleet & Worksite SolutionsUnited Rentals\n\nUnited Rentals provides 3300+ equipment and tool classes for industrial & construction sites across the United States and Canada. Rent heavy equipment now.\n\nWe're here to help you find the right equipment for your project. How can I assist you today?\nThe AI-powered chatbot is an assistant that is provided for general information only and not for professional advice. The chatbot’s responses are generated by AI and may be inaccurate, incomplete, or outdated. They are provided for general informational purposes only and are not a substitute for your own judgment or information provided by a United Rentals representative. You are solely responsible for selecting equipment that is appropriate and safe for your job and jobsite. You must independently review and verify all results, which may be inaccurate, incomplete or outdated. For your protection, do not share sensitive personal information in the chat. By proceeding, you consent to the recording and sharing of your information by United Rentals (and authorized third parties).\nI agree to the United Rentals Website Terms of Use and Privacy Policy\nAl can make mistakes and is not a substitute for professional advice or judgment. Please verify important information.\nDrive Safety, Productivity & Sustainability with\nWorksite Performance Solutions™\nSkid Steers & Compact Track Loaders\nSkid Steers & Compact Track Loaders\nAerial Attachments & Safety Accessories\nStraight Mast Rough Terrain Forklifts\nGet quality used equipment during out Spring Sales Event on March 19th at participating events.\nQuickly access your favorite and recently rented equipment\nFederal, State or Local government customers must sign in to avoid paying tax and extra fees.\nConsider us your new favorite coworker. We help manage the entire worksite with a few taps.\nOptions to help streamline operations and drive smart decisions.\nHave Total Control on the job with a custom dashboard buil",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900448468",
+      "url": "https://www.he-equipment.com",
+      "title": "Herc Rentals – Equipment & Tool Rental Solutions",
+      "summary": "Herc Rentals is a major national equipment and tool rental company with 600+ locations across North America, offering daily, weekly, and monthly rates. They recently acquired H&E Rentals and provide a broad range of equipment categories including aerial lifts, with services like delivery, 24/7 emergency support, safety training, and live delivery tracking.",
+      "category": "competitor",
+      "keyFacts": [
+        "Herc Rentals has 600+ locations across North America",
+        "H&E Rentals has been acquired by and is now part of Herc Rentals",
+        "They offer daily, weekly, and monthly rental rates",
+        "They provide delivery and pickup to/from job sites with live delivery tracking",
+        "24/7 emergency service is available for breakdowns and after-hours support",
+        "They offer safety training for equipment operators",
+        "No CDL required for most rented equipment",
+        "Customer solutions team reachable at 1(833)-311-0247",
+        "They sell competitively priced used equipment with warranty protection plans",
+        "Equipment categories include Aerial, Earthmoving, Material Handling, Power Generation, Climate Control, and many more",
+        "They serve data center and digital infrastructure projects",
+        "They serve the utility industry including emergency response"
+      ],
+      "competitiveIntel": "Herc Rentals is now significantly larger after acquiring H&E Rentals, expanding their footprint to 600+ locations. They compete on breadth of equipment selection, national scale, technology (live delivery tracking, fleet telematics), and 24/7 service. They sell used equipment with warranty plans, creating an additional revenue stream and customer touchpoint. Their focus on specialized verticals like data centers and utilities shows strategic market segmentation. They do not publish specific pricing online, suggesting negotiated/custom pricing. Their massive scale and national presence is a key differentiator that Gorilla Rental cannot match, but Gorilla can compete on local South Florida expertise, personalized service, and potentially faster/more flexible response times.",
+      "technicalKnowledge": [
+        "Herc Rentals equipment categories: Aerial, Air Compressors & Tools, Climate Control, Compaction & Paving, Concrete & Masonry, Earthmoving, Floor Care & Surface Prep, Material Handling, Power Generation, ProContractor tools, Pumps, Remediation & Restoration, Construction equipment, Heavy equipment, Trucks & Trailers",
+        "Most rental equipment does not require a CDL to operate, though specific equipment may have different requirements",
+        "They offer fleet and telematics solutions for equipment management"
+      ],
+      "businessInsights": [
+        "Herc Rentals' acquisition of H&E Rentals signals continued consolidation in the equipment rental industry, putting pressure on smaller regional players",
+        "Their investment in technology (live delivery tracking, telematics) sets customer experience expectations that smaller competitors like Gorilla Rental should be aware of",
+        "Herc's focus on data centers and utilities as verticals shows where large-scale rental demand is growing",
+        "Used equipment sales with warranty protection is a business model worth considering for Gorilla Rental",
+        "National players emphasize breadth and scale; local specialists like Gorilla Rental should emphasize depth of knowledge, speed, and personalized relationships in South Florida"
+      ],
+      "actionItems": [
+        "Monitor Herc Rentals' South Florida branch locations and pricing to understand local competitive positioning",
+        "Differentiate Gorilla Rental through superior local response times, personalized service, and South Florida market expertise that national chains struggle to match",
+        "Consider implementing delivery tracking technology to meet rising customer expectations set by national competitors",
+        "Evaluate offering used equipment sales as an additional revenue stream",
+        "Highlight Gorilla Rental's aerial work platform specialization vs. Herc's generalist approach — specialists often deliver better expertise and service in their niche",
+        "Ensure 24/7 emergency support capability to match national competitor service levels",
+        "Track the post-merger integration of H&E into Herc for potential disruption that could create customer acquisition opportunities"
+      ],
+      "confidenceScore": 0.85,
+      "relevanceScore": 0.82,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:07:28.468Z",
+      "rawContent": "Herc Rentals – Equipment & Tool Rental Solutions\n\nEquipment and tool rentals\n\nFind reliable equipment and tool rentals at Herc Rentals. Choose daily, weekly, or monthly rates across 610+ locations.\n\nEasily move materials, equipment and crews with our lineup of trucks, vans and trailers.\nBrowse competitively priced used gear – now available with warranty protection plans for extra peace of mind.\nFind Your Local Equipment Rental Branch\nFrom power and cooling to site prep and security, Herc Rentals delivers fast, reliable equipment solutions tailored for data centers and digital infrastructure projects.\nFrom day-to-day maintenance and planned project support to the technical assistance needed in response to unplanned or emergency events.\nHerc Rentals works behind the scenes by providing our partners in the utility industry with the solutions and gear they need in both day-to-day operations and emergencies.\nYour complete fleet & telematics solution.\nAs temperatures rise, renting an air conditioner can be a great solution to keep your project site cool and comfortable.\nDoes Herc Rentals service my area?\n\t\t\n\t\t\n\t\t\t\n\t\t\t\n\t\t\n\t\t\n           Yes, Herc Rentals has 600+ locations across North America.  Find the Nearest Branch.\nCan I get the equipment delivered to my job site?\n\t\t\t\n\t\t\t\t\n\t\t\t\n\t\t\t\n\t\t\n\t\t\t\n\t\t\t\tYes, Herc Rentals can deliver and pickup equipment to/from your job site.\nHow fast is the delivery?\n\t\t\t\n\t\t\t\t\n\t\t\t\n\t\t\t\n\t\t\n      \t\t\t\n        \n          Herc Rentals offers live delivery tracking and service calls to ensure timely delivery. You can set up alerts and notifications to stay updated on delivery and pick-up progress.\nHerc Rentals offers live delivery tracking and service calls to ensure timely delivery. You can set up alerts and notifications to stay updated on delivery and pick-up progress.\nCan I make a reservation?\n\t\t\n\t\t\n\t\t\t\n\t\t\t\n\t\t\n\t\t\n           You can make a reservation through HercRentals.com or by contacting the customer solutions team at 1(833)-311-0247.\nAre weekly o",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900466183",
+      "url": "https://www.neffrental.com",
+      "title": "Kpktoto Togel Login ~ Mimbar Daring Toto Togel Terakbar",
+      "summary": "The URL neffrental.com appears to have been compromised or is no longer hosting legitimate rental equipment content. Instead, it displays an Indonesian-language online gambling/togel (lottery) website called Kpktoto, with no aerial work platform or equipment rental information present.",
+      "category": "competitor",
+      "keyFacts": [
+        "neffrental.com domain is not currently displaying legitimate equipment rental content",
+        "The site has been taken over by or redirects to an Indonesian online gambling/togel platform called Kpktoto",
+        "No aerial work platform, boom lift, or scissor lift rental information is available on this URL",
+        "The domain may have expired, been hacked, or been repurposed"
+      ],
+      "competitiveIntel": "Neff Rental (neffrental.com) appears to no longer have an active, legitimate website. If Neff Rental was a competitor in the South Florida aerial work platform rental market, their web presence is effectively non-existent or compromised. This represents a potential opportunity for Gorilla Rental to capture any customers who previously found Neff Rental online, as those visitors will now encounter a spam/gambling site and look elsewhere.",
+      "technicalKnowledge": [],
+      "businessInsights": [
+        "A competitor's domain being compromised or abandoned signals potential market opportunity for Gorilla Rental to capture their former customers",
+        "This highlights the importance of maintaining domain security and renewals — Gorilla Rental should ensure its own domain registrations are secure and auto-renewing",
+        "Customers searching for Neff Rental will encounter a spam site, damaging trust — Gorilla Rental could target SEO keywords associated with Neff Rental to capture redirected search traffic"
+      ],
+      "actionItems": [
+        "Verify whether Neff Rental is still an active competitor operating under a different domain or has ceased operations",
+        "Consider targeting SEO keywords related to 'Neff Rental' or 'neff rental South Florida' to capture displaced customers",
+        "Audit Gorilla Rental's own domain security, SSL certificates, and renewal status to prevent similar issues",
+        "Monitor other competitor websites periodically for similar domain lapses that could present market opportunities"
+      ],
+      "confidenceScore": 0.95,
+      "relevanceScore": 0.3,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:07:46.183Z",
+      "rawContent": "Kpktoto Togel Login ~ Mimbar Daring Toto Togel Terakbar\n\nKpktoto Togel Login ~ Mimbar Daring Toto Togel Terakbar\n\nPementasan togel Kpktoto melakonkan display situs toto togel terbesar yang representasinya online, layanan Kpk Toto 100% bisa digunakan segala segmen.\n\nDaftar situs KPKTOTO pasti bayar:\nRekomendasi Situs Toto Togel Terbaik dan Terpercaya\nOrder & Pembayaran\n                                                    \n                                                    \n                                                        Pembatalan Pesanan\nHubungi kami di\n                                                        \n                                                             Live Chat (24 Jam)\nUntuk bantuan silakan,Klik disini\nWishlist dan\n                                                        Toko yang Saya Ikuti\nPengembalian\n                                                        & Pembatalan\nKeperluan Rumah & Gaya\n                                                                                Hidup\nLingerie, Baju Tidur &\n                                                                                    Santai\nPakaian Anak Muslim\n                                                                                    Laki-Laki\nPakaian Anak Muslim\n                                                                                    Perempuan\nMainan Olahraga & Luar\n                                                                                    Ruangan\nPenyejuk dan Pembersih\n                                                                                    Udara\nPenghisap Debu & Perawatan\n                                                                                    Lantai\nBinatu & Alat\n                                                                                    Kebersihan\nPerkakas & Perbaikan\n                                                                                    Rumah\nCokelat, Camilan &\n                                                     ",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900477652",
+      "url": "https://www.bakerequipment.com",
+      "title": "https://www.bakerequipment.com",
+      "summary": "Baker Equipment is a competitor in the equipment rental and sales space. The content from their website was not available for detailed extraction, but they represent a potential competitive presence in the equipment market relevant to Gorilla Rental's operations.",
+      "category": "competitor",
+      "keyFacts": [
+        "Baker Equipment operates a website at bakerequipment.com",
+        "They appear to be in the equipment rental/sales industry",
+        "Could potentially serve overlapping markets with Gorilla Rental"
+      ],
+      "competitiveIntel": "Baker Equipment is a potential competitor in the equipment space. No specific pricing, positioning, or strategy details could be extracted from the available content. Further monitoring of their website and offerings is recommended to assess competitive threat level in the South Florida aerial work platform rental market.",
+      "technicalKnowledge": [],
+      "businessInsights": [
+        "Baker Equipment maintains an online presence and should be monitored as a potential competitor",
+        "Unable to extract detailed competitive intelligence from the current content — a deeper review of their services, coverage areas, and pricing is recommended"
+      ],
+      "actionItems": [
+        "Revisit bakerequipment.com to gather detailed competitive intelligence on their product offerings, service areas, and pricing",
+        "Determine if Baker Equipment operates in or serves the South Florida market",
+        "Compare Baker Equipment's fleet and rental terms against Gorilla Rental's offerings",
+        "Set up periodic monitoring of their website for changes in pricing or service expansion"
+      ],
+      "confidenceScore": 0.15,
+      "relevanceScore": 0.3,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:07:57.652Z",
+      "rawContent": "",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900495164",
+      "url": "https://www.brandsafway.com",
+      "title": "BrandSafway Scaffolding Systems | Industrial, Commercial, and Infrastructure Solutions",
+      "summary": "BrandSafway is a leading global provider of access, scaffolding, specialized services, and forming/shoring solutions serving industrial, commercial, and infrastructure markets. They operate approximately 340 locations across 25 countries and emphasize safety through their proprietary Employee Intervention System (EIS). They offer scaffolding and access equipment rentals along with custom solutions.",
+      "category": "competitor",
+      "keyFacts": [
+        "BrandSafway is a leading global provider of access and scaffolding solutions",
+        "Operates approximately 340 locations in 25 countries",
+        "Serves industrial, commercial, and infrastructure markets",
+        "Offers scaffolding and access equipment rentals",
+        "Uses a proprietary Employee Intervention System (EIS) for safety",
+        "Provides custom access and scaffolding solutions",
+        "Tagline is 'At Work For You®'",
+        "Focuses on productivity and lowest installed project cost"
+      ],
+      "competitiveIntel": "BrandSafway is a major global competitor in the access equipment and scaffolding space, but their primary focus is scaffolding systems and industrial services rather than boom lift and scissor lift rentals specifically. Their scale (340 locations, 25 countries) makes them a large enterprise competitor, but they are more scaffolding-focused than aerial work platform-focused. Their value proposition centers on 'lowest installed project cost' and safety — Gorilla Rental can differentiate by emphasizing specialized boom/scissor lift expertise, local South Florida knowledge, faster response times, and more personalized service compared to this global corporation. No specific pricing information was found.",
+      "technicalKnowledge": [
+        "Employee Intervention System (EIS) is a kaizen-based behavioral safety process",
+        "EIS focuses on hazard recognition and control through employee coaching",
+        "Employees are empowered to stop work when unsafe conditions are identified",
+        "BrandSafway offers access equipment, scaffolding, forming, and shoring solutions"
+      ],
+      "businessInsights": [
+        "Large competitors like BrandSafway compete on global scale and breadth of product offerings",
+        "Safety programs and certifications are a key differentiator and selling point in the access equipment industry",
+        "BrandSafway's focus on 'lowest installed project cost' suggests price competition at the enterprise level",
+        "Gorilla Rental can compete by offering specialized aerial work platform expertise vs. BrandSafway's broader scaffolding focus",
+        "Local, nimble service in South Florida is a competitive advantage against a global corporation with 340 locations"
+      ],
+      "actionItems": [
+        "Highlight Gorilla Rental's specialization in boom lifts and scissor lifts as an advantage over generalist competitors like BrandSafway",
+        "Develop and promote a safety program or certification to match enterprise-level competitor safety messaging",
+        "Emphasize local South Florida expertise, fast delivery, and personalized service as differentiators",
+        "Target customers who may find BrandSafway too large/slow for their aerial lift rental needs",
+        "Consider creating marketing content that positions specialized AWP rental vs. general scaffolding/access solutions"
+      ],
+      "confidenceScore": 0.75,
+      "relevanceScore": 0.45,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:08:15.164Z",
+      "rawContent": "BrandSafway Scaffolding Systems | Industrial, Commercial, and Infrastructure Solutions\n\nAt Work For You®\n\nBrandSafway Scaffolding Systems | Industrial Services. Scaffolding and Industrial Services, optimum safety and productivity, lowest installed project cost\n\nBrandSafway is a leading global provider of access, specialized services, and forming and shoring solutions to the industrial, commercial and infrastructure markets.AT WORK FOR YOU®We deliver more value by helping customers improve productivity and safety on every jobsite.\nLearn about our commitment to safety.\nWith approximately 340 locations in 25 countries, we're everywhere you need us to be.\nContact us to rent scaffolding and access equipment with ease.\nExplore the broadest range of access and scaffolding products available, work with an expert on a custom solution, and learn about our extended services as well.\nIndustry-leading depth and range\nBrandSafway's Employee Intervention System (EIS) was developed to stop accidents before they happen. A proactive, behavioral-based process, the EIS helps prevent poor decisions in the hazard recognition and control process. This kaizen-based system identifies potential hazards associated with the environment, projects and work practices, allowing us to anticipate and prevent accidents by coaching employees on correct behaviors. Through the EIS, employees are empowered and obligated to stop work whenever they think an unsafe condition exists. This employee-driven program allows us to stay on the cutting edge of safety through continuous improvement.\nBrandSafway's Employee Intervention System (EIS) was developed to stop accidents before they happen. A proactive, behavioral-based process, the EIS helps prevent poor decisions in the hazard recognition and control process. This kaizen-based system identifies potential hazards associated with the environment, projects and work practices, allowing us to anticipate and prevent accidents by coaching employees on correct beha",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900517638",
+      "url": "https://www.genielift.com",
+      "title": "Home | Genie - Quality by Design | Boom Lifts | Scissors | Telehandlers",
+      "summary": "Genie is a major aerial work platform manufacturer offering articulated boom lifts, telescopic boom lifts, scissor lifts, and telehandlers used across industries worldwide. They provide comprehensive support including parts ordering, equipment manuals, dealer locator tools, financing, training, and warranty services.",
+      "category": "equipment",
+      "keyFacts": [
+        "Genie manufactures articulated boom lifts, telescopic boom lifts, scissor lifts, and telehandlers",
+        "Genie products are used in a wide range of industries globally",
+        "Equipment manuals are available for download online covering safety, controls, inspections, operations, and maintenance",
+        "Parts orders are processed within 24 hours and shipped worldwide",
+        "Genie offers a Serial Number Smart Parts Lookup System for quick parts identification",
+        "Genie Dealer Locator helps find rental partners and distributors within 25 to 200-mile radius by ZIP code",
+        "Post-purchase support includes equipment financing, product registration, warranty, safety notices, technical services, training, and more"
+      ],
+      "competitiveIntel": "Genie is one of the primary OEMs whose equipment Gorilla Rental likely stocks or competes against in the rental market. Their dealer locator tool directs customers to local rental partners — Gorilla Rental should ensure visibility as a Genie rental partner in South Florida if possible. Genie's tagline 'Quality by Design' positions them as a durability and reliability brand. Their extensive parts network with 24-hour processing sets a service benchmark for rental companies to match.",
+      "technicalKnowledge": [
+        "Genie product lines include articulated boom lifts, telescopic boom lifts, scissor lifts, and telehandlers",
+        "Genie equipment requires pre-operation inspections as outlined in their manuals",
+        "Genie uses a Serial Number-based parts lookup system for equipment-specific part identification",
+        "Genie genuine parts, accessories, and service tools are available for order via phone, fax, or online"
+      ],
+      "businessInsights": [
+        "Genie's dealer locator tool is a key customer acquisition channel — being listed as a Genie rental partner in South Florida could drive inbound leads to Gorilla Rental",
+        "Genie's 24-hour parts processing sets customer expectations for fast turnaround on equipment maintenance and repairs",
+        "Genie offers equipment financing which may compete with rental models for customers considering purchase vs. rent decisions",
+        "Access to Genie manuals and training resources can help Gorilla Rental staff maintain equipment expertise and ensure compliance with manufacturer guidelines",
+        "Genie's comprehensive after-sale support (warranty, training, technical services) is a value-add that rental companies stocking Genie equipment can leverage in marketing"
+      ],
+      "actionItems": [
+        "Verify Gorilla Rental is listed as a Genie rental partner in the Genie Dealer Locator for South Florida ZIP codes",
+        "Download and maintain current Genie manuals for all Genie equipment in Gorilla Rental's fleet",
+        "Set up a Genie parts ordering account for fast 24-hour parts fulfillment to minimize equipment downtime",
+        "Utilize Genie's Serial Number Smart Parts Lookup System for efficient fleet maintenance",
+        "Leverage Genie's training resources to keep Gorilla Rental technicians and operators certified and knowledgeable",
+        "Highlight Genie brand quality and reliability in Gorilla Rental's marketing materials to build customer confidence",
+        "Monitor Genie safety notices and apply them proactively to fleet equipment"
+      ],
+      "confidenceScore": 0.82,
+      "relevanceScore": 0.78,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:08:37.638Z",
+      "rawContent": "Home | Genie - Quality by Design | Boom Lifts | Scissors | Telehandlers\n\nWe deliver the Quality your business needs: Durable equipment, expert support, and dependable parts.\n\nGenie® articulated boom lifts, telescopic boom lifts, scissor lifts and telehandler products  are used in a wide range of industries around the world. \n\nAccess and download manuals for any Genie equipment online anytime. The manuals provide essential information on safety rules, guides to controls, pre-operation inspections, operation instructions, maintenance guidelines and more.\nGenie makes your parts ordering hassle-free by phone, fax or online. Our extensive parts network ships to locations around the world, with almost all orders processed in 24 hours. Quickly and easily find and order the Genie® Genuine parts, accessories and service tools you need. With the Genie Serial Number Smart Parts Lookup System, you’re just a few fast clicks away from what you’re looking for.\nLooking for your local Genie rental partner or distributor? Enter your location information (as easy as your ZIP code) and the product category you’re interested in into the Genie Dealer Locator, and addresses, maps and links will point you toward Genie equipment distributors within the 25 to 200-mile radius you specify.\nAll the extras you get from Genie to support your business after a purchase: Equipment financing, product registration, warranty, safety notices, technical services and support, training and more!",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900534897",
+      "url": "https://www.jlg.com",
+      "title": "Home | JLG Industries",
+      "summary": "JLG Industries is a leading manufacturer of aerial access equipment. They have launched ClearSky SmartFleet™, a rebuilt fleet management and communication platform designed to revolutionize fleet operations for rental companies and equipment owners.",
+      "category": "equipment",
+      "keyFacts": [
+        "JLG is a leading manufacturer of access equipment (boom lifts, scissor lifts, etc.)",
+        "JLG has launched ClearSky SmartFleet™, an advanced fleet management and communication platform",
+        "ClearSky SmartFleet has been rebuilt from top to bottom, representing a major update",
+        "JLG provides tech tips, news, and event updates for equipment operators and fleet managers"
+      ],
+      "competitiveIntel": "JLG is one of the primary OEMs whose equipment Gorilla Rental likely rents out or competes against in the rental market. Their ClearSky SmartFleet platform is a telematics/fleet management tool that could influence how competitors manage their fleets more efficiently, potentially lowering operating costs and improving uptime. Rental companies using JLG equipment with ClearSky integration may gain operational advantages in fleet utilization and maintenance scheduling.",
+      "technicalKnowledge": [
+        "ClearSky SmartFleet™ is JLG's proprietary fleet management and telematics platform",
+        "The platform focuses on fleet communication, tracking, and operational management",
+        "JLG manufactures a full line of access equipment including boom lifts and scissor lifts"
+      ],
+      "businessInsights": [
+        "Fleet management technology like ClearSky SmartFleet is becoming an industry standard — Gorilla Rental should evaluate telematics solutions to optimize fleet utilization and reduce downtime",
+        "JLG's investment in digital fleet tools signals that OEMs are moving toward data-driven equipment management, which rental companies should leverage",
+        "Understanding JLG's equipment lineup and capabilities is essential for Gorilla Rental's purchasing and rental inventory decisions in South Florida"
+      ],
+      "actionItems": [
+        "Evaluate whether Gorilla Rental's JLG equipment (if any) can be integrated with ClearSky SmartFleet for better fleet tracking and maintenance",
+        "Research ClearSky SmartFleet features and pricing to determine if it could improve Gorilla Rental's fleet utilization and reduce operating costs",
+        "Compare JLG's fleet management tools with alternatives from other OEMs (Genie, Skyjack, etc.) to determine best fit",
+        "Stay updated on JLG product launches and tech tips that could benefit Gorilla Rental's service offerings and customer education"
+      ],
+      "confidenceScore": 0.6,
+      "relevanceScore": 0.7,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:08:54.897Z",
+      "rawContent": "Home | JLG Industries\n\nThe One You Want\n\nJLG is a leading manufacturer of access equipment. Get up-to-date news, events, tech tips and even machine sightings. Where will you find JLG? \n\nLearn How To Revolutionize Your Fleet With ClearSky.\nRebuilt from top to bottom, ClearSky SmartFleet™ launches the industry toward a bold, new frontier in fleet management and communication.\nStay Informed On The Latest Topics",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900551279",
+      "url": "https://www.skyjack.com",
+      "title": "Home | Skyjack",
+      "summary": "Skyjack is a major aerial work platform manufacturer offering electric articulating booms and other lift equipment. Their website highlights new electric articulating boom products and active hiring, suggesting company growth and expansion into electric equipment lines.",
+      "category": "equipment",
+      "keyFacts": [
+        "Skyjack is a leading manufacturer of aerial work platforms including boom lifts and scissor lifts",
+        "Skyjack has launched new electric articulating boom lifts",
+        "Skyjack is actively hiring, indicating company growth",
+        "Skyjack provides technical manuals searchable by model or serial number",
+        "Skyjack's brand tagline is 'Simply More'"
+      ],
+      "competitiveIntel": "Skyjack is a key OEM supplier for the rental industry. Their investment in new electric articulating booms signals a broader industry shift toward electric/emission-free equipment. Gorilla Rental should monitor whether Skyjack electric booms become available for fleet acquisition, as electric units may appeal to indoor job sites and environmentally conscious customers in South Florida.",
+      "technicalKnowledge": [
+        "Skyjack is expanding their electric articulating boom lift product line",
+        "Electric articulating booms offer zero-emission operation suitable for indoor and environmentally sensitive applications",
+        "Skyjack provides searchable technical manuals by model or serial number for service and maintenance support"
+      ],
+      "businessInsights": [
+        "The industry trend toward electric articulating booms may create rental demand for zero-emission lifts in South Florida, especially for indoor construction and green building projects",
+        "Skyjack's active hiring suggests strong market demand for aerial work platforms and potential for new product releases",
+        "Having access to Skyjack's technical manuals by serial number can streamline fleet maintenance and reduce downtime for Gorilla Rental if operating Skyjack equipment"
+      ],
+      "actionItems": [
+        "Evaluate Skyjack's new electric articulating booms for potential fleet addition to serve indoor and emission-restricted job sites",
+        "Establish or strengthen dealer/OEM relationship with Skyjack for competitive pricing on equipment purchases",
+        "Monitor Skyjack product launches for new models that could differentiate Gorilla Rental's fleet in the South Florida market",
+        "Ensure Gorilla Rental team has access to Skyjack technical manuals for any Skyjack units in the fleet to optimize maintenance"
+      ],
+      "confidenceScore": 0.55,
+      "relevanceScore": 0.65,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:09:11.279Z",
+      "rawContent": "Home | Skyjack\n\nSIMPLY MORE\n\nNEW ELECTRIC ARTICULATING BOOMS\nWE'RE HIRING!CAREERS WITH SKYJACK\nWE'RE HIRING!CAREERS WITH SKYJACK\nTECHNICAL MANUALS\n    Search by Model or Serial Number\nSearch by Model or Serial Number",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900562438",
+      "url": "https://www.hy-brid.com",
+      "title": "Agency - Start Bootstrap Theme",
+      "summary": "The URL hy-brid.com leads to a digital agency called Hybrid, not the aerial work platform manufacturer Hy-Brid Lifts (which operates at hybridlifts.com). This is a digital strategy, production, and management agency founded in 2008 in Pittsburgh, with no relevance to the aerial work platform industry.",
+      "category": "general",
+      "keyFacts": [
+        "hy-brid.com is a digital agency, not the Hy-Brid Lifts scissor lift manufacturer",
+        "The actual Hy-Brid Lifts manufacturer of low-level scissor lifts operates at hybridlifts.com",
+        "This Hybrid agency focuses on digital strategy, production, and management services",
+        "Founded in 2008 in Pittsburgh, PA"
+      ],
+      "competitiveIntel": "",
+      "technicalKnowledge": [],
+      "businessInsights": [
+        "The URL hy-brid.com does not correspond to the aerial work platform manufacturer Hy-Brid Lifts — any research into Hy-Brid Lifts equipment should reference hybridlifts.com instead",
+        "Domain name confusion highlights the importance of verifying manufacturer websites when sourcing equipment information"
+      ],
+      "actionItems": [
+        "If researching Hy-Brid Lifts low-level scissor lifts, use the correct URL: hybridlifts.com",
+        "Disregard this source as it has no relevance to the aerial work platform rental industry"
+      ],
+      "confidenceScore": 0.95,
+      "relevanceScore": 0.02,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:09:22.438Z",
+      "rawContent": "Agency - Start Bootstrap Theme\n\nHybrid's services are organized across three distinct channels:\nSTRATEGY - connecting a clients vision with what is possible (time + money)\nPRODUCTION - designing and building digital products and services.\nMANAGEMENT - supporting, updating and monitoring published digital products and services.\nDigital technology is disrupting organizations, wreaking havoc on well-established business models and upending entire industries. Hybrid’s Strategy practice helps senior executives anticipate and adapt to these trends — accelerating growth and transforming their brands and businesses for success in the digital world.\nWhen we say digital production, we mean it. Front end dev, Back end dev, APP dev, Audio & Imaging. Build for the mobile-centric web or transform your business to fit in with the modern cross-platform reality with Hybrid. Drawing upon extensive UI/UX design and front-end development expertise, we deliver rich web app experiences that are a hit with end users.\nWe have been advocates for a wide range of clients collaborating, recommending and supervising the purchasing, set-up, configuration and implementation of the hardware and network platforms for a major city, to ,enabling real-time mobile video training for NGO's. We specialize in purchasing recommendations for government agencies and businesses.\nHybrid began in 2008 when a group of 9 to 5 agency workers decided to create a fictional band website, app, PC game and animated music video for submission to the American Advertising Awards in Pittsburgh. Our work won Gold, and the story began.\n\n\t\t\t\t\t\tHybrid focuses on pioneering digital solutions. We do this by synthesizing new ideas and old ones building the infrastructure for emerging media channels and helping clients find new life in the digital space.\nLorem ipsum dolor sit amet consectetur.",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900585377",
+      "url": "https://www.ipaf.org",
+      "title": "IPAF - The International Powered Access Federation",
+      "summary": "IPAF (International Powered Access Federation) promotes safe and effective use of powered access equipment worldwide, providing technical advice, training, safety resources, and influencing legislation. The organization offers operator certification (PAL Cards), toolbox talks on battery safety, accident reporting systems, and hosts industry events globally.",
+      "category": "safety",
+      "keyFacts": [
+        "IPAF is the International Powered Access Federation promoting safe use of powered access equipment worldwide",
+        "IPAF provides operator certification through PAL Cards that can be verified",
+        "IPAF offers a network of training centers for powered access equipment operators",
+        "IPAF publishes an annual Global Safety Report (2025 edition available)",
+        "IPAF publishes a UK Rental Activity Safety Report",
+        "IPAF encourages reporting of all accidents and near-misses to help save lives",
+        "Lithium Ferrophosphate (LFP) is the most common Li-ion battery type fitted to MEWPs",
+        "Incorrect battery charging on MEWPs can increase risk of fire or explosion",
+        "Li-ion batteries in MEWPs pose risks of fire, explosion, and thermal runaway",
+        "IPAF hosts global conferences including the IPAF Summit and International Awards for Powered Access (IAPAs)",
+        "IPAF has a Women in Powered Access Initiative to recognize women's contributions in the industry"
+      ],
+      "competitiveIntel": "IPAF membership and training certification is an industry standard. Rental companies that are IPAF members and provide IPAF-trained operators may have a competitive advantage in demonstrating safety commitment to customers. Being listed in the IPAF Members Directory provides visibility to potential clients seeking reputable rental partners.",
+      "technicalKnowledge": [
+        "MEWPs (Mobile Elevating Work Platforms) is the industry standard term for boom lifts and scissor lifts",
+        "Lithium Ferrophosphate (LFP) batteries are the most common Li-ion battery type in MEWPs",
+        "Li-ion batteries in MEWPs carry risk of fire, explosion, and thermal runaway",
+        "Battery charging on electrified MEWPs must follow manufacturer's instructions from the operators' manual",
+        "Incorrect battery charging can cause fire or explosion from transformers and/or charging equipment",
+        "PAL Cards serve as operator certification verification for powered access equipment"
+      ],
+      "businessInsights": [
+        "IPAF membership provides industry credibility and can be a differentiator for rental companies in South Florida",
+        "Ensuring all operators have valid PAL Cards demonstrates professionalism and safety commitment to clients",
+        "IPAF's accident reporting system and safety reports provide valuable data for improving fleet safety programs",
+        "IPAF toolbox talks on battery safety are directly relevant to maintaining electric boom and scissor lift fleets",
+        "The powered access industry is increasingly global with events in Germany, Brazil, Portugal, and Turkey indicating market expansion",
+        "IPAF's focus on Li-ion battery safety reflects the industry trend toward electrification of aerial work platforms"
+      ],
+      "actionItems": [
+        "Consider becoming an IPAF member to gain credibility, access safety resources, and be listed in the Members Directory",
+        "Ensure all Gorilla Rental operators receive IPAF training and maintain valid PAL Cards",
+        "Implement IPAF toolbox talks on Li-ion battery safety and charging lead safety for fleet maintenance staff",
+        "Establish an internal accident and near-miss reporting system aligned with IPAF guidelines",
+        "Review and distribute IPAF's Global Safety Report 2025 to management and safety teams",
+        "Use IPAF membership badge and training certifications in marketing materials to differentiate from competitors",
+        "Develop battery charging protocols for electric MEWPs based on IPAF guidelines and manufacturer instructions",
+        "Report any accidents to IPAF to contribute to industry safety data and demonstrate responsible operations"
+      ],
+      "confidenceScore": 0.88,
+      "relevanceScore": 0.82,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:09:45.377Z",
+      "rawContent": "IPAF - The International Powered Access Federation\n\nIPAF promotes the safe and effective use of powered access equipment worldwide\n\nIPAF promotes the safe and effective use of powered access equipment worldwide. Providing technical advice, influencing legislation, safety and training.\n\nReport accidents, and help save lives!\nLooking for training? Find a training centre near you\nNew to Powered Access? Here's what you need to know\nNeed to check the status of an operator's PAL Card and their details?\nInfluence regulation and legislation\nFeatured                News\n      \n        \n      IPAF Summit & IAPAs rescheduled to mid-October\n    \n  \n      IPAF and KHL Group announces that the 2026 International Awards for Powered Access (IAPAs) and the IPAF Summit, scheduled to be held in Istanbul, Turkey on 21 and 22 April, will be rescheduled to 14 and 15 October this year.\n    \n      \n        \n      \n      16 Mar 2026\nIPAF Summit & IAPAs rescheduled to mid-October\nIPAF and KHL Group announces that the 2026 International Awards for Powered Access (IAPAs) and the IPAF Summit, scheduled to be held in Istanbul, Turkey on 21 and 22 April, will be rescheduled to 14 and 15 October this year.\nNews\n      \n        \n      Industry gathers in Hamburg for IPAF Elevation Deutschland & Österreich 2026\n    \n  \n      Powered access professionals from across Germany and Austria came together in Hamburg for IPAF Elevation Deutschland & Österreich 2026, a two-day event bringing the regional access community together to network, exchange knowledge and explore the latest developments in the industry.\n    \n      \n        \n      \n      9 Mar 2026\nIndustry gathers in Hamburg for IPAF Elevation Deutschland & Österreich 2026\nPowered access professionals from across Germany and Austria came together in Hamburg for IPAF Elevation Deutschland & Österreich 2026, a two-day event bringing the regional access community together to network, exchange knowledge and explore the latest developments in the industry",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900603708",
+      "url": "https://www.constructiondive.com",
+      "title": "Construction News and Trends | Construction Dive",
+      "summary": "Construction Dive covers broad construction industry news including major project announcements, 2026 industry outlook trends, and infrastructure policy developments. Key topics include data center construction demand, material costs, interest rates, multifamily construction starts, and highway bill uncertainty.",
+      "category": "industry_news",
+      "keyFacts": [
+        "Terawulf is building a $3B data center in Kentucky with Fluor handling preconstruction",
+        "Turner Construction is working on a $900M Pennsylvania hospital expansion",
+        "Construction jobs data shows a slow start to 2026",
+        "Multifamily construction starts jumped in January on both monthly and yearly basis",
+        "Associated Equipment Distributors is hoping for a highway bill in the $550 billion range",
+        "Data center demand is one of the top construction trends to watch in 2026",
+        "Material costs, interest rates, and immigration are key concerns for construction leaders in 2026",
+        "Revolution Wind has come online and Vineyard Wind 1 has completed construction",
+        "A $3B+ 16-mile toll road project in Georgia awarded under a 56-year public-private partnership"
+      ],
+      "competitiveIntel": "",
+      "technicalKnowledge": [
+        "Data center construction is a major growth sector driving equipment and labor demand",
+        "Multifamily residential construction is rebounding, potentially increasing demand for aerial work platforms",
+        "Large hospital expansions ($900M+) represent significant boom lift and scissor lift rental opportunities",
+        "Infrastructure projects face uncertainty pending new federal highway bill legislation"
+      ],
+      "businessInsights": [
+        "Data center boom ($3B+ projects) creates sustained demand for aerial work platform rentals in construction phases",
+        "Slow construction jobs start to 2026 may temporarily soften equipment rental demand",
+        "Material cost volatility and interest rate uncertainty could delay project starts, affecting rental revenue timing",
+        "Multifamily construction rebound signals growing rental equipment demand in residential sector",
+        "Large hospital and infrastructure projects represent high-value, long-duration rental opportunities",
+        "Immigration policy changes could impact labor availability, potentially increasing demand for equipment that improves productivity",
+        "Highway bill uncertainty ($550B target) may cause infrastructure contractors to delay equipment commitments"
+      ],
+      "actionItems": [
+        "Monitor data center construction projects in South Florida for potential boom lift and scissor lift rental opportunities",
+        "Track multifamily construction permit activity in South Florida to anticipate rental demand increases",
+        "Prepare fleet capacity for potential surge if highway bill passes at the $550B level",
+        "Develop relationships with contractors working on hospital and healthcare facility expansions",
+        "Consider marketing to data center construction contractors as a growing customer segment",
+        "Stay informed on material cost trends that could accelerate or delay South Florida project timelines",
+        "Build contingency plans for potential slowdown if interest rates remain high and delay project starts"
+      ],
+      "confidenceScore": 0.7,
+      "relevanceScore": 0.5,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:10:03.708Z",
+      "rawContent": "Construction News and Trends | Construction Dive\n\nDon't miss tomorrow's construction industry news\n\nConstruction Dive provides news and analysis for construction industry executives. We cover commercial and residential construction, focusing on topics like technology, design, regulation, legal issues and more.\n\nLet Construction Dive's free newsletter keep you informed, straight from your inbox.\nSR400 Peach Partners, a consortium of Acciona Concessions, ACS Infrastructure and Meridiam, will deliver and maintain the 16-mile toll project under a 56-year public-private partnership.\n                                        Read more\n                                            ➔\nTerawulf taps Fluor for preconstruction on $3B Kentucky data center\nTerawulf taps Fluor for preconstruction on $3B Kentucky data center\nOpinion\n            \n            \n        \n    \n\n\n                                            \n                                                \n                                                    When AI chatbots hallucinate, infrastructure pays\nWhen AI chatbots hallucinate, infrastructure pays\nRevolution Wind comes online, Vineyard Wind 1 completes construction\nRevolution Wind comes online, Vineyard Wind 1 completes construction\nTurner goes vertical on $900M Pennsylvania hospital expansion\nTurner goes vertical on $900M Pennsylvania hospital expansion\nConstruction’s latest jobs data shows slow start to 2026\nConstruction’s latest jobs data shows slow start to 2026\nJustin Sullivan/Getty Images via Getty Images\n                                                \n                                                \n                                            \n                                        \n                                    \n                                \n                            \n                        \n                        \n                            \n                            \n                                \n\n\n\n\n    \n        \n        Deep Dive\n     ",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900627489",
+      "url": "https://www.equipmentworld.com",
+      "title": "Equipment WorldFacebook iconTwitter X iconLinkedIn iconYouTube iconFacebook iconTwitter X iconLinkedIn iconYouTube icon",
+      "summary": "Equipment World is a media publication covering construction news, equipment rollouts, and business solutions for construction industry professionals. The content provided is a minimal landing page with no substantive articles or data.",
+      "category": "industry_news",
+      "keyFacts": [
+        "Equipment World is a construction industry media outlet",
+        "Covers construction news, equipment rollouts, and business solutions",
+        "Targets construction industry professionals"
+      ],
+      "competitiveIntel": "",
+      "technicalKnowledge": [],
+      "businessInsights": [
+        "Equipment World is a useful industry publication to monitor for construction equipment trends, new product launches, and competitor activity",
+        "Following Equipment World can help Gorilla Rental stay informed on aerial work platform industry developments and customer needs"
+      ],
+      "actionItems": [
+        "Subscribe to Equipment World newsletters for ongoing industry intelligence",
+        "Monitor Equipment World for competitor advertisements and new aerial lift product announcements",
+        "Consider Equipment World as a potential advertising or content placement channel to reach construction professionals in South Florida"
+      ],
+      "confidenceScore": 0.4,
+      "relevanceScore": 0.3,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:10:27.489Z",
+      "rawContent": "Equipment WorldFacebook iconTwitter X iconLinkedIn iconYouTube iconFacebook iconTwitter X iconLinkedIn iconYouTube icon\n\nEquipment World covers construction news, equipment rollouts, and business solutions for construction industry professionals.",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773900647272",
+      "url": "https://www.jlg.com/en/equipment",
+      "title": "Equipment | JLG",
+      "summary": "JLG is a major aerial lift equipment manufacturer that has been in the market since 1969, offering a wide range of aerial platforms, material handling solutions, boom lifts, and scissor lifts. They position themselves as a comprehensive provider with equipment, services, parts, and technical support.",
+      "category": "equipment",
+      "keyFacts": [
+        "JLG has been in the aerial lift market since 1969",
+        "JLG offers aerial platforms, material handling solutions, and access equipment",
+        "JLG provides services, parts, and technical support in addition to equipment",
+        "JLG has an Equipment Selector tool to help customers find the right equipment",
+        "JLG positions itself as a market-defining brand in aerial lifts"
+      ],
+      "competitiveIntel": "JLG is one of the leading OEMs (Original Equipment Manufacturers) in the aerial work platform industry. As a manufacturer, they supply equipment to rental companies like Gorilla Rental. Understanding JLG's full product lineup is important for fleet acquisition decisions. Their Equipment Selector tool could be studied for how they categorize and recommend equipment — potentially informing Gorilla Rental's own customer-facing recommendations.",
+      "technicalKnowledge": [
+        "JLG manufactures both aerial platforms (boom lifts, scissor lifts) and material handling equipment",
+        "JLG product categories include lift and access equipment for various job site applications",
+        "JLG offers an equipment selector tool suggesting they have a wide range of models with varying specs for different use cases"
+      ],
+      "businessInsights": [
+        "JLG is a key supplier/OEM to consider for fleet expansion at Gorilla Rental",
+        "JLG's brand recognition since 1969 could add credibility to Gorilla Rental's fleet if JLG equipment is stocked",
+        "JLG's parts and technical support availability is important for minimizing equipment downtime in a rental fleet",
+        "Understanding JLG's full product range can help Gorilla Rental identify gaps in their own rental offerings"
+      ],
+      "actionItems": [
+        "Explore JLG's full product catalog and Equipment Selector tool to identify models suitable for Gorilla Rental's South Florida market",
+        "Evaluate JLG pricing vs. other OEMs (Genie, Skyjack, Haulotte) for fleet acquisition",
+        "Investigate JLG dealer/support availability in South Florida for maintenance and parts",
+        "Consider featuring JLG brand equipment in Gorilla Rental marketing materials to leverage JLG's brand recognition",
+        "Review JLG's latest equipment innovations to stay current with market offerings"
+      ],
+      "confidenceScore": 0.65,
+      "relevanceScore": 0.6,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:10:47.272Z",
+      "rawContent": "Equipment | JLG\n\nJLG Equipment\n\nJLG lifts have defined the aerial lift market since 1969. Find lift and access equipment that meets your job site needs.\n\nYou need to go higher. Work faster. Do more. Check out the lift equipment from JLG that will take you to new heights, helping you conquer those challenges with confidence. From the latest access lifts to services, parts and technical support, JLG makes sure you have what you need to get the job done.\nWhether you're looking for an aerial platform or a material handling solution, all your access equipment needs can be filled with our wide range of products. Explore our full product offering today.\nFind Your Perfect Equipment Match With JLG's Equipment Selector",
+      "type": "url"
+    },
+    {
+      "id": "KN-1773866966208",
+      "url": null,
+      "title": "Gorilla Rental — Equipment Fleet & Pricing",
+      "summary": "Complete equipment catalog for Gorilla Rental (South Florida aerial lift rentals):\n\n  Boom Lift 45ft (BL001): Daily $370 | Weekly $1200 | Monthly $3700\n  Boom Lift 65ft (BL002): Daily $400 | Weekly $1",
+      "category": "business",
+      "keyFacts": [],
+      "competitiveIntel": "",
+      "technicalKnowledge": [],
+      "businessInsights": [],
+      "actionItems": [],
+      "confidenceScore": 1,
+      "relevanceScore": 1,
+      "addedBy": "onboarding",
+      "learnedAt": "2026-03-18T20:49:26.208Z",
+      "rawContent": "Complete equipment catalog for Gorilla Rental (South Florida aerial lift rentals):\n\n  Boom Lift 45ft (BL001): Daily $370 | Weekly $1200 | Monthly $3700\n  Boom Lift 65ft (BL002): Daily $400 | Weekly $1300 | Monthly $4000\n  Boom Lift 60ft (BL003): Daily $430 | Weekly $1400 | Monthly $4300\n  Boom Lift 125ft (BL007): Daily $600 | Weekly $2000 | Monthly $6000\n  Boom Lift 85ft (BL010): Daily $450 | Weekly $1500 | Monthly $4500\n  Genie S-40 Boom (BL011): Daily $150 | Weekly $490 | Monthly $1500\n  Scissor Lift 32ft (SL001): Daily $150 | Weekly $500 | Monthly $1500\n  Shore Posts (PS001): Daily call | Weekly call | Monthly $12\n  Scaffolding (SC001): Daily $17 | Weekly call | Monthly call\n  Overhead Protection (OP001): Daily call | Weekly call | Monthly $20\n\nAdditional fees:\n  Delivery/Pickup: $200.00\n  Security Deposit: $150.00\n  Tax Rate: 7%",
+      "type": "manual"
+    },
+    {
+      "id": "KN-1773866981353",
+      "url": null,
+      "title": "Gorilla Rental — Company Overview & Operations",
+      "summary": "Gorilla Rental is a South Florida aerial work platform rental company serving Broward County (primary), Miami-Dade, and Palm Beach. They offer boom lifts (40ft–125ft), scissor lifts (32ft electric), scaffolding, shore posts, and overhead protection to general contractors, painters, landscapers, roofers, and other trade professionals.",
+      "category": "business",
+      "keyFacts": [
+        "Gorilla Rental specializes in aerial work platform rentals in South Florida",
+        "Primary service area is Broward County, with coverage in Miami-Dade and Palm Beach",
+        "Boom lifts available from 40ft to 125ft reach in electric and diesel options",
+        "Scissor lifts available at 32ft electric",
+        "Scaffolding offered at a daily rate (modular)",
+        "Shore posts offered at a monthly rate",
+        "Overhead protection services available",
+        "Delivery fee is $200.00",
+        "Refundable deposit of $150.00 per rental",
+        "Florida sales tax of 7% applies to all rentals",
+        "Target customers include general contractors, painters, landscapers, roofers, drywall, framing, and excavation companies",
+        "Driver Andrei: +14474744549",
+        "Driver Nazar: +17860000000",
+        "Company phone: +14474744549",
+        "Company email: info@gorillarental.us",
+        "Company website: gorillarental.us"
+      ],
+      "competitiveIntel": "Gorilla Rental operates in the competitive South Florida aerial lift rental market, differentiating through a broad range of equipment (boom lifts up to 125ft, scissor lifts, scaffolding, shore posts, overhead protection) and a straightforward pricing model with flat $200 delivery fee and $150 refundable deposit, targeting trade professionals across three major South Florida counties.",
+      "technicalKnowledge": [
+        "Boom lifts range from 40ft to 125ft reach with electric and diesel power options",
+        "Scissor lifts are 32ft electric models",
+        "Scaffolding is modular and rented on a daily rate basis",
+        "Shore posts are rented on a monthly rate basis",
+        "Overhead protection is available as an additional service offering"
+      ],
+      "businessInsights": [
+        "Primary market is Broward County with expansion into Miami-Dade and Palm Beach",
+        "Revenue streams include equipment rental fees, delivery fees ($200), and potential deposit forfeitures",
+        "Flat delivery fee structure simplifies quoting and customer communication",
+        "Refundable deposit model ($150) incentivizes proper equipment care and return",
+        "Diverse customer base across multiple trades reduces dependency on any single industry segment",
+        "Small driver team (Andrei and Nazar) suggests lean operations with potential scaling needs as demand grows"
+      ],
+      "actionItems": [
+        "Maintain up-to-date pricing and availability for all equipment categories",
+        "Ensure driver contact information is current for dispatch and customer coordination",
+        "Track deposit returns and any damage claims per rental",
+        "Monitor demand across Broward, Miami-Dade, and Palm Beach to optimize delivery logistics",
+        "Collect and verify 7% Florida sales tax on all applicable transactions"
+      ],
+      "confidenceScore": 1,
+      "relevanceScore": 1,
+      "addedBy": "onboarding",
+      "learnedAt": "2026-03-18T20:49:41.353Z",
+      "rawContent": "Gorilla Rental — South Florida aerial work platform rental company.\n\nSERVICES:\n  • Boom Lifts: 40ft to 125ft reach (electric and diesel)\n  • Scissor Lifts: 32ft electric\n  • Scaffolding: modular, daily rate\n  • Shore Posts: monthly rate\n  • Overhead Protection\n\nSERVICE AREA: South Florida — Broward County (primary), Miami-Dade, Palm Beach\n\nTARGET CUSTOMERS:\n  • General Contractors, Painters, Landscapers, Roofers\n  • Drywall, Framing, Excavation companies\n\nTEAM (DRIVERS):\n  Andrei — +14474744549\n  Nazar — +17860000000\n\nCONTACT:\n  Phone: +14474744549\n  Email: info@gorillarental.us\n  Website: gorillarental.us\n\nPRICING POLICY:\n  • Delivery included in delivery fee ($200.00)\n  • Refundable deposit $150.00 per rental\n  • Tax: 7% Florida sales tax",
+      "type": "manual"
+    },
+    {
+      "id": "KN-1773866994665",
+      "url": null,
+      "title": "Gorilla Rental — Pipeline & Customer Data",
+      "summary": "Gorilla Rental currently has 5 jobs in the pipeline with $20,469.10 in total pipeline revenue. All jobs are in the quoting phase (3 quote_built, 2 quote_sent), with zero active rentals, zero completed jobs, and zero leads in the system.",
+      "category": "business",
+      "keyFacts": [
+        "Total jobs in pipeline: 5",
+        "Pipeline revenue: $20,469.10",
+        "Active rentals: 0",
+        "Completed jobs: 0",
+        "3 jobs at quote_built stage, 2 jobs at quote_sent stage",
+        "Top customer by revenue: John Smith at $5,970.60",
+        "4 total customers in the pipeline: John Smith, Kyle, Test, Andrei Hazazup",
+        "Zero leads in the system (0 total, 0 new, 0 converted)",
+        "Average job value approximately $4,093.82"
+      ],
+      "competitiveIntel": "",
+      "technicalKnowledge": [
+        "Pipeline stages in use: quote_built and quote_sent",
+        "No jobs have progressed beyond the quoting phase yet",
+        "Lead tracking is set up but currently has no entries"
+      ],
+      "businessInsights": [
+        "All revenue is stuck in the quoting phase — no jobs have converted to active rentals, indicating a potential bottleneck in closing deals",
+        "Zero leads suggest the business may be in early stages or lead capture/tracking is not yet active",
+        "The 'Test' customer at $5,756.60 may be a test entry and could be inflating pipeline numbers by ~28%",
+        "Revenue is concentrated among a small number of customers, with the top 2 real customers accounting for ~57% of pipeline value",
+        "Quote-to-close conversion rate is currently 0%, which is the most critical metric to improve",
+        "Lead generation and lead conversion processes need to be established or activated to build a sustainable pipeline"
+      ],
+      "actionItems": [
+        "Follow up on the 2 quote_sent jobs to push them toward conversion",
+        "Send quotes for the 3 quote_built jobs to advance them in the pipeline",
+        "Verify and remove the 'Test' customer entry to ensure accurate pipeline reporting",
+        "Implement lead generation strategies to fill the top of the funnel",
+        "Establish a lead tracking and follow-up process",
+        "Set up pipeline stage progression tracking to identify and address conversion bottlenecks"
+      ],
+      "confidenceScore": 0.95,
+      "relevanceScore": 1,
+      "addedBy": "onboarding",
+      "learnedAt": "2026-03-18T20:49:54.665Z",
+      "rawContent": "Job pipeline summary:\n\nTotal jobs: 5\nActive rentals: 0\nCompleted jobs: 0\nPipeline revenue: $20,469.10\n\nJobs by stage:\n  quote_built: 3 jobs\n  quote_sent: 2 jobs\n\nTop customers by revenue:\n  John Smith: $5,970.60\n  Kyle: $5,756.60\n  Test: $5,756.60\n  Andrei Hazazup: $2,985.30\n\nLeads: 0 total, 0 new, 0 converted",
+      "type": "manual"
+    },
+    {
+      "id": "KN-1773872824542",
+      "url": null,
+      "title": "Gorilla Rental — Equipment Fleet & Pricing",
+      "summary": "Complete equipment catalog for Gorilla Rental (South Florida aerial lift rentals):\n\n  Boom Lift 45ft (BL001): Daily $370 | Weekly $1200 | Monthly $3700\n  Boom Lift 65ft (BL002): Daily $400 | Weekly $1",
+      "category": "business",
+      "keyFacts": [],
+      "competitiveIntel": "",
+      "technicalKnowledge": [],
+      "businessInsights": [],
+      "actionItems": [],
+      "confidenceScore": 1,
+      "relevanceScore": 1,
+      "addedBy": "onboarding",
+      "learnedAt": "2026-03-18T22:27:04.542Z",
+      "rawContent": "Complete equipment catalog for Gorilla Rental (South Florida aerial lift rentals):\n\n  Boom Lift 45ft (BL001): Daily $370 | Weekly $1200 | Monthly $3700\n  Boom Lift 65ft (BL002): Daily $400 | Weekly $1300 | Monthly $4000\n  Boom Lift 60ft (BL003): Daily $430 | Weekly $1400 | Monthly $4300\n  Boom Lift 125ft (BL007): Daily $600 | Weekly $2000 | Monthly $6000\n  Boom Lift 85ft (BL010): Daily $450 | Weekly $1500 | Monthly $4500\n  Genie S-40 Boom (BL011): Daily $150 | Weekly $490 | Monthly $1500\n  Scissor Lift 32ft (SL001): Daily $150 | Weekly $500 | Monthly $1500\n  Shore Posts (PS001): Daily call | Weekly call | Monthly $12\n  Scaffolding (SC001): Daily $17 | Weekly call | Monthly call\n  Overhead Protection (OP001): Daily call | Weekly call | Monthly $20\n\nAdditional fees:\n  Delivery/Pickup: $200.00\n  Security Deposit: $150.00\n  Tax Rate: 7%",
+      "type": "manual"
+    },
+    {
+      "id": "KN-1773872837428",
+      "url": null,
+      "title": "Gorilla Rental — Company Overview & Operations",
+      "summary": "Gorilla Rental is a South Florida aerial work platform rental company serving Broward County (primary), Miami-Dade, and Palm Beach. They offer boom lifts (40ft–125ft), scissor lifts (32ft electric), scaffolding, shore posts, and overhead protection to general contractors, painters, landscapers, roofers, drywall, framing, and excavation companies.",
+      "category": "business",
+      "keyFacts": [
+        "South Florida aerial work platform rental company",
+        "Primary service area: Broward County; also serves Miami-Dade and Palm Beach",
+        "Boom Lifts: 40ft to 125ft reach (electric and diesel options)",
+        "Scissor Lifts: 32ft electric",
+        "Scaffolding: modular, daily rate",
+        "Shore Posts: monthly rate",
+        "Overhead Protection available",
+        "Delivery fee: $200.00",
+        "Refundable deposit: $150.00 per rental",
+        "Florida sales tax: 7%",
+        "Driver Andrei: +14474744549",
+        "Driver Nazar: +17860000000",
+        "Phone: +14474744549",
+        "Email: info@gorillarental.us",
+        "Website: gorillarental.us"
+      ],
+      "competitiveIntel": "Gorilla Rental operates in the competitive South Florida aerial lift rental market, differentiating with a broad equipment range (40ft–125ft boom lifts), flat-rate delivery pricing, and a relatively low refundable deposit, targeting trade contractors across three major counties.",
+      "technicalKnowledge": [
+        "Boom lifts available in both electric and diesel powertrains, ranging from 40ft to 125ft reach",
+        "Scissor lifts are 32ft electric models suitable for indoor and outdoor use",
+        "Scaffolding is modular and priced on a daily rate basis",
+        "Shore posts are rented on a monthly rate basis",
+        "Overhead protection services are available for jobsite safety compliance"
+      ],
+      "businessInsights": [
+        "Target customer segments are trade-specific contractors (GCs, painters, landscapers, roofers, drywall, framing, excavation) — marketing should be tailored per trade",
+        "Flat $200 delivery fee simplifies quoting and reduces pricing friction",
+        "$150 refundable deposit per rental keeps barrier to entry low for smaller contractors",
+        "Broward County is the primary market — expansion opportunities exist in deeper Miami-Dade and Palm Beach penetration",
+        "7% Florida sales tax must be applied to all rental invoices"
+      ],
+      "actionItems": [
+        "Ensure all quotes include delivery fee ($200), deposit ($150), and 7% FL sales tax",
+        "Route delivery/pickup requests to drivers Andrei (+14474744549) or Nazar (+17860000000)",
+        "Direct customer inquiries to info@gorillarental.us or +14474744549",
+        "Confirm service area eligibility (Broward, Miami-Dade, Palm Beach) before booking"
+      ],
+      "confidenceScore": 1,
+      "relevanceScore": 1,
+      "addedBy": "onboarding",
+      "learnedAt": "2026-03-18T22:27:17.428Z",
+      "rawContent": "Gorilla Rental — South Florida aerial work platform rental company.\n\nSERVICES:\n  • Boom Lifts: 40ft to 125ft reach (electric and diesel)\n  • Scissor Lifts: 32ft electric\n  • Scaffolding: modular, daily rate\n  • Shore Posts: monthly rate\n  • Overhead Protection\n\nSERVICE AREA: South Florida — Broward County (primary), Miami-Dade, Palm Beach\n\nTARGET CUSTOMERS:\n  • General Contractors, Painters, Landscapers, Roofers\n  • Drywall, Framing, Excavation companies\n\nTEAM (DRIVERS):\n  Andrei — +14474744549\n  Nazar — +17860000000\n\nCONTACT:\n  Phone: +14474744549\n  Email: info@gorillarental.us\n  Website: gorillarental.us\n\nPRICING POLICY:\n  • Delivery included in delivery fee ($200.00)\n  • Refundable deposit $150.00 per rental\n  • Tax: 7% Florida sales tax",
+      "type": "manual"
+    },
+    {
+      "id": "KN-1773872851675",
+      "url": null,
+      "title": "Gorilla Rental — Pipeline & Customer Data",
+      "summary": "Gorilla Rental currently has 5 jobs in the pipeline totaling $20,469.10 in potential revenue, with all jobs in the quoting phase (3 quote_built, 2 quote_sent). There are no active rentals, no completed jobs, and no leads in the system, indicating the business is in an early operational stage or ramp-up period.",
+      "category": "business",
+      "keyFacts": [
+        "Total jobs in pipeline: 5",
+        "Active rentals: 0",
+        "Completed jobs: 0",
+        "Total pipeline revenue: $20,469.10",
+        "3 jobs in quote_built stage, 2 jobs in quote_sent stage",
+        "Top customer by revenue: John Smith at $5,970.60",
+        "4 customers in the system: John Smith, Kyle, Test, Andrei Hazazup",
+        "Zero leads tracked (0 total, 0 new, 0 converted)",
+        "Average job value approximately $4,093.82"
+      ],
+      "competitiveIntel": "",
+      "technicalKnowledge": [
+        "Pipeline stages in use: quote_built and quote_sent",
+        "No jobs have progressed beyond the quoting phase yet",
+        "Lead tracking module exists but has no data, suggesting it may not be actively used or integrated"
+      ],
+      "businessInsights": [
+        "100% of pipeline revenue ($20,469.10) is in the quoting stage with no conversions yet — closing even 1-2 quotes would establish initial revenue",
+        "Revenue is relatively concentrated: John Smith, Kyle, and Test each represent ~28-29% of pipeline revenue",
+        "'Test' customer with $5,756.60 may be a test record and should be verified to ensure pipeline revenue figures are accurate",
+        "No leads in the system suggests customer acquisition may be happening through direct/offline channels not tracked in the platform",
+        "The gap between quote_built (3) and quote_sent (2) indicates 1 quote may need follow-up to be sent to the customer",
+        "With zero completed jobs, establishing a conversion baseline should be a priority to forecast future revenue"
+      ],
+      "actionItems": [
+        "Follow up on the 2 quotes that have been sent to push toward conversion",
+        "Review and send the 1 quote still in quote_built stage",
+        "Verify whether the 'Test' customer record ($5,756.60) is a real job or test data that should be removed",
+        "Begin using the lead tracking system to capture and measure customer acquisition efforts",
+        "Prioritize closing the John Smith quote ($5,970.60) as the highest-value opportunity",
+        "Establish a follow-up cadence for quotes to improve conversion rates"
+      ],
+      "confidenceScore": 0.9,
+      "relevanceScore": 1,
+      "addedBy": "onboarding",
+      "learnedAt": "2026-03-18T22:27:31.675Z",
+      "rawContent": "Job pipeline summary:\n\nTotal jobs: 5\nActive rentals: 0\nCompleted jobs: 0\nPipeline revenue: $20,469.10\n\nJobs by stage:\n  quote_built: 3 jobs\n  quote_sent: 2 jobs\n\nTop customers by revenue:\n  John Smith: $5,970.60\n  Kyle: $5,756.60\n  Test: $5,756.60\n  Andrei Hazazup: $2,985.30\n\nLeads: 0 total, 0 new, 0 converted",
+      "type": "manual"
+    },
+    {
+      "id": "KN-1773900424914",
+      "url": "https://www.bluelinerental.com",
+      "title": "United Rentals – Trusted Equipment Fleet & Worksite SolutionsUnited Rentals",
+      "summary": "This page is from United Rentals (not Blue Line Rental as the source URL suggests — Blue Line was acquired by United Rentals). United Rentals is the world's largest rental equipment company, offering 3,300+ equipment and tool classes across the US and Canada, with extensive digital tools, mobile apps, and industry-specific solutions.",
+      "category": "competitor",
+      "keyFacts": [
+        "United Rentals is the world's largest rental equipment company",
+        "Offers 3,300+ equipment and tool classes",
+        "Operates across the United States and Canada",
+        "Blue Line Rental domain now redirects to United Rentals (indicating acquisition/merger)",
+        "Provides AI-powered chatbot for equipment assistance",
+        "Offers mobile app for 24/7 equipment browsing, rental, and pickup requests",
+        "Has a training certification program called United Academy",
+        "Provides Worksite Performance Solutions for safety, productivity, and sustainability",
+        "Offers sustainability-focused equipment selection by emission level",
+        "Serves multiple industries including chemical, oil & gas, civil infrastructure, and distribution",
+        "Offers used equipment sales events (Spring Sales Event)",
+        "Provides government customer tax-exempt purchasing",
+        "Has operations in Europe (France, Germany, Netherlands) and North America"
+      ],
+      "competitiveIntel": "United Rentals acquired Blue Line Rental, consolidating market share. As the world's largest equipment rental company with 3,300+ equipment classes, they represent Gorilla Rental's largest national competitor in South Florida. They heavily invest in digital tools (AI chatbot, mobile app, online dashboards, notifications) to create customer stickiness and streamline operations. They promote sustainability and emission-level equipment filtering as differentiators. Their scale allows them to offer broad industry-specific solutions (Power & HVAC, Trench Safety, Fluid Solutions, Emergency Response, Storage) that smaller competitors cannot match. Government customers receive special tax-exempt treatment. They also sell used equipment, creating an additional revenue stream. Their weaknesses for Gorilla may include less personalized local service and potentially higher pricing due to corporate overhead.",
+      "technicalKnowledge": [
+        "United Rentals offers aerial attachments and safety accessories as a category",
+        "Equipment categories include skid steers, compact track loaders, straight mast rough terrain forklifts",
+        "They provide Power & HVAC, Fluid Solutions, and Trench Safety as specialized solution categories",
+        "Equipment can be filtered by emission level for sustainability compliance"
+      ],
+      "businessInsights": [
+        "Blue Line Rental has been absorbed by United Rentals, reducing the number of independent competitors in the market",
+        "Major competitors are investing heavily in digital customer experience (apps, AI chatbots, dashboards) to differentiate",
+        "United Rentals uses technology (Total Control dashboard, notifications, mobile app) to increase customer retention and reduce churn",
+        "The industry trend is toward sustainability-focused equipment offerings and emission-level transparency",
+        "Large competitors leverage scale to serve niche industries (chemical, oil & gas, oilfield services) that smaller companies may not target",
+        "Used equipment sales events represent an additional competitor revenue model",
+        "Online request submissions are promoted as 2x faster than emails/faxes, setting customer expectations for response times"
+      ],
+      "actionItems": [
+        "Differentiate Gorilla Rental through personalized local service, faster delivery, and South Florida market expertise that United Rentals cannot match at scale",
+        "Invest in digital presence — consider a simple mobile-friendly rental request system to compete with United Rentals' app experience",
+        "Emphasize Gorilla's specialization in aerial work platforms (boom lifts & scissor lifts) vs United Rentals' generalist 3,300-class approach",
+        "Monitor United Rentals' pricing in South Florida locations to ensure competitive positioning",
+        "Consider offering sustainability/emission-level information on equipment to match emerging industry expectations",
+        "Target customers who may feel underserved by United Rentals' large corporate structure with personalized account management",
+        "Ensure response times to customer inquiries are faster than United Rentals' digital-first approach to win on service quality",
+        "Note that Blue Line Rental no longer exists as an independent competitor — update competitive landscape accordingly"
+      ],
+      "confidenceScore": 0.82,
+      "relevanceScore": 0.85,
+      "addedBy": "daily_sweep",
+      "learnedAt": "2026-03-19T06:07:04.914Z",
+      "rawContent": "United Rentals – Trusted Equipment Fleet & Worksite SolutionsUnited Rentals\n\nUnited Rentals provides 3300+ equipment and tool classes for industrial & construction sites across the United States and Canada. Rent heavy equipment now.\n\nWe're here to help you find the right equipment for your project. How can I assist you today?\nThe AI-powered chatbot is an assistant that is provided for general information only and not for professional advice. The chatbot’s responses are generated by AI and may be inaccurate, incomplete, or outdated. They are provided for general informational purposes only and are not a substitute for your own judgment or information provided by a United Rentals representative. You are solely responsible for selecting equipment that is appropriate and safe for your job and jobsite. You must independently review and verify all results, which may be inaccurate, incomplete or outdated. For your protection, do not share sensitive personal information in the chat. By proceeding, you consent to the recording and sharing of your information by United Rentals (and authorized third parties).\nI agree to the United Rentals Website Terms of Use and Privacy Policy\nAl can make mistakes and is not a substitute for professional advice or judgment. Please verify important information.\nDrive Safety, Productivity & Sustainability with\nWorksite Performance Solutions™\nSkid Steers & Compact Track Loaders\nSkid Steers & Compact Track Loaders\nAerial Attachments & Safety Accessories\nStraight Mast Rough Terrain Forklifts\nGet quality used equipment during out Spring Sales Event on March 19th at participating events.\nQuickly access your favorite and recently rented equipment\nFederal, State or Local government customers must sign in to avoid paying tax and extra fees.\nConsider us your new favorite coworker. We help manage the entire worksite with a few taps.\nOptions to help streamline operations and drive smart decisions.\nHave Total Control on the job with a custom dashboard buil",
+      "type": "url"
     }
   ],
-  "lastUpdated": "2026-03-17T23:38:29.050Z"
+  "lastUpdated": "2026-03-19T06:10:47.273Z"
 }

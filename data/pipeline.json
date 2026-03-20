@@ -87,5 +87,63 @@
     "stage": "quote_sent",
     "createdAt": "2026-03-17T14:08:22.680Z",
     "sentAt": "2026-03-17T14:27:25.886Z"
+  },
+  {
+    "jobId": "GR-2026-0004",
+    "customerName": "Kyle",
+    "customerEmail": "kylerose1946@gmail.com",
+    "customerPhone": "754-303-2523",
+    "deliveryAddress": "Deerfield Beach, FL",
+    "startDate": "2025-04-07",
+    "endDate": "2025-04-20",
+    "duration": "2 weeks",
+    "equipment": [
+      {
+        "sku": "BL001",
+        "name": "Boom Lift 45ft",
+        "quantity": 1,
+        "dailyRate": 370,
+        "rentalPeriod": "14 days",
+        "unitPrice": 5180,
+        "total": 5180
+      }
+    ],
+    "subtotal": 5380,
+    "tax": 376.6,
+    "total": 5756.6,
+    "depositLink": "https://buy.stripe.com/28E8wH4fu3Za6Pv6yB97G06",
+    "booqableOrderId": "2b98ca01-c3ed-4f66-bd16-4284cf2bbd7c",
+    "notes": "",
+    "stage": "quote_built",
+    "createdAt": "2026-03-17T16:14:40.891Z"
+  },
+  {
+    "jobId": "GR-2026-0005",
+    "customerName": "Test",
+    "customerEmail": "hazazupandrei@gmail.com",
+    "customerPhone": "754-303-2523",
+    "deliveryAddress": "Deerfield Beach, FL",
+    "startDate": "2025-04-07",
+    "endDate": "2025-04-20",
+    "duration": "2 weeks",
+    "equipment": [
+      {
+        "sku": "BL001",
+        "name": "Boom Lift 45ft",
+        "quantity": 1,
+        "dailyRate": 370,
+        "rentalPeriod": "14 days",
+        "unitPrice": 5180,
+        "total": 5180
+      }
+    ],
+    "subtotal": 5380,
+    "tax": 376.6,
+    "total": 5756.6,
+    "depositLink": "https://buy.stripe.com/5kQ6oz3bq3Zagq55ux97G0b",
+    "booqableOrderId": "5aa83d42-0eff-4977-a88a-ece706b32683",
+    "notes": "",
+    "stage": "quote_built",
+    "createdAt": "2026-03-17T16:34:54.950Z"
   }
 ]

@@ -10,7 +10,12 @@
       "Bash(grep:*)",
       "Bash(file:*)",
       "Bash(xattr:*)",
-      "Read(/Users/kyle/**)"
+      "Read(/Users/kyle/**)",
+      "Bash(grep -E '\"\"pdfkit\"\"|\"\"html-pdf-node\"\"' package.json)",
+      "Bash(ls ~/openclaw/gorillahq/railway* ~/openclaw/gorillahq/nixpacks*)",
+      "Bash(ls ~/openclaw/gorillahq/.railway*)",
+      "Bash(kill 14007)",
+      "Bash(ls /Users/kyle/openclaw/gorillahq/*.js)"
     ]
   }
 }

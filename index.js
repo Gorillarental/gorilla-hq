@@ -12,6 +12,7 @@ import dotenv from 'dotenv';
 import multer from 'multer';
 dotenv.config();
 
+import { sendTelegram, telegramWebhookHandler, notifyAll } from './telegram.js';
 import { quoteRoutes, quoteChat } from './quotes.js';
 import { adminRoutes, adminChat } from './admin.js';
 import { opsRoutes, opsChat, getTodaysJobs, getUpcomingJobs } from './ops.js';
@@ -423,6 +424,9 @@ app.use((err, req, res, next) => {
   console.error('[Server] Error:', err.message);
   res.status(500).json({ ok: false, error: err.message });
 });
+
+// ─── Telegram webhook ──────────────────────────────────────────
+app.post('/webhook/telegram', telegramWebhookHandler);
 
 // ─── Start ─────────────────────────────────────────────────────
 await initDB();

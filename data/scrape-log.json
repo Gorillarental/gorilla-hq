@@ -7,5 +7,23 @@
     "errors": 3,
     "areas": "Fort Lauderdale",
     "categories": 1
+  },
+  {
+    "date": "2026-03-18T21:36:26.913Z",
+    "found": 3,
+    "added": 0,
+    "skipped": 0,
+    "errors": 3,
+    "areas": "Fort Lauderdale",
+    "categories": 1
+  },
+  {
+    "date": "2026-03-19T10:52:53.444Z",
+    "found": 50,
+    "added": 0,
+    "skipped": 0,
+    "errors": 50,
+    "areas": "Miami, Hialeah, Doral, Coral Gables, Miami Beach, Homestead, Fort Lauderdale, Hollywood, Pompano Beach, Miramar, Pembroke Pines, Coral Springs, West Palm Beach, Boca Raton, Delray Beach, Boynton Beach",
+    "categories": 20
   }
 ]
