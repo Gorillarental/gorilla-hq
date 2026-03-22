@@ -389,8 +389,14 @@ export async function getCashflowReport(month) {
 
 export async function processReceipt(fileBuffer, fileName, mimeType, metadata = {}) {
   try {
-    // 1. Upload to SharePoint RECEIPTS folder
-    const { webUrl } = await uploadReceipt(fileBuffer, fileName, mimeType);
+    // 1. Try to upload to SharePoint RECEIPTS folder (optional)
+    let webUrl = null;
+    try {
+      const result = await uploadReceipt(fileBuffer, fileName, mimeType);
+      webUrl = result.webUrl;
+    } catch (spErr) {
+      console.warn('[Admin] SharePoint upload skipped:', spErr.message);
+    }
 
     // 2. If image, use Claude vision to extract: amount, vendor, date, category
     let extracted = {
@@ -843,7 +849,7 @@ export async function adminChat(message, history = []) {
     // "show receipts [month]"
     const receiptsMatch = msg.match(/show receipts\s+(.+)/);
     if (receiptsMatch) {
-      const receipts = await listReceipts(receiptsMatch[1]);
+      const receipts = await listReceipts(receiptsMatch[1]).catch(() => []);
       const lines    = receipts.map(r => `  - ${r.name} (${r.size} bytes)`).join('\n') || '  None';
       return { text: `Receipts for ${receiptsMatch[1]}:\n${lines}`, receipts };
     }
@@ -986,7 +992,7 @@ export function adminRoutes(app) {
   app.get('/admin/receipts', async (req, res) => {
     try {
       const month    = req.query.month || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-      const receipts = await listReceipts(month);
+      const receipts = await listReceipts(month).catch(() => []);
       res.json({ ok: true, month, receipts });
     } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
   });
