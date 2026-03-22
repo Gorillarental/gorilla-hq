@@ -3,1924 +3,780 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gorilla Rental AI Operations Center</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Gorilla HQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg-primary:#0a0a0a;--bg-secondary:#141414;--bg-card:#1a1a1a;--bg-card-hover:#202020;
-  --accent:#f6ec0e;--accent-hover:#e6dc0e;--accent-dark:#c4c40c;
-  --text-primary:#ffffff;--text-secondary:#999999;--text-muted:#555555;
-  --border:#2a2a2a;--border-hover:#3a3a3a;
-  --success:#22c55e;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;
-  --purple:#a855f7;--teal:#14b8a6;--pink:#ec4899;--orange:#f97316;
+  --yellow:#f6ec0e;--yellow-dark:#c8c10b;--black:#09090b;
+  --bg:#f4f4f5;--white:#ffffff;
+  --border:#e4e4e7;--border-light:#f0f0f1;
+  --text:#18181b;--text-2:#52525b;--text-3:#a1a1aa;
+  --radius:12px;--radius-sm:8px;
+  --sidebar:240px;
 }
-body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
 
-/* LOCK SCREEN */
-#lockScreen{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;}
-.ls-emoji{font-size:60px;}
-.ls-title{font-size:32px;font-weight:800;letter-spacing:4px;color:var(--accent);text-transform:uppercase;}
-.ls-sub{font-size:14px;color:var(--text-secondary);}
-.ls-label{font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;}
-.ls-digits{display:flex;gap:12px;}
-.ls-digit{width:64px;height:80px;background:var(--bg-card);border:2px solid var(--border);border-radius:12px;color:var(--text-primary);font-size:32px;font-weight:700;text-align:center;outline:none;transition:border-color .2s;font-family:'Inter',monospace;}
-.ls-digit:focus{border-color:var(--accent);}
-.ls-digit.error{border-color:var(--danger);}
-.ls-error{color:var(--danger);font-size:13px;display:none;}
-.ls-footer{font-size:11px;color:#333;}
-@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-.shake{animation:shake .4s ease;}
+/* Lock */
+#lock{position:fixed;inset:0;background:var(--black);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;}
+.lock-logo{width:56px;height:56px;background:var(--yellow);border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:var(--black);}
+.lock-title{color:#fff;font-size:26px;font-weight:800;letter-spacing:2px;}
+.lock-digits{display:flex;gap:12px;}
+.lock-digit{width:60px;height:72px;background:#18181b;border:2px solid #27272a;border-radius:10px;color:#fff;font-size:28px;font-weight:700;text-align:center;outline:none;transition:border-color .15s;}
+.lock-digit:focus{border-color:var(--yellow);}
+.lock-digit.err{border-color:#ef4444;}
+.lock-err{color:#ef4444;font-size:12px;display:none;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-6px)}50%{transform:translateX(6px)}}
+.shake{animation:shake .35s ease;}
 
-/* APP LAYOUT */
-#app{display:none;min-height:100vh;}
-.layout{display:flex;min-height:100vh;}
+/* Sidebar */
+#sidebar{width:var(--sidebar);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:100;}
+.sb-logo{padding:18px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border-light);}
+.sb-logo-icon{width:34px;height:34px;background:var(--yellow);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;flex-shrink:0;}
+.sb-logo-name{font-weight:800;font-size:14px;}
+.sb-logo-sub{font-size:10px;color:var(--text-3);font-weight:500;}
+nav{flex:1;padding:10px 8px;overflow-y:auto;display:flex;flex-direction:column;gap:1px;}
+.nav-section{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.08em;text-transform:uppercase;padding:10px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;color:var(--text-2);transition:all .12s;}
+.nav-item:hover{background:var(--bg);color:var(--text);}
+.nav-item.active{background:var(--yellow);color:var(--black)!important;font-weight:700;}
+.ni-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sb-footer{padding:12px 16px;border-top:1px solid var(--border-light);}
+.sb-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3);}
+.sb-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;}
 
-/* SIDEBAR */
-.sidebar{width:240px;background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto;}
-.sidebar-logo{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-.sidebar-logo-emoji{font-size:24px;}
-.sidebar-logo-text{font-size:14px;font-weight:800;letter-spacing:2px;color:var(--accent);}
-.sidebar-logo-sub{font-size:10px;color:var(--text-muted);letter-spacing:1px;}
-nav{flex:1;padding:8px 0;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;color:var(--text-secondary);font-size:13px;font-weight:500;transition:all .15s;border-left:3px solid transparent;}
-.nav-item:hover{background:var(--bg-card);color:var(--text-primary);}
-.nav-item.active{background:rgba(246,236,14,.07);color:var(--accent);border-left-color:var(--accent);}
-.nav-emoji{font-size:16px;width:20px;}
-.sidebar-status{padding:16px;border-top:1px solid var(--border);}
-.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--success);margin-right:6px;}
-.status-text{font-size:12px;color:var(--text-secondary);}
-.sidebar-logout{margin:8px 16px;padding:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text-secondary);font-size:12px;cursor:pointer;text-align:center;transition:all .15s;}
-.sidebar-logout:hover{border-color:var(--danger);color:var(--danger);}
-
-/* MAIN */
-.main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
-
-/* TOPBAR */
-.topbar{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
-.topbar-title{font-size:18px;font-weight:700;}
-.topbar-right{display:flex;align-items:center;gap:12px;}
-.notif-btn{position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;color:var(--text-secondary);transition:all .15s;}
-.notif-btn:hover{border-color:var(--border-hover);color:var(--text-primary);}
-.notif-badge{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;}
-.qa-btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;position:relative;}
-.qa-btn:hover{background:var(--accent-hover);}
-.qa-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;min-width:180px;z-index:200;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4);}
-.qa-dropdown.open{display:block;}
-.qa-item{padding:10px 14px;font-size:13px;cursor:pointer;transition:background .1s;}
-.qa-item:hover{background:var(--bg-card-hover);}
-
-/* PAGE CONTENT */
-.page{padding:24px;display:none;}
+/* Main */
+#main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:15px;font-weight:700;}
+.topbar-actions{display:flex;align-items:center;gap:8px;}
+.content{padding:24px;flex:1;}
+.page{display:none;}
 .page.active{display:block;}
 
-/* CARDS */
-.card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;}
-.card:hover{border-color:var(--border-hover);}
+/* Cards */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-title{font-size:13px;font-weight:700;}
+.card-sub{font-size:12px;color:var(--text-3);}
 
-/* STATS GRID */
-.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;}
-.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .15s;}
-.stat-card:hover{border-color:var(--border-hover);}
-.stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
-.stat-value{font-size:22px;font-weight:800;}
-.stat-sub{font-size:11px;color:var(--text-secondary);margin-top:4px;}
-.stat-card.yellow .stat-value{color:var(--accent);}
-.stat-card.red .stat-value{color:var(--danger);}
-.stat-card.green .stat-value{color:var(--success);}
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.stat-label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.stat-value{font-size:24px;font-weight:800;line-height:1;}
+.stat-hint{font-size:11px;color:var(--text-3);margin-top:3px;}
+.stat.warn .stat-value{color:#f59e0b;}
+.stat.danger .stat-value{color:#ef4444;}
+.stat.good .stat-value{color:#22c55e;}
 
-/* ALERT BANNERS */
-.alert{padding:10px 16px;border-radius:8px;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
-.alert-red{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5;}
-.alert-yellow{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#fcd34d;}
-.alert-blue{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:#93c5fd;}
+/* Agent grid */
+.agents-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+.agent-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:12px;transition:border-color .15s,box-shadow .15s;cursor:pointer;}
+.agent-card:hover{border-color:var(--yellow-dark);box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.ac-header{display:flex;align-items:center;gap:12px;}
+.ac-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ac-name{font-size:14px;font-weight:700;}
+.ac-role{font-size:11px;color:var(--text-3);}
+.ac-desc{font-size:12px;color:var(--text-2);line-height:1.5;}
+.ac-skills{display:flex;flex-wrap:wrap;gap:5px;}
+.skill-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;border:1px solid var(--border);color:var(--text-2);}
+.ac-footer{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border-light);}
+.ac-status{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);}
+.status-dot{width:6px;height:6px;border-radius:50%;}
 
-/* TABLES */
-.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-th{background:var(--bg-secondary);padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
-td{padding:10px 12px;border-top:1px solid var(--border);vertical-align:middle;}
-tr:hover td{background:var(--bg-card-hover);}
+/* Dashboard grid */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.job-item{padding:10px 0;border-bottom:1px solid var(--border-light);}
+.job-item:last-child{border-bottom:none;}
+.job-id{font-size:12px;font-weight:700;}
+.job-name{font-size:12px;color:var(--text-2);}
+.job-detail{font-size:11px;color:var(--text-3);margin-top:1px;}
+.empty-state{text-align:center;padding:24px;color:var(--text-3);font-size:13px;}
 
-/* STAGE PILLS */
-.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
-.pill-quote_built{background:#333;color:#aaa;}
-.pill-quote_sent{background:rgba(59,130,246,.2);color:#93c5fd;}
-.pill-reserved{background:rgba(168,85,247,.2);color:#d8b4fe;}
-.pill-contract_sent{background:rgba(249,115,22,.2);color:#fdba74;}
-.pill-delivery_scheduled{background:rgba(246,236,14,.2);color:#f6ec0e;}
-.pill-in_progress{background:rgba(34,197,94,.2);color:#86efac;}
-.pill-returned{background:rgba(20,184,166,.2);color:#5eead4;}
-.pill-completed{background:rgba(22,101,52,.4);color:#4ade80;}
-.pill-cancelled{background:rgba(239,68,68,.2);color:#fca5a5;}
+/* Alerts */
+.alerts{margin-bottom:16px;display:flex;flex-direction:column;gap:6px;}
+.alert{padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;}
+.alert-red{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;}
+.alert-yellow{background:#fffbeb;border:1px solid #fde68a;color:#92400e;}
+.alert-blue{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;}
 
-/* SECTION HEADERS */
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.section-title{font-size:15px;font-weight:700;}
-.section-sub{font-size:12px;color:var(--text-secondary);}
+/* Table */
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border-bottom:1px solid var(--border);}
+td{padding:9px 10px;border-bottom:1px solid var(--border-light);font-size:13px;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg);}
+.pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;}
 
-/* QUICK ACTIONS */
-.qa-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
-.qab{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--text-primary);}
-.qab:hover{background:var(--bg-card-hover);border-color:var(--accent);color:var(--accent);}
-.qab.primary{background:var(--accent);color:#000;border-color:var(--accent);}
-.qab.primary:hover{background:var(--accent-hover);}
+/* Agent page */
+.agent-page-grid{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+.agent-info-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;position:sticky;top:68px;}
+.ai-header{padding:20px;border-bottom:1px solid var(--border);}
+.ai-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px;}
+.ai-name{font-size:17px;font-weight:800;margin-bottom:2px;}
+.ai-role{font-size:11px;color:var(--text-3);}
+.ai-desc{padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6;border-bottom:1px solid var(--border);}
+.ai-caps{padding:14px 16px;}
+.cap-title{font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.cap-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;}
+.cap-bullet{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0;margin-top:1px;}
+.cap-text{font-size:12px;color:var(--text-2);line-height:1.4;}
 
-/* TWO PANEL */
-.two-panel{display:grid;grid-template-columns:35% 1fr;gap:16px;}
-.two-panel.wide{grid-template-columns:30% 1fr;}
-
-/* CHAT */
-.chat-wrap{display:flex;flex-direction:column;height:400px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-.chat-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-secondary);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;}
-.chat-status{width:8px;height:8px;border-radius:50%;background:var(--success);}
-.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
-.msg{max-width:85%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
-.msg.user{background:var(--accent);color:#000;margin-left:auto;border-radius:12px 12px 4px 12px;}
-.msg.agent{background:var(--bg-secondary);color:var(--text-primary);margin-right:auto;border-radius:12px 12px 12px 4px;}
-.msg.thinking{background:var(--bg-secondary);color:var(--text-muted);font-style:italic;}
-@keyframes dots{0%,100%{opacity:.3}50%{opacity:1}}
-.thinking-dots span{animation:dots 1.4s ease infinite;display:inline-block;}
+/* Chat */
+.chat-box{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;height:calc(100vh - 100px);}
+.chat-top{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.chat-top-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;}
+.chat-top-name{font-size:13px;font-weight:700;}
+.chat-top-sub{font-size:11px;color:var(--text-3);margin-left:auto;}
+.chat-msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;}
+.msg{max-width:82%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.55;white-space:pre-wrap;}
+.msg.user{background:var(--yellow);color:var(--black);margin-left:auto;border-radius:12px 12px 4px 12px;font-weight:500;}
+.msg.bot{background:var(--bg);color:var(--text);margin-right:auto;border-radius:12px 12px 12px 4px;}
+.msg.thinking{background:var(--bg);margin-right:auto;border-radius:12px;padding:12px 16px;}
+.thinking-dots{display:flex;gap:4px;}
+.thinking-dots span{width:6px;height:6px;border-radius:50%;background:var(--text-3);animation:bounce .9s infinite;}
 .thinking-dots span:nth-child(2){animation-delay:.2s;}
 .thinking-dots span:nth-child(3){animation-delay:.4s;}
-.chat-input-row{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;}
-.chat-input{flex:1;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text-primary);outline:none;font-family:'Inter',sans-serif;}
-.chat-input:focus{border-color:var(--accent);}
-.chat-send{background:var(--accent);color:#000;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;}
-.chat-send:hover{background:var(--accent-hover);}
-.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
-.preset{background:var(--bg-secondary);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;transition:all .15s;color:var(--text-secondary);}
-.preset:hover{border-color:var(--accent);color:var(--accent);}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+.chat-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.chat-input{flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;font-family:'Inter',sans-serif;outline:none;resize:none;transition:border-color .12s;}
+.chat-input:focus{border-color:var(--yellow-dark);}
+.chat-send{background:var(--yellow);color:var(--black);border:none;border-radius:var(--radius-sm);padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;transition:background .12s;flex-shrink:0;}
+.chat-send:hover{background:var(--yellow-dark);}
+.chat-welcome{text-align:center;padding:36px 20px;color:var(--text-3);}
+.chat-welcome-emoji{font-size:38px;margin-bottom:10px;}
+.chat-welcome-title{font-size:15px;font-weight:700;color:var(--text-2);margin-bottom:5px;}
+.chat-welcome-text{font-size:12px;line-height:1.6;max-width:280px;margin:0 auto;}
+.suggestions{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px;}
+.sug{font-size:12px;padding:6px 12px;border:1px solid var(--border);border-radius:20px;cursor:pointer;transition:all .12s;color:var(--text-2);background:var(--white);}
+.sug:hover{border-color:var(--yellow-dark);background:var(--yellow);color:var(--black);}
 
-/* JOBS GRID */
-.jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
-.job-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;}
-.job-card:hover{border-color:var(--border-hover);}
-.job-card-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;}
-.job-id{font-size:12px;font-weight:700;color:var(--accent);}
-.job-type{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
-.job-type.delivery{background:rgba(59,130,246,.2);color:#93c5fd;}
-.job-type.pickup{background:rgba(249,115,22,.2);color:#fdba74;}
-.job-customer{font-size:13px;font-weight:600;margin-bottom:4px;}
-.job-detail{font-size:12px;color:var(--text-secondary);margin-bottom:2px;}
-.job-actions{display:flex;gap:6px;margin-top:10px;}
-.jab{flex:1;padding:6px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-secondary);transition:all .15s;text-align:center;}
-.jab:hover{border-color:var(--accent);color:var(--accent);}
-.jab.green:hover{border-color:var(--success);color:var(--success);}
+/* HQ Chat */
+.hq-pills{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.hq-pill{display:flex;align-items:center;gap:6px;padding:7px 14px;border:2px solid var(--border);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-2);transition:all .12s;white-space:nowrap;}
+.hq-pill.on{border-color:var(--yellow-dark);background:var(--yellow);color:var(--black);}
+.agent-reply-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
 
-/* ACTION BUTTONS */
-.btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);transition:all .15s;}
-.btn:hover{border-color:var(--border-hover);}
-.btn.success{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:var(--success);}
-.btn.danger{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:var(--danger);}
-.btn.primary{background:var(--accent);color:#000;border-color:var(--accent);}
-.btn.primary:hover{background:var(--accent-hover);}
-
-/* LOADING SKELETON */
-.skel{background:linear-gradient(90deg,var(--bg-card) 25%,var(--bg-card-hover) 50%,var(--bg-card) 75%);background-size:200% 100%;animation:skel-anim 1.5s infinite;border-radius:4px;height:16px;margin:4px 0;}
-@keyframes skel-anim{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:none;align-items:center;justify-content:center;}
-.modal-overlay.open{display:flex;}
-.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:640px;width:90%;max-height:80vh;overflow-y:auto;}
-.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
-.modal-title{font-size:16px;font-weight:700;}
-.modal-close{background:none;border:none;color:var(--text-secondary);font-size:20px;cursor:pointer;padding:4px;}
-.modal-close:hover{color:var(--text-primary);}
-.form-group{margin-bottom:14px;}
-.form-label{font-size:12px;color:var(--text-secondary);margin-bottom:6px;display:block;}
-.form-input{width:100%;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text-primary);outline:none;font-family:'Inter',sans-serif;}
-.form-input:focus{border-color:var(--accent);}
-select.form-input option{background:var(--bg-card);}
-
-/* TOAST */
-#toastContainer{position:fixed;bottom:20px;right:20px;z-index:9000;display:flex;flex-direction:column;gap:8px;}
-.toast{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:13px;min-width:260px;max-width:380px;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:toast-in .3s ease;border-left:4px solid var(--border);}
-.toast.success{border-left-color:var(--success);}
-.toast.error{border-left-color:var(--danger);}
-.toast.warning{border-left-color:var(--warning);}
-.toast.info{border-left-color:var(--info);}
-@keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-
-/* FLOAT CHAT BTN */
-#floatChatBtn{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#000;border:none;font-size:22px;cursor:pointer;z-index:500;box-shadow:0 4px 16px rgba(246,236,14,.3);transition:transform .2s;}
-#floatChatBtn:hover{transform:scale(1.1);}
-#floatChatPanel{position:fixed;bottom:86px;right:24px;width:340px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;z-index:500;display:none;box-shadow:0 8px 32px rgba(0,0,0,.5);}
-#floatChatPanel.open{display:block;}
-.float-panel-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
-.float-panel-title{font-size:13px;font-weight:700;}
-.float-agent-select{background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text-primary);outline:none;}
-.float-msgs{height:260px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
-.float-input-row{padding:10px;border-top:1px solid var(--border);display:flex;gap:6px;}
-.float-input{flex:1;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--text-primary);outline:none;}
-.float-send{background:var(--accent);color:#000;border:none;border-radius:6px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;}
-
-/* GRID HELPERS */
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
-.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mt20{margin-top:20px;}
-.mb8{margin-bottom:8px;}.mb12{margin-bottom:12px;}.mb16{margin-bottom:16px;}
-.flex{display:flex;}.items-center{align-items:center;}.gap8{gap:8px;}.gap12{gap:12px;}
-.text-sm{font-size:12px;}.text-muted{color:var(--text-secondary);}.text-accent{color:var(--accent);}
-.font-bold{font-weight:700;}.font-600{font-weight:600;}
-.w100{width:100%;}
-
-/* APPROVAL CARDS */
-.approval-card{background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
-.approval-meta{font-size:12px;color:var(--text-muted);margin-top:4px;}
-.approval-actions{display:flex;gap:8px;margin-top:12px;}
-
-/* HOUR CHART */
-.hour-chart{display:flex;align-items:flex-end;gap:2px;height:60px;margin-top:8px;}
-.hour-bar{flex:1;background:var(--accent);border-radius:2px 2px 0 0;min-height:2px;transition:height .3s;}
-
-/* ACTIVITY TIMELINE */
-.activity-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
-.activity-item:last-child{border-bottom:none;}
-.activity-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
-.activity-body{flex:1;}
-.activity-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
-.activity-desc{font-size:13px;}
-.activity-time{font-size:11px;color:var(--text-muted);}
-.activity-expand{font-size:11px;color:var(--text-muted);cursor:pointer;margin-top:4px;}
-.activity-meta{display:none;background:var(--bg-secondary);border-radius:6px;padding:8px;font-size:11px;font-family:monospace;color:var(--text-secondary);margin-top:6px;white-space:pre-wrap;}
-
-/* AGENT BADGE */
-.agent-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;}
-
-/* TASK CARD */
-.task-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;transition:border-color .15s;}
-.task-card:hover{border-color:var(--border-hover);}
-.task-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;}
+/* Tasks & Activity */
+.task-item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--border-light);}
+.task-item:last-child{border-bottom:none;}
 .task-title{font-size:13px;font-weight:600;}
-.task-actions{display:flex;gap:6px;margin-top:10px;}
-.tab-row{display:flex;gap:4px;margin-bottom:16px;}
-.tab{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);transition:all .15s;}
-.tab.active{background:var(--accent);color:#000;border-color:var(--accent);}
+.task-desc{font-size:12px;color:var(--text-2);margin-top:2px;}
+.task-meta{font-size:11px;color:var(--text-3);margin-top:4px;display:flex;gap:8px;align-items:center;}
+.activity-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-light);}
+.activity-item:last-child{border-bottom:none;}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.activity-text{font-size:12px;color:var(--text-2);line-height:1.5;}
+.activity-meta{font-size:11px;color:var(--text-3);margin-top:1px;}
+.badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;}
+.badge-high{background:#fef2f2;color:#dc2626;}
+.badge-med{background:#fffbeb;color:#92400e;}
+.badge-low{background:#f0fdf4;color:#166534;}
 
-/* COLLAPSIBLE */
-.collapsible-toggle{cursor:pointer;user-select:none;}
-.collapsible-body{display:none;}
-.collapsible-body.open{display:block;}
+/* Buttons */
+.btn{font-size:12px;font-weight:700;padding:6px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--white);color:var(--text);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:4px;}
+.btn:hover{background:var(--bg);}
+.btn.primary{background:var(--yellow);border-color:var(--yellow);color:var(--black);}
+.btn.primary:hover{background:var(--yellow-dark);}
+.btn.sm{font-size:11px;padding:4px 10px;}
+.btn.danger{background:#fef2f2;border-color:#fecaca;color:#dc2626;}
+.qa-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
 
-/* FILTERS */
-.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
-.filter-input{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--text-primary);outline:none;}
-.filter-input:focus{border-color:var(--accent);}
-.filter-select{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--text-primary);outline:none;}
+/* Toast */
+#toasts{position:fixed;bottom:20px;right:20px;z-index:9000;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;animation:slideIn .2s ease;max-width:320px;}
+.toast.success{background:#f0fdf4;border:1px solid #86efac;color:#166534;}
+.toast.error{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;}
+.toast.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-/* LEAD STATUS */
-.lead-new{background:rgba(239,68,68,.2);color:#fca5a5;}
-.lead-contacted{background:rgba(245,158,11,.2);color:#fcd34d;}
-.lead-converted{background:rgba(34,197,94,.2);color:#86efac;}
-.lead-dismissed{background:rgba(85,85,85,.2);color:#888;}
-
-/* DATE GROUP */
-.date-group-header{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:10px;}
-
-/* ROW COLORS */
-tr.overdue td{background:rgba(239,68,68,.06);}
-tr.ending-soon td{background:rgba(245,158,11,.06);}
-
-/* KNOWLEDGE */
-.kb-item{background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;}
-.kb-item:hover{border-color:var(--border-hover);}
-.kb-item-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:4px;}
-.kb-title{font-size:13px;font-weight:600;}
-.kb-summary{font-size:12px;color:var(--text-secondary);display:none;}
-.kb-summary.expanded{display:block;}
-
-/* DRIVER CARD */
-.driver-card{background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;padding:14px;}
-.driver-name{font-size:15px;font-weight:700;margin-bottom:4px;}
-.driver-phone{font-size:12px;color:var(--text-muted);margin-bottom:10px;}
-
-/* MOBILE */
-@media(max-width:768px){
-  .sidebar{display:none;}
-  .main{margin-left:0;}
-  .stats-grid{grid-template-columns:repeat(2,1fr);}
-  .two-panel{grid-template-columns:1fr;}
-  .grid-2,.grid-3{grid-template-columns:1fr;}
-  .mobile-tabs{display:flex!important;}
-}
-.mobile-tabs{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-secondary);border-top:1px solid var(--border);z-index:200;padding:8px 0 12px;}
-.mobile-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;color:var(--text-muted);font-size:9px;}
-.mobile-tab.active{color:var(--accent);}
-.mobile-tab-emoji{font-size:18px;}
-@media(min-width:769px)and(max-width:1024px){
-  .sidebar{width:48px;}
-  .sidebar .nav-item span:last-child,.sidebar-logo-text,.sidebar-logo-sub,.sidebar-status .status-text,.sidebar-logout{display:none;}
-  .sidebar-logo{justify-content:center;}
-  .nav-item{justify-content:center;padding:12px;}
-  .main{margin-left:48px;}
-}
+.section-label{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
 </style>
 </head>
 <body>
 
-<!-- LOCK SCREEN -->
-<div id="lockScreen">
-  <div class="ls-emoji">🦍</div>
+<!-- Lock -->
+<div id="lock">
+  <div class="lock-logo">G</div>
   <div style="text-align:center">
-    <div class="ls-title">Gorilla Rental</div>
-    <div class="ls-sub">AI Operations Center</div>
+    <div class="lock-title">GORILLA HQ</div>
+    <div style="color:#52525b;font-size:13px;margin-top:4px">Enter your PIN</div>
   </div>
-  <div style="height:16px"></div>
-  <div class="ls-label">Enter Access Code</div>
-  <div class="ls-digits" id="lsDigits">
-    <input class="ls-digit" id="d0" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]">
-    <input class="ls-digit" id="d1" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]">
-    <input class="ls-digit" id="d2" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]">
-    <input class="ls-digit" id="d3" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]">
+  <div>
+    <div style="font-size:10px;color:#52525b;text-align:center;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px">PIN</div>
+    <div class="lock-digits" id="lockDigits">
+      <input class="lock-digit" id="d0" type="password" maxlength="1" inputmode="numeric">
+      <input class="lock-digit" id="d1" type="password" maxlength="1" inputmode="numeric">
+      <input class="lock-digit" id="d2" type="password" maxlength="1" inputmode="numeric">
+      <input class="lock-digit" id="d3" type="password" maxlength="1" inputmode="numeric">
+    </div>
+    <div class="lock-err" id="lockErr">Incorrect PIN — try again</div>
   </div>
-  <div class="ls-error" id="lsError">Incorrect code</div>
-  <div class="ls-footer">Gorilla Rental Internal System</div>
+  <div style="font-size:11px;color:#3f3f46">Gorilla Rental · Internal Operations</div>
 </div>
 
-<!-- APP -->
-<div id="app">
-<div class="layout">
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <span class="sidebar-logo-emoji">🦍</span>
-    <div><div class="sidebar-logo-text">GORILLA RENTAL</div><div class="sidebar-logo-sub">AI OPERATIONS</div></div>
+<!-- Sidebar -->
+<div id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">G</div>
+    <div>
+      <div class="sb-logo-name">Gorilla HQ</div>
+      <div class="sb-logo-sub">Operations Center</div>
+    </div>
   </div>
-  <nav id="sideNav">
-    <div class="nav-item active" data-page="dashboard"><span class="nav-emoji">🏠</span><span>Dashboard</span></div>
-    <div class="nav-item" data-page="company"><span class="nav-emoji">🏢</span><span>Company</span></div>
-    <div class="nav-item" data-page="quote"><span class="nav-emoji">💬</span><span>Quote</span></div>
-    <div class="nav-item" data-page="admin"><span class="nav-emoji">📋</span><span>Admin</span></div>
-    <div class="nav-item" data-page="ops"><span class="nav-emoji">🚚</span><span>Ops</span></div>
-    <div class="nav-item" data-page="finance"><span class="nav-emoji">💰</span><span>Finance</span></div>
-    <div class="nav-item" data-page="marketing"><span class="nav-emoji">📣</span><span>Marketing</span></div>
-    <div class="nav-item" data-page="ghl"><span class="nav-emoji">📱</span><span>GHL CRM</span></div>
-    <div class="nav-item" data-page="knowledge"><span class="nav-emoji">🧠</span><span>Knowledge</span></div>
-    <div class="nav-item" data-page="tasks"><span class="nav-emoji">✅</span><span>Tasks</span></div>
-    <div class="nav-item" data-page="activity"><span class="nav-emoji">📊</span><span>Activity</span></div>
+  <nav>
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" data-page="dashboard">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="7" height="7" rx="1"/><rect x="11" y="2" width="7" height="7" rx="1"/><rect x="2" y="11" width="7" height="7" rx="1"/><rect x="11" y="11" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" data-page="hq">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/><path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/></svg>
+      HQ Chat
+    </div>
+    <div class="nav-section">Agents</div>
+    <div class="nav-item" data-page="quote"><div class="ni-dot" style="background:#3b82f6"></div>Quote</div>
+    <div class="nav-item" data-page="admin"><div class="ni-dot" style="background:#8b5cf6"></div>Admin</div>
+    <div class="nav-item" data-page="ops"><div class="ni-dot" style="background:#f97316"></div>Ops</div>
+    <div class="nav-item" data-page="finance"><div class="ni-dot" style="background:#22c55e"></div>Finance</div>
+    <div class="nav-item" data-page="marketing"><div class="ni-dot" style="background:#ec4899"></div>Marketing</div>
+    <div class="nav-item" data-page="knowledge"><div class="ni-dot" style="background:#14b8a6"></div>Knowledge</div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" data-page="tasks">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+      Tasks
+    </div>
+    <div class="nav-item" data-page="activity">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 000 2h14a1 1 0 100-2H3zm0 4a1 1 0 000 2h14a1 1 0 100-2H3zm0 4a1 1 0 000 2h9a1 1 0 100-2H3z" clip-rule="evenodd"/></svg>
+      Activity
+    </div>
   </nav>
-  <div class="sidebar-status">
-    <span class="status-dot"></span><span class="status-text">System Online · <span id="lastSync">--</span></span>
+  <div class="sb-footer">
+    <div class="sb-status">
+      <div class="sb-dot"></div>
+      <span id="clock">--:--</span>
+      <span style="margin-left:auto;cursor:pointer" onclick="logout()">Sign out</span>
+    </div>
   </div>
-  <div class="sidebar-logout" onclick="logout()">Logout</div>
-</aside>
+</div>
 
-<!-- MAIN -->
-<main class="main">
+<!-- Main -->
+<div id="main">
   <div class="topbar">
     <div class="topbar-title" id="pageTitle">Dashboard</div>
-    <div class="topbar-right">
-      <div class="notif-btn" onclick="toggleQA()">🔔 <span id="notifCount">0</span><span class="notif-badge" id="notifBadge" style="display:none">0</span></div>
-      <div style="position:relative">
-        <button class="qa-btn" onclick="toggleQAMenu()">⚡ Quick Actions ▾</button>
-        <div class="qa-dropdown" id="qaMenu">
-          <div class="qa-item" onclick="quickNewQuote()">➕ New Quote</div>
-          <div class="qa-item" onclick="quickSweep()">📧 Reminder Sweep</div>
-          <div class="qa-item" onclick="quickLearn()">🧠 Learn Now</div>
-          <div class="qa-item" onclick="quickBriefing()">🌅 Morning Briefing</div>
-        </div>
-      </div>
+    <div class="topbar-actions">
+      <button class="btn primary" onclick="goPage('quote')">+ New Quote</button>
+      <button class="btn" onclick="quickSweep()">Run Sweep</button>
+      <button class="btn" onclick="quickBriefing()">Send Briefing</button>
     </div>
   </div>
 
-  <!-- PAGES -->
-  <!-- PAGE: DASHBOARD -->
-  <div class="page active" id="page-dashboard">
-    <div id="dash-alerts"></div>
-    <div class="stats-grid" id="dash-stats">
-      <div class="stat-card"><div class="stat-label">Total Pipeline</div><div class="stat-value" id="s-pipeline">--</div><div class="stat-sub">all jobs</div></div>
-      <div class="stat-card" id="sc-active"><div class="stat-label">Active Rentals</div><div class="stat-value" id="s-active">--</div><div class="stat-sub">in progress</div></div>
-      <div class="stat-card" id="sc-48h"><div class="stat-label">Ending 48h</div><div class="stat-value" id="s-48h">--</div><div class="stat-sub">need attention</div></div>
-      <div class="stat-card" id="sc-overdue"><div class="stat-label">Overdue</div><div class="stat-value" id="s-overdue">--</div><div class="stat-sub">past end date</div></div>
-      <div class="stat-card yellow"><div class="stat-label">Month Revenue</div><div class="stat-value" id="s-revenue">$--</div><div class="stat-sub">pipeline value</div></div>
-      <div class="stat-card" id="sc-tasks"><div class="stat-label">Pending Tasks</div><div class="stat-value" id="s-tasks">--</div><div class="stat-sub">to do</div></div>
-    </div>
-    <div class="qa-row">
-      <div class="qab primary" onclick="goPage('quote')">➕ New Quote</div>
-      <div class="qab" onclick="quickSweep()">📧 Sweep Reminders</div>
-      <div class="qab" onclick="goPage('knowledge')">🧠 Learn</div>
-      <div class="qab" onclick="goPage('finance')">📊 Finance Report</div>
-      <div class="qab" onclick="quickBriefing()">🌅 Briefing</div>
-      <div class="qab" onclick="loadDashboard()">🔄 Refresh</div>
-    </div>
-    <div class="section-header"><div class="section-title">Pipeline</div><div class="section-sub" id="dash-pipeline-sub">Loading...</div></div>
-    <div class="table-wrap mb16">
-      <table id="pipelineTable">
-        <thead><tr><th>Job ID</th><th>Customer</th><th>Equipment</th><th>Stage</th><th>Total</th><th>Start</th><th>End</th><th>Actions</th></tr></thead>
-        <tbody id="pipelineTbody"><tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr></tbody>
-      </table>
-    </div>
-    <div class="grid-2">
-      <div>
-        <div class="section-header"><div class="section-title">🚚 Deliveries Today</div></div>
-        <div id="dash-deliveries" class="jobs-grid"></div>
-      </div>
-      <div>
-        <div class="section-header"><div class="section-title">📥 Pickups Today</div></div>
-        <div id="dash-pickups" class="jobs-grid"></div>
-      </div>
-    </div>
-    <div class="mt20">
-      <div class="section-header"><div class="section-title">✅ Pending Tasks (Top 3)</div><div class="qab" onclick="goPage('tasks')">View All</div></div>
-      <div id="dash-tasks"></div>
-    </div>
-    <div class="mt20">
-      <div class="section-header"><div class="section-title">📊 Recent Activity</div><div class="qab" onclick="goPage('activity')">View All</div></div>
-      <div id="dash-activity"></div>
-    </div>
-  </div>
+  <div class="content">
 
-  <!-- PAGE: COMPANY -->
-  <div class="page" id="page-company">
-    <div class="flex gap8 mb16">
-      <button class="btn primary" onclick="loadCompany()">🔄 Refresh</button>
-      <button class="btn" onclick="runOnboarding()">🔁 Re-run Onboarding</button>
-    </div>
-    <div id="company-content">
-      <div class="card"><div class="skel" style="height:24px;width:200px"></div><div class="skel mt8"></div><div class="skel mt8" style="width:60%"></div></div>
-    </div>
-    <div class="mt20">
-      <div class="section-header">
-        <div class="section-title">💰 Cashflow</div>
-        <div class="flex gap8 items-center">
-          <select id="cashflowMonth" class="filter-select" onchange="loadCashflow()">
-            <option value="2026-03">March 2026</option>
-            <option value="2026-02">February 2026</option>
-            <option value="2026-01">January 2026</option>
-          </select>
-          <button class="btn primary" onclick="openAddCashflow()">+ Add Entry</button>
-        </div>
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div id="dash-alerts" class="alerts"></div>
+      <div class="stats-row">
+        <div class="stat" id="st-pipeline"><div class="stat-label">Pipeline</div><div class="stat-value" id="sv-pipeline">—</div><div class="stat-hint">active jobs</div></div>
+        <div class="stat" id="st-active"><div class="stat-label">Active Rentals</div><div class="stat-value" id="sv-active">—</div><div class="stat-hint">on rent</div></div>
+        <div class="stat" id="st-ending"><div class="stat-label">Ending 48h</div><div class="stat-value" id="sv-ending">—</div><div class="stat-hint">need action</div></div>
+        <div class="stat" id="st-overdue"><div class="stat-label">Overdue</div><div class="stat-value" id="sv-overdue">—</div><div class="stat-hint">outstanding</div></div>
+        <div class="stat"><div class="stat-label">Pipeline Revenue</div><div class="stat-value" id="sv-revenue">—</div><div class="stat-hint">this month</div></div>
       </div>
-      <div class="grid-3 mb16">
-        <div class="card"><div class="stat-label">Income</div><div class="stat-value" style="color:var(--success)" id="cf-income">$--</div></div>
-        <div class="card"><div class="stat-label">Expenses</div><div class="stat-value" style="color:var(--danger)" id="cf-expenses">$--</div></div>
-        <div class="card"><div class="stat-label">Net Profit</div><div class="stat-value" id="cf-net">$--</div></div>
-      </div>
-      <div class="table-wrap">
-        <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th>Amount</th><th>Job</th></tr></thead>
-        <tbody id="cashflowTbody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr></tbody></table>
-      </div>
-    </div>
-    <div class="mt20">
-      <div class="section-header"><div class="section-title">🚜 Equipment Fleet</div></div>
-      <div class="grid-3" id="fleet-grid"></div>
-    </div>
-  </div>
-
-  <!-- PAGE: QUOTE -->
-  <div class="page" id="page-quote">
-    <div class="two-panel">
-      <div>
-        <div class="card mb12">
-          <div class="flex items-center gap8 mb12"><span class="chat-status"></span><span class="font-600">QUOTE AGENT ONLINE</span></div>
-          <div class="grid-2" id="quote-stats" style="gap:8px">
-            <div><div class="stat-label">Total Quotes</div><div class="font-bold text-accent" id="qs-total">--</div></div>
-            <div><div class="stat-label">Pipeline Value</div><div class="font-bold text-accent" id="qs-value">$--</div></div>
-            <div><div class="stat-label">Quote Sent</div><div class="font-bold" id="qs-sent">--</div></div>
-            <div><div class="stat-label">Built</div><div class="font-bold" id="qs-built">--</div></div>
-          </div>
+      <div class="dash-grid">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Today's Schedule</span><span class="card-sub" id="jobs-count">—</span></div>
+          <div id="dash-jobs"></div>
         </div>
         <div class="card">
-          <div class="section-title mb8">Recent Activity</div>
-          <div id="quote-activity"></div>
-        </div>
-      </div>
-      <div>
-        <div class="preset-row" id="quote-presets">
-          <div class="preset" onclick="sendChat('quote','Build me a new quote')">➕ New Quote</div>
-          <div class="preset" onclick="sendChat('quote','Show me the current pipeline')">📋 View Pipeline</div>
-          <div class="preset" onclick="sendChat('quote','What are our current equipment prices?')">💰 Check Prices</div>
-          <div class="preset" onclick="sendChat('quote','Resend the latest quote')">📧 Resend Quote</div>
-        </div>
-        <div class="chat-wrap" id="chat-quote">
-          <div class="chat-header"><span class="chat-status"></span>Quote Agent</div>
-          <div class="chat-msgs" id="msgs-quote"></div>
-          <div class="chat-input-row">
-            <input class="chat-input" id="input-quote" placeholder="Build a quote for..." onkeydown="if(event.key==='Enter')sendChat('quote',this.value)">
-            <button class="chat-send" onclick="sendChat('quote',document.getElementById('input-quote').value)">Send</button>
+          <div class="card-header"><span class="card-title">Pipeline</span><span class="card-sub">recent jobs</span></div>
+          <div style="overflow-x:auto">
+            <table><thead><tr><th>Job ID</th><th>Customer</th><th>Stage</th><th>Value</th><th>Date</th></tr></thead>
+            <tbody id="dash-pipeline"></tbody></table>
           </div>
         </div>
       </div>
-    </div>
-    <div class="mt20">
-      <div class="section-header"><div class="section-title">Recent Quotes</div><button class="btn" onclick="loadQuotePipeline()">🔄 Refresh</button></div>
-      <div class="table-wrap">
-        <table><thead><tr><th>Job ID</th><th>Customer</th><th>Equipment</th><th>Stage</th><th>Total</th><th>Created</th><th>Actions</th></tr></thead>
-        <tbody id="quoteTbody"></tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- PAGE: ADMIN -->
-  <div class="page" id="page-admin">
-    <div class="two-panel">
-      <div>
-        <div class="card mb12">
-          <div class="flex items-center gap8 mb12"><span class="chat-status"></span><span class="font-600">ADMIN AGENT ONLINE</span></div>
-        </div>
-        <div class="card mb12">
-          <div class="section-title mb12">⏳ Pending Approvals</div>
-          <div id="approvals-list"><div class="text-muted text-sm">Loading...</div></div>
-        </div>
-      </div>
-      <div>
-        <div class="preset-row">
-          <div class="preset" onclick="sendChat('admin','Create a reservation for the latest quote')">📋 Create Reservation</div>
-          <div class="preset" onclick="sendChat('admin','Send the rental contract')">📄 Send Contract</div>
-          <div class="preset" onclick="sendChat('admin','Send a payment link')">💰 Payment Link</div>
-          <div class="preset" onclick="sendChat('admin','What is the job status?')">📊 Job Status</div>
-        </div>
-        <div class="chat-wrap" id="chat-admin">
-          <div class="chat-header"><span class="chat-status"></span>Admin Agent</div>
-          <div class="chat-msgs" id="msgs-admin"></div>
-          <div class="chat-input-row">
-            <input class="chat-input" id="input-admin" placeholder="Create reservation, send contract..." onkeydown="if(event.key==='Enter')sendChat('admin',this.value)">
-            <button class="chat-send" onclick="sendChat('admin',document.getElementById('input-admin').value)">Send</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="mt20">
-      <div class="section-header"><div class="section-title">Reservations</div><button class="btn" onclick="loadAdminReservations()">🔄 Refresh</button></div>
-      <div class="table-wrap">
-        <table><thead><tr><th>Job ID</th><th>Customer</th><th>Start</th><th>End</th><th>Total</th><th>Balance</th><th>Status</th></tr></thead>
-        <tbody id="reservationsTbody"><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr></tbody>
-      </table></div>
-    </div>
-  </div>
-
-  <!-- PAGE: OPS -->
-  <div class="page" id="page-ops">
-    <div class="mb16">
-      <div class="collapsible-toggle" onclick="toggleEl('ops-chat-body')">
-        <div class="section-header"><div class="section-title">💬 Ops Chat ▾</div></div>
-      </div>
-      <div class="collapsible-body" id="ops-chat-body">
-        <div class="preset-row">
-          <div class="preset" onclick="sendChat('ops','What jobs do we have today?')">📅 Today's Jobs</div>
-          <div class="preset" onclick="sendChat('ops','Show upcoming deliveries')">🚚 Upcoming</div>
-          <div class="preset" onclick="sendChat('ops','Notify drivers of today jobs')">📱 Notify Drivers</div>
-          <div class="preset" onclick="sendChat('ops','Mark latest delivery complete')">✅ Mark Delivered</div>
-        </div>
-        <div class="chat-wrap" id="chat-ops">
-          <div class="chat-header"><span class="chat-status"></span>Ops Agent</div>
-          <div class="chat-msgs" id="msgs-ops"></div>
-          <div class="chat-input-row">
-            <input class="chat-input" id="input-ops" placeholder="Schedule delivery, notify driver..." onkeydown="if(event.key==='Enter')sendChat('ops',this.value)">
-            <button class="chat-send" onclick="sendChat('ops',document.getElementById('input-ops').value)">Send</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="grid-2 mb20">
-      <div>
-        <div class="section-header"><div class="section-title">🚚 Deliveries Today</div><button class="btn" onclick="loadOps()">🔄</button></div>
-        <div id="ops-deliveries"><div class="text-muted text-sm">None scheduled</div></div>
-      </div>
-      <div>
-        <div class="section-header"><div class="section-title">📥 Pickups Today</div></div>
-        <div id="ops-pickups"><div class="text-muted text-sm">None scheduled</div></div>
-      </div>
-    </div>
-    <div class="mb20">
-      <div class="section-header"><div class="section-title">📅 Upcoming 7 Days</div></div>
-      <div id="ops-upcoming"></div>
-    </div>
-    <div class="grid-2">
-      <div class="driver-card"><div class="driver-name">🚚 Andrei</div><div class="driver-phone">+1 (447) 474-4549</div><div id="driver-andrei-jobs" class="text-sm text-muted">Loading assignments...</div><div class="mt8"><a href="tel:+14474744549" class="btn">📞 Call</a></div></div>
-      <div class="driver-card"><div class="driver-name">🚚 Nazar</div><div class="driver-phone">+1 (786) 000-0000</div><div id="driver-nazar-jobs" class="text-sm text-muted">Loading assignments...</div><div class="mt8"><a href="tel:+17860000000" class="btn">📞 Call</a></div></div>
-    </div>
-  </div>
-
-  <!-- PAGE: FINANCE -->
-  <div class="page" id="page-finance">
-    <div class="stats-grid mb16">
-      <div class="stat-card green"><div class="stat-label">Active Rentals</div><div class="stat-value" id="fin-active">--</div></div>
-      <div class="stat-card" id="fin-sc-48h"><div class="stat-label">Ending 48h</div><div class="stat-value" id="fin-48h">--</div></div>
-      <div class="stat-card" id="fin-sc-overdue"><div class="stat-label">Overdue</div><div class="stat-value" id="fin-overdue">--</div></div>
-      <div class="stat-card yellow"><div class="stat-label">Month Revenue</div><div class="stat-value" id="fin-revenue">$--</div></div>
-      <div class="stat-card"><div class="stat-label">Active Value</div><div class="stat-value" id="fin-active-rev">$--</div></div>
-      <div class="stat-card"><div class="stat-label">Pipeline Value</div><div class="stat-value" id="fin-pipeline-rev">$--</div></div>
-    </div>
-    <div class="two-panel">
-      <div>
-        <div class="preset-row">
-          <div class="preset" onclick="sendChat('finance','Run a reminder sweep for all active rentals')">⚡ Reminder Sweep</div>
-          <div class="preset" onclick="sendChat('finance','Give me a revenue report for this month')">📊 Revenue Report</div>
-          <div class="preset" onclick="sendChat('finance','Check all active rentals')">🔍 Check Active</div>
-          <div class="preset" onclick="sendChat('finance','Extend rental')">📅 Extend Rental</div>
-        </div>
-        <div class="chat-wrap" id="chat-finance">
-          <div class="chat-header"><span class="chat-status"></span>Finance Agent</div>
-          <div class="chat-msgs" id="msgs-finance"></div>
-          <div class="chat-input-row">
-            <input class="chat-input" id="input-finance" placeholder="Send reminder, extend rental..." onkeydown="if(event.key==='Enter')sendChat('finance',this.value)">
-            <button class="chat-send" onclick="sendChat('finance',document.getElementById('input-finance').value)">Send</button>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div class="section-header"><div class="section-title">Active Rentals</div><button class="btn" onclick="loadFinance()">🔄 Refresh</button></div>
-        <div class="table-wrap">
-          <table><thead><tr><th>Job ID</th><th>Customer</th><th>End Date</th><th>Hours Left</th><th>Total</th><th>Actions</th></tr></thead>
-          <tbody id="financeTbody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr></tbody></table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PAGE: MARKETING -->
-  <div class="page" id="page-marketing">
-    <div class="stats-grid mb16">
-      <div class="stat-card"><div class="stat-label">Total Leads</div><div class="stat-value" id="mkt-total">--</div></div>
-      <div class="stat-card red"><div class="stat-label">New Leads</div><div class="stat-value" id="mkt-new">--</div></div>
-      <div class="stat-card"><div class="stat-label">Contacted</div><div class="stat-value" id="mkt-contacted">--</div></div>
-      <div class="stat-card green"><div class="stat-label">Converted</div><div class="stat-value" id="mkt-converted">--</div></div>
-      <div class="stat-card yellow"><div class="stat-label">Conversion Rate</div><div class="stat-value" id="mkt-rate">--%</div></div>
-      <div class="stat-card"><div class="stat-label">Posts Generated</div><div class="stat-value" id="mkt-posts">--</div></div>
-    </div>
-    <div class="two-panel">
-      <div>
-        <div class="preset-row">
-          <div class="preset" onclick="sendChat('marketing','Capture a new lead')">📥 New Lead</div>
-          <div class="preset" onclick="sendChat('marketing','Generate a Facebook post for our 45ft boom lift')">📱 Gen Post</div>
-          <div class="preset" onclick="sendChat('marketing','Create outreach email for a contractor')">📧 Outreach</div>
-          <div class="preset" onclick="sendChat('marketing','Show marketing stats')">📊 Stats</div>
-        </div>
-        <div class="chat-wrap" id="chat-marketing">
-          <div class="chat-header"><span class="chat-status"></span>Marketing Agent</div>
-          <div class="chat-msgs" id="msgs-marketing"></div>
-          <div class="chat-input-row">
-            <input class="chat-input" id="input-marketing" placeholder="Generate post, capture lead..." onkeydown="if(event.key==='Enter')sendChat('marketing',this.value)">
-            <button class="chat-send" onclick="sendChat('marketing',document.getElementById('input-marketing').value)">Send</button>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div class="section-header"><div class="section-title">Leads</div><button class="btn" onclick="loadMarketing()">🔄 Refresh</button></div>
-        <div class="table-wrap">
-          <table><thead><tr><th>Name</th><th>Source</th><th>Equipment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-          <tbody id="leadsTbody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">No leads yet</td></tr></tbody></table>
-        </div>
-      </div>
-    </div>
-    <div class="grid-2 mt20">
-      <div class="card">
-        <div class="section-title mb12">📱 Social Post Generator</div>
-        <div class="flex gap8 mb8">
-          <select id="postType" class="filter-select">
-            <option value="equipment">Equipment Promo</option>
-            <option value="promo">General Promo</option>
-            <option value="safety">Safety Post</option>
-            <option value="seasonal">Seasonal</option>
-          </select>
-          <button class="btn primary" onclick="generatePost()">Generate</button>
-        </div>
-        <div id="post-output" class="text-sm text-muted">Click Generate to create a post...</div>
-      </div>
-      <div class="card">
-        <div class="section-title mb12">🏗️ Equipment Listing</div>
-        <div class="flex gap8 mb8">
-          <select id="listingSku" class="filter-select">
-            <option value="BL001">Boom Lift 45ft</option>
-            <option value="BL002">Boom Lift 65ft</option>
-            <option value="BL003">Boom Lift 60ft</option>
-            <option value="BL007">Boom Lift 125ft</option>
-            <option value="BL010">Boom Lift 85ft</option>
-            <option value="BL011">Genie S-40</option>
-          </select>
-          <button class="btn primary" onclick="generateListing()">Generate</button>
-        </div>
-        <div id="listing-output" class="text-sm text-muted">Click Generate to create a listing...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PAGE: GHL CRM -->
-  <div class="page" id="page-ghl">
-    <!-- Stats Row -->
-    <div class="stats-grid mb16" style="grid-template-columns:repeat(5,1fr)">
-      <div class="stat-card yellow"><div class="stat-label">Total Contacts</div><div class="stat-value" id="ghl-total-contacts">--</div><div class="stat-sub">in GHL</div></div>
-      <div class="stat-card green"><div class="stat-label">New Today</div><div class="stat-value" id="ghl-new-today">--</div><div class="stat-sub">added</div></div>
-      <div class="stat-card"><div class="stat-label">Open Opportunities</div><div class="stat-value" id="ghl-open-opps">--</div><div class="stat-sub">in pipeline</div></div>
-      <div class="stat-card"><div class="stat-label">Pipeline Value</div><div class="stat-value" id="ghl-pipeline-value">$--</div><div class="stat-sub">total</div></div>
-      <div class="stat-card"><div class="stat-label">Active Conversations</div><div class="stat-value" id="ghl-active-convos">--</div><div class="stat-sub">last 24h</div></div>
-    </div>
-
-    <!-- GHL Snapshot: 3 columns -->
-    <div class="grid-3 mb16">
-      <div class="card">
-        <div class="section-title mb12">👥 Contacts</div>
-        <div class="mb8"><span class="text-muted text-sm">Total:</span> <strong id="ghl-snap-total">--</strong></div>
-        <div class="mb12"><span class="text-muted text-sm">New today:</span> <strong id="ghl-snap-new">--</strong></div>
-        <div class="section-sub mb8">Top Tags</div>
-        <div id="ghl-tags-list" style="font-size:12px"></div>
-      </div>
-      <div class="card">
-        <div class="section-title mb12">💼 Pipeline</div>
-        <div class="mb8"><span class="text-muted text-sm">Open:</span> <strong id="ghl-snap-open">--</strong></div>
-        <div class="mb8"><span class="text-muted text-sm">Won:</span> <strong id="ghl-snap-won">--</strong></div>
-        <div class="mb12"><span class="text-muted text-sm">Total Value:</span> <strong id="ghl-snap-value">$--</strong></div>
-        <div class="section-sub mb8">Stages</div>
-        <div id="ghl-stages-list" style="font-size:12px"></div>
-      </div>
-      <div class="card">
-        <div class="section-title mb12">💬 Conversations</div>
-        <div class="mb12"><span class="text-muted text-sm">Active (24h):</span> <strong id="ghl-snap-active">--</strong></div>
-        <div class="section-sub mb8">Recent</div>
-        <div id="ghl-recent-convos" style="font-size:12px"></div>
-      </div>
-    </div>
-
-    <!-- Google Lead Scraper -->
-    <div class="card mb16">
-      <div class="section-header">
-        <div class="section-title">🔍 Google Lead Scraper</div>
-        <button class="btn" onclick="loadGHLScrapeHistory()">🔄 Refresh</button>
-      </div>
-      <div class="grid-3 mb16">
-        <div><div class="stat-label">Total Runs</div><div class="font-bold text-accent" id="scrape-runs">--</div></div>
-        <div><div class="stat-label">Contacts Added</div><div class="font-bold" id="scrape-total-added">--</div></div>
-        <div><div class="stat-label">Last Run</div><div class="font-bold" id="scrape-last-run">--</div></div>
-      </div>
-      <div class="filter-row mb12">
-        <select class="filter-select" id="scrape-area">
-          <option value="Fort Lauderdale">Fort Lauderdale</option>
-          <option value="Miami">Miami</option>
-          <option value="Hialeah">Hialeah</option>
-          <option value="Doral">Doral</option>
-          <option value="Coral Gables">Coral Gables</option>
-          <option value="Miami Beach">Miami Beach</option>
-          <option value="Homestead">Homestead</option>
-          <option value="Hollywood">Hollywood</option>
-          <option value="Pompano Beach">Pompano Beach</option>
-          <option value="Miramar">Miramar</option>
-          <option value="Pembroke Pines">Pembroke Pines</option>
-          <option value="Coral Springs">Coral Springs</option>
-          <option value="West Palm Beach">West Palm Beach</option>
-          <option value="Boca Raton">Boca Raton</option>
-          <option value="Delray Beach">Delray Beach</option>
-          <option value="Boynton Beach">Boynton Beach</option>
-        </select>
-        <select class="filter-select" id="scrape-category">
-          <option value="Construction">Construction</option>
-          <option value="Property">Property</option>
-          <option value="Specialty">Specialty</option>
-          <option value="Events">Events</option>
-        </select>
-        <select class="filter-select" id="scrape-max">
-          <option value="10">10 results</option>
-          <option value="20" selected>20 results</option>
-          <option value="50">50 results</option>
-          <option value="100">100 results</option>
-        </select>
-        <button class="btn primary" onclick="runGHLScrape()">▶ Run Scrape</button>
-        <button class="btn" onclick="runGHLQuickTest()">🧪 Quick Test (3)</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Date</th><th>Areas</th><th>Categories</th><th>Found</th><th>Added</th><th>Skipped</th><th>Errors</th></tr></thead>
-          <tbody id="scrape-history-tbody"><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">No history yet</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Contacts Table -->
-    <div class="card mb16">
-      <div class="section-header">
-        <div class="section-title">👥 GHL Contacts</div>
-        <button class="btn" onclick="loadGHLContacts()">🔄 Refresh</button>
-      </div>
-      <div class="filter-row mb12">
-        <input class="filter-input" id="ghl-search" placeholder="Search contacts..." oninput="filterGHLContacts()">
-        <input class="filter-input" id="ghl-tag-filter" placeholder="Filter by tag...">
-        <select class="filter-select" id="ghl-county-filter" onchange="filterGHLContacts()">
-          <option value="">All Counties</option>
-          <option value="miami-dade">Miami-Dade</option>
-          <option value="broward">Broward</option>
-          <option value="palm-beach">Palm Beach</option>
-        </select>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Tags</th><th>County</th><th>Added</th><th>Actions</th></tr></thead>
-          <tbody id="ghl-contacts-tbody"><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Quick SMS -->
-    <div class="card">
-      <div class="section-title mb12">📲 Quick SMS</div>
-      <div class="grid-2">
-        <div>
-          <div class="form-group"><label class="form-label">To (phone)</label><input class="form-input" id="sms-to" placeholder="+1..."></div>
-          <div class="form-group">
-            <label class="form-label">From</label>
-            <select class="form-input" id="sms-from">
-              <option value="">Main +1 (954) 231-7455</option>
-              <option value="+18578327404">Chip +1 (857) 832-7404</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="sms-message" rows="4" placeholder="Type your message..."></textarea></div>
-          <button class="btn primary w100" onclick="sendGHLSMS()">📤 Send SMS</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PAGE: KNOWLEDGE -->
-  <div class="page" id="page-knowledge">
-    <div class="two-panel wide">
-      <div>
-        <div class="card mb12">
-          <div class="section-title mb12">📊 Knowledge Stats</div>
-          <div id="kb-stats" class="grid-2" style="gap:8px">
-            <div><div class="stat-label">Total Entries</div><div class="font-bold text-accent" id="kb-total">--</div></div>
-            <div><div class="stat-label">Last Updated</div><div class="font-bold" id="kb-updated">--</div></div>
-          </div>
-        </div>
-        <div class="card mb12">
-          <div class="section-title mb12">🔗 Quick Learn</div>
-          <div class="form-group">
-            <label class="form-label">URL to Learn From</label>
-            <input class="form-input" id="learnUrl" placeholder="https://...">
-          </div>
-          <button class="btn primary w100" onclick="quickLearnUrl()">Learn Now</button>
+      <div class="section-label">AI Agents</div>
+      <div class="agents-grid" id="agents-grid"></div>
+      <div class="dash-grid">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Pending Tasks</span><button class="btn sm" onclick="goPage('tasks')">View all</button></div>
+          <div id="dash-tasks"></div>
         </div>
         <div class="card">
-          <div class="section-title mb12">✏️ Manual Teach</div>
-          <div class="form-group">
-            <input class="form-input mb8" id="teachTitle" placeholder="Title">
-            <textarea class="form-input" id="teachContent" placeholder="Content to teach..." rows="4" style="resize:vertical"></textarea>
-          </div>
-          <select class="form-input mb8" id="teachCategory">
-            <option value="general">General</option>
-            <option value="equipment">Equipment</option>
-            <option value="pricing">Pricing</option>
-            <option value="safety">Safety</option>
-            <option value="competitor">Competitor</option>
-            <option value="business">Business</option>
-          </select>
-          <button class="btn primary w100" onclick="teachKnowledge()">Add to Knowledge Base</button>
+          <div class="card-header"><span class="card-title">Recent Activity</span><button class="btn sm" onclick="goPage('activity')">View all</button></div>
+          <div id="dash-activity"></div>
         </div>
       </div>
-      <div>
-        <div class="tab-row">
-          <div class="tab active" onclick="switchKbTab('query',this)">🔍 General Query</div>
-          <div class="tab" onclick="switchKbTab('engineering',this)">⚙️ Engineering Query</div>
+    </div>
+
+    <!-- HQ Chat -->
+    <div class="page" id="page-hq">
+      <div style="margin-bottom:14px">
+        <div style="font-size:16px;font-weight:800;margin-bottom:3px">Gorilla HQ Chat</div>
+        <div style="font-size:13px;color:var(--text-3)">Route your message to one agent, or let HQ auto-route it.</div>
+      </div>
+      <div class="hq-pills">
+        <div class="hq-pill on" data-agent="auto" onclick="setHQAgent(this,'auto')">🦍 Auto-Route</div>
+        <div class="hq-pill" data-agent="quote" onclick="setHQAgent(this,'quote')">💬 Quote</div>
+        <div class="hq-pill" data-agent="admin" onclick="setHQAgent(this,'admin')">📋 Admin</div>
+        <div class="hq-pill" data-agent="ops" onclick="setHQAgent(this,'ops')">🚚 Ops</div>
+        <div class="hq-pill" data-agent="finance" onclick="setHQAgent(this,'finance')">💰 Finance</div>
+        <div class="hq-pill" data-agent="marketing" onclick="setHQAgent(this,'marketing')">📣 Marketing</div>
+        <div class="hq-pill" data-agent="knowledge" onclick="setHQAgent(this,'knowledge')">🧠 Knowledge</div>
+      </div>
+      <div class="chat-box" style="height:calc(100vh - 230px)">
+        <div class="chat-top">
+          <div class="chat-top-dot"></div>
+          <div class="chat-top-name" id="hq-label">Auto-Route</div>
+          <div class="chat-top-sub">All agents online</div>
         </div>
-        <div id="kb-query-panel">
-          <div class="preset-row">
-            <div class="preset" onclick="sendKbQuery('general','What equipment should I use for a 5-story building?')">🏗️ Equipment Specs</div>
-            <div class="preset" onclick="sendKbQuery('general','What are the OSHA rules for aerial lifts?')">⚠️ OSHA Rules</div>
-            <div class="preset" onclick="sendKbQuery('general','What are competitor prices in South Florida?')">💰 Competitor Prices</div>
-            <div class="preset" onclick="sendKbQuery('general','Recommend equipment for a roofing job')">🎯 Job Recommendation</div>
-          </div>
-          <div class="chat-wrap" id="chat-knowledge">
-            <div class="chat-header"><span class="chat-status"></span>Knowledge Agent — <span id="kb-mode">General Query</span></div>
-            <div class="chat-msgs" id="msgs-knowledge"></div>
-            <div class="chat-input-row">
-              <input class="chat-input" id="input-knowledge" placeholder="Ask anything about equipment, pricing, safety..." onkeydown="if(event.key==='Enter')sendKbQuery(kbMode,this.value)">
-              <button class="chat-send" onclick="sendKbQuery(kbMode,document.getElementById('input-knowledge').value)">Ask</button>
+        <div class="chat-msgs" id="msgs-hq">
+          <div class="chat-welcome">
+            <div class="chat-welcome-emoji">🦍</div>
+            <div class="chat-welcome-title">Gorilla HQ is online</div>
+            <div class="chat-welcome-text">Ask anything — I'll route it to the right agent, or pick one above.</div>
+            <div class="suggestions">
+              <div class="sug" onclick="hqSug(&quot;What jobs are delivering today?&quot;)">Today's deliveries</div>
+              <div class="sug" onclick="hqSug(&quot;Any overdue rentals?&quot;)">Overdue rentals</div>
+              <div class="sug" onclick="hqSug(&quot;Send morning briefing&quot;)">Morning briefing</div>
+              <div class="sug" onclick="hqSug(&quot;Show monthly revenue report&quot;)">Revenue report</div>
             </div>
           </div>
         </div>
-        <div class="mt16">
-          <div class="section-header">
-            <div class="section-title">Knowledge Base</div>
-            <div class="flex gap8">
-              <select class="filter-select" id="kb-cat-filter" onchange="loadKnowledge()">
-                <option value="">All Categories</option>
-                <option value="equipment">Equipment</option>
-                <option value="pricing">Pricing</option>
-                <option value="safety">Safety</option>
-                <option value="competitor">Competitor</option>
-                <option value="business">Business</option>
-                <option value="industry_news">Industry News</option>
-              </select>
-              <button class="btn" onclick="loadKnowledge()">🔄 Refresh</button>
-            </div>
-          </div>
-          <div id="kb-entries"></div>
+        <div class="chat-footer">
+          <input class="chat-input" id="input-hq" placeholder="Ask Gorilla HQ anything…" onkeydown="if(event.key==='Enter'){event.preventDefault();sendHQ();}">
+          <button class="chat-send" onclick="sendHQ()">Send</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- PAGE: TASKS -->
-  <div class="page" id="page-tasks">
-    <div class="flex gap8 mb16 items-center" style="flex-wrap:wrap">
-      <div><span class="pill" style="background:rgba(59,130,246,.2);color:#93c5fd">Pending: <span id="t-pending">--</span></span></div>
-      <div><span class="pill" style="background:rgba(239,68,68,.2);color:#fca5a5">High: <span id="t-high">--</span></span></div>
-      <div style="flex:1"></div>
-      <button class="btn primary" onclick="openCreateTask()">➕ New Task</button>
-    </div>
-    <div class="filter-row">
-      <select class="filter-select" id="tf-status" onchange="loadTasks()"><option value="">All Status</option><option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="dismissed">Dismissed</option></select>
-      <select class="filter-select" id="tf-agent" onchange="loadTasks()"><option value="">All Agents</option><option value="quote">Quote</option><option value="admin">Admin</option><option value="ops">Ops</option><option value="finance">Finance</option><option value="marketing">Marketing</option><option value="knowledge">Knowledge</option><option value="system">System</option></select>
-      <select class="filter-select" id="tf-priority" onchange="loadTasks()"><option value="">All Priority</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
-      <input class="filter-input" id="tf-search" placeholder="Search tasks..." oninput="filterTasks()">
-    </div>
-    <div id="tasks-list"></div>
-    <div class="stats-grid mt20">
-      <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="ts-total">--</div></div>
-      <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="ts-pending">--</div></div>
-      <div class="stat-card red"><div class="stat-label">High Priority</div><div class="stat-value" id="ts-high">--</div></div>
-      <div class="stat-card green"><div class="stat-label">Completed Today</div><div class="stat-value" id="ts-done-today">--</div></div>
-      <div class="stat-card purple"><div class="stat-label">Created by AI</div><div class="stat-value" id="ts-ai">--</div></div>
-      <div class="stat-card"><div class="stat-label"></div><div class="stat-value"></div></div>
-    </div>
-  </div>
+    <!-- Agent pages (built by JS) -->
+    <div class="page" id="page-quote"></div>
+    <div class="page" id="page-admin"></div>
+    <div class="page" id="page-ops"></div>
+    <div class="page" id="page-finance"></div>
+    <div class="page" id="page-marketing"></div>
+    <div class="page" id="page-knowledge"></div>
 
-  <!-- PAGE: ACTIVITY -->
-  <div class="page" id="page-activity">
-    <div class="stats-grid mb16">
-      <div class="stat-card"><div class="stat-label">Total Today</div><div class="stat-value" id="act-total">--</div></div>
-      <div class="stat-card red"><div class="stat-label">Errors Today</div><div class="stat-value" id="act-errors">--</div></div>
-      <div class="stat-card yellow"><div class="stat-label">Most Active</div><div class="stat-value text-sm font-600" id="act-agent">--</div></div>
-      <div class="stat-card"><div class="stat-label">Last Action</div><div class="stat-value text-sm font-600" id="act-last">--</div></div>
-      <div class="stat-card"></div>
-      <div class="stat-card"><button class="btn" onclick="exportActivityCSV()">📥 Export CSV</button></div>
-    </div>
-    <div class="filter-row">
-      <div id="agent-filter-btns" class="flex gap8" style="flex-wrap:wrap">
-        <div class="tab active" onclick="setActAgent('',this)">All</div>
-        <div class="tab" onclick="setActAgent('quote',this)" style="border-color:rgba(59,130,246,.4);color:#93c5fd">Quote</div>
-        <div class="tab" onclick="setActAgent('admin',this)" style="border-color:rgba(168,85,247,.4);color:#d8b4fe">Admin</div>
-        <div class="tab" onclick="setActAgent('ops',this)" style="border-color:rgba(246,236,14,.4);color:#f6ec0e">Ops</div>
-        <div class="tab" onclick="setActAgent('finance',this)" style="border-color:rgba(34,197,94,.4);color:#86efac">Finance</div>
-        <div class="tab" onclick="setActAgent('marketing',this)" style="border-color:rgba(236,72,153,.4);color:#f9a8d4">Marketing</div>
-        <div class="tab" onclick="setActAgent('knowledge',this)" style="border-color:rgba(20,184,166,.4);color:#5eead4">Knowledge</div>
+    <!-- Tasks -->
+    <div class="page" id="page-tasks">
+      <div class="qa-row">
+        <button class="btn" onclick="loadTasks('pending')">Pending</button>
+        <button class="btn" onclick="loadTasks('all')">All Tasks</button>
       </div>
-      <input class="filter-input" id="act-search" placeholder="Search activity..." oninput="renderActivity()">
-      <select class="filter-select" id="act-hours" onchange="loadActivity()"><option value="24">Last 24h</option><option value="168" selected>Last 7 days</option><option value="720">Last 30 days</option></select>
+      <div class="card"><div id="tasks-list"><div class="empty-state">Loading…</div></div></div>
     </div>
-    <div id="activity-timeline" class="card mb16"></div>
-    <div class="card">
-      <div class="section-title mb12">Activity by Hour (Today)</div>
-      <div class="hour-chart" id="hourChart"></div>
-      <div class="flex" style="justify-content:space-between;margin-top:4px">
-        <span class="text-sm text-muted">12am</span>
-        <span class="text-sm text-muted">6am</span>
-        <span class="text-sm text-muted">12pm</span>
-        <span class="text-sm text-muted">6pm</span>
-        <span class="text-sm text-muted">11pm</span>
+
+    <!-- Activity -->
+    <div class="page" id="page-activity">
+      <div class="qa-row">
+        <button class="btn" onclick="loadActivity(20)">Last 20</button>
+        <button class="btn" onclick="loadActivity(50)">Last 50</button>
+        <button class="btn" onclick="loadActivity(100)">Last 100</button>
       </div>
+      <div class="card"><div id="activity-list"><div class="empty-state">Loading…</div></div></div>
     </div>
-  </div>
 
-</main>
-</div>
-
-<!-- MOBILE TABS -->
-<div class="mobile-tabs">
-  <div class="mobile-tab active" onclick="goPage('dashboard')"><span class="mobile-tab-emoji">🏠</span>Home</div>
-  <div class="mobile-tab" onclick="goPage('quote')"><span class="mobile-tab-emoji">💬</span>Quote</div>
-  <div class="mobile-tab" onclick="goPage('ops')"><span class="mobile-tab-emoji">🚚</span>Ops</div>
-  <div class="mobile-tab" onclick="goPage('finance')"><span class="mobile-tab-emoji">💰</span>Finance</div>
-  <div class="mobile-tab" onclick="goPage('tasks')"><span class="mobile-tab-emoji">✅</span>Tasks</div>
-</div>
-
-<!-- TOAST CONTAINER -->
-<div id="toastContainer"></div>
-
-<!-- FLOAT CHAT -->
-<button id="floatChatBtn" onclick="toggleFloatChat()">🦍</button>
-<div id="floatChatPanel">
-  <div class="float-panel-header">
-    <div class="float-panel-title">🦍 Gorilla AI</div>
-    <select class="float-agent-select" id="floatAgent">
-      <option value="auto">Auto Route</option>
-      <option value="quote">Quote</option>
-      <option value="admin">Admin</option>
-      <option value="ops">Ops</option>
-      <option value="finance">Finance</option>
-      <option value="marketing">Marketing</option>
-    </select>
-  </div>
-  <div class="float-msgs" id="float-msgs"></div>
-  <div class="float-input-row">
-    <input class="float-input" id="float-input" placeholder="Ask anything..." onkeydown="if(event.key==='Enter')sendFloatChat()">
-    <button class="float-send" onclick="sendFloatChat()">→</button>
   </div>
 </div>
 
-<!-- JOB DETAIL MODAL -->
-<div class="modal-overlay" id="jobModal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="jobModal-title">Job Details</div>
-      <button class="modal-close" onclick="closeModal('jobModal')">✕</button>
-    </div>
-    <div id="jobModal-body"></div>
-  </div>
-</div>
+<div id="toasts"></div>
 
-<!-- CREATE TASK MODAL -->
-<div class="modal-overlay" id="taskModal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Create Task</div>
-      <button class="modal-close" onclick="closeModal('taskModal')">✕</button>
-    </div>
-    <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="task-title" placeholder="Task title"></div>
-    <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="task-desc" rows="3" placeholder="Details..."></textarea></div>
-    <div class="grid-2" style="gap:12px">
-      <div class="form-group"><label class="form-label">Priority</label><select class="form-input" id="task-priority"><option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option></select></div>
-      <div class="form-group"><label class="form-label">Agent</label><select class="form-input" id="task-agent"><option value="system">System</option><option value="quote">Quote</option><option value="admin">Admin</option><option value="ops">Ops</option><option value="finance">Finance</option><option value="marketing">Marketing</option></select></div>
-    </div>
-    <div class="grid-2" style="gap:12px">
-      <div class="form-group"><label class="form-label">Job ID</label><input class="form-input" id="task-job" placeholder="GR-2026-XXXX"></div>
-      <div class="form-group"><label class="form-label">Due Date</label><input class="form-input" id="task-due" type="date"></div>
-    </div>
-    <button class="btn primary w100" onclick="submitCreateTask()">Create Task</button>
-  </div>
-</div>
-
-<!-- ADD CASHFLOW MODAL -->
-<div class="modal-overlay" id="cashflowModal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Add Cashflow Entry</div>
-      <button class="modal-close" onclick="closeModal('cashflowModal')">✕</button>
-    </div>
-    <div class="grid-2" style="gap:12px">
-      <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="cf-date" type="date"></div>
-      <div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" id="cf-amount" type="number" placeholder="0.00"></div>
-    </div>
-    <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="cf-desc" placeholder="Description"></div>
-    <div class="grid-2" style="gap:12px">
-      <div class="form-group"><label class="form-label">Category</label><select class="form-input" id="cf-category"><option>Rental Income</option><option>Extra Charges</option><option>Fuel</option><option>Repairs</option><option>Supplies</option><option>Insurance</option><option>Other Expense</option></select></div>
-      <div class="form-group"><label class="form-label">Type</label><select class="form-input" id="cf-type"><option value="income">Income</option><option value="expense">Expense</option></select></div>
-    </div>
-    <div class="form-group"><label class="form-label">Job ID (optional)</label><input class="form-input" id="cf-job" placeholder="GR-2026-XXXX"></div>
-    <button class="btn primary w100" onclick="submitCashflow()">Add Entry</button>
-  </div>
-</div>
-</div><!-- #app -->
 <script>
-const API = window.location.hostname==='localhost'?'http://localhost:3000':'https://gorillahq.up.railway.app';
-const state={currentPage:'dashboard',chatHistories:{},refreshInterval:null,notifications:[],lastRefresh:null,actLogs:[],allTasks:[],actAgent:''};
-const AGENT_COLORS={quote:'#3b82f6',admin:'#a855f7',ops:'#f6ec0e',finance:'#22c55e',marketing:'#ec4899',knowledge:'#14b8a6',system:'#666666'};
-const STAGE_CONFIG={
-  quote_built:{color:'#555555',label:'Quote Built'},quote_sent:{color:'#3b82f6',label:'Quote Sent'},
-  reserved:{color:'#a855f7',label:'Reserved'},contract_sent:{color:'#f97316',label:'Contract Sent'},
-  delivery_scheduled:{color:'#f6ec0e',label:'Delivery Sched.',textColor:'#000'},
-  in_progress:{color:'#22c55e',label:'In Progress'},returned:{color:'#14b8a6',label:'Returned'},
-  completed:{color:'#166534',label:'Completed'},cancelled:{color:'#ef4444',label:'Cancelled'}
-};
-let kbMode='general';
+// ─────────────────────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────────────────────
+const PIN = '1988';
 
-// ── AUTH ──────────────────────────────────────────────────────
-(function(){
-  if(localStorage.getItem('gr_auth')==='1988'){unlock();}
+const AGENTS = [
+  { id:'quote',    name:'Quote Agent',     emoji:'💬', color:'#3b82f6', role:'Sales & Pricing',
+    desc:'Builds quotes, calculates pricing, creates Booqable reservations, and sends Stripe deposit links to customers.',
+    skills:['Quote generation','PDF quotes','Booqable orders','Stripe deposits','Equipment pricing'],
+    suggestions:['Quote a Genie S-85 for 1 week in Miami','Send deposit link for GR-2026-0042','Show me all open quotes'] },
+  { id:'admin',    name:'Admin Agent',     emoji:'📋', color:'#8b5cf6', role:'Contracts & Reservations',
+    desc:'Manages contracts, confirmations, invoices, post-rental charges, and sends the daily morning briefing.',
+    skills:['Contracts','Invoices','Morning briefing','Payment tracking','Post-rental charges'],
+    suggestions:['Status of GR-2026-0042','Send morning briefing','Any pending approvals?'] },
+  { id:'ops',      name:'Ops Agent',       emoji:'🚚', color:'#f97316', role:'Dispatch & Logistics',
+    desc:'Handles deliveries, pickups, driver assignments, and scheduling for the field team.',
+    skills:["Today's schedule",'Driver dispatch','Route planning','Job status','Pickup schedule'],
+    suggestions:["What's on the schedule today?","Who is Nazar delivering to?","Any pickups this week?"] },
+  { id:'finance',  name:'Finance Agent',   emoji:'💰', color:'#22c55e', role:'Revenue & Cash Flow',
+    desc:'Tracks revenue, monitors overdue rentals, sends payment reminders, and generates financial reports.',
+    skills:['Revenue reports','Reminder sweeps','Cash flow tracking','Overdue monitoring','Monthly reports'],
+    suggestions:['Show monthly revenue','Run reminder sweep','Any overdue rentals?'] },
+  { id:'marketing',name:'Marketing Agent', emoji:'📣', color:'#ec4899', role:'Leads & Outreach',
+    desc:'Manages leads, runs Google scraping for new prospects, handles GHL CRM contacts, and outreach campaigns.',
+    skills:['Lead capture','GHL CRM','Google scraping','Social outreach','Pipeline tracking'],
+    suggestions:['How many leads this week?','Add a new lead','Run Google scrape for Miami contractors'] },
+  { id:'knowledge',name:'Knowledge Agent', emoji:'🧠', color:'#14b8a6', role:'Learning & Memory',
+    desc:'Learns from URLs, PDFs, and instructions. Stores information so all other agents can reference it.',
+    skills:['Learn from URLs','Knowledge base','Company info','Teach facts','Daily learning sweep'],
+    suggestions:['Learn from https://gorillarental.us','What do you know about pricing?','Run learning sweep'] },
+];
+
+const AGENT_COLORS = { quote:'#3b82f6', admin:'#8b5cf6', ops:'#f97316', finance:'#22c55e', marketing:'#ec4899', knowledge:'#14b8a6' };
+const STAGE_COLORS = { prospect:'#94a3b8', quoted:'#3b82f6', negotiating:'#f59e0b', confirmed:'#8b5cf6', delivered:'#f97316', active:'#22c55e', completed:'#16a34a', cancelled:'#ef4444' };
+
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+const S = { page:'dashboard', histories:{}, hqAgent:'auto' };
+
+// ─────────────────────────────────────────────────────────────
+// LOCK
+// ─────────────────────────────────────────────────────────────
+(function setupLock(){
+  if(localStorage.getItem('gr_auth')===PIN){unlock();return;}
+  ['d0','d1','d2','d3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.addEventListener('input',()=>{
+      el.value=el.value.replace(/\D/g,'').slice(-1);
+      if(el.value&&i<3)document.getElementById(['d0','d1','d2','d3'][i+1]).focus();
+      if(['d0','d1','d2','d3'].every(d=>document.getElementById(d).value))checkPin();
+    });
+    el.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!el.value&&i>0)document.getElementById(['d0','d1','d2','d3'][i-1]).focus();});
+  });
+  document.getElementById('d0').focus();
 })();
 
-function unlock(){
-  document.getElementById('lockScreen').style.display='none';
-  document.getElementById('app').style.display='block';
-  initApp();
+function checkPin(){
+  const pin=['d0','d1','d2','d3'].map(id=>document.getElementById(id).value).join('');
+  if(pin===PIN){localStorage.setItem('gr_auth',PIN);unlock();return;}
+  const w=document.getElementById('lockDigits');
+  w.classList.add('shake');
+  ['d0','d1','d2','d3'].forEach(id=>{document.getElementById(id).classList.add('err');document.getElementById(id).value='';});
+  document.getElementById('lockErr').style.display='block';
+  setTimeout(()=>{w.classList.remove('shake');['d0','d1','d2','d3'].forEach(id=>document.getElementById(id).classList.remove('err'));},450);
+  document.getElementById('d0').focus();
 }
+
+function unlock(){document.getElementById('lock').style.display='none';init();}
 function logout(){localStorage.removeItem('gr_auth');location.reload();}
 
-// Lock screen digit inputs
-const digits=['d0','d1','d2','d3'];
-digits.forEach((id,i)=>{
-  const el=document.getElementById(id);
-  el.addEventListener('input',e=>{
-    const v=el.value.replace(/\D/g,'');
-    el.value=v.slice(-1);
-    if(v&&i<3)document.getElementById(digits[i+1]).focus();
-    if(i===3&&el.value)checkCode();
-  });
-  el.addEventListener('keydown',e=>{
-    if(e.key==='Backspace'&&!el.value&&i>0)document.getElementById(digits[i-1]).focus();
-  });
-});
-document.getElementById('d0').focus();
-
-function checkCode(){
-  const code=digits.map(id=>document.getElementById(id).value).join('');
-  if(code==='1988'){localStorage.setItem('gr_auth','1988');unlock();}
-  else{
-    const w=document.getElementById('lsDigits');
-    w.classList.add('shake');
-    digits.forEach(id=>{document.getElementById(id).classList.add('error');document.getElementById(id).value='';});
-    document.getElementById('lsError').style.display='block';
-    setTimeout(()=>{w.classList.remove('shake');digits.forEach(id=>document.getElementById(id).classList.remove('error'));},600);
-    document.getElementById('d0').focus();
-  }
-}
-
-// ── API ───────────────────────────────────────────────────────
-async function api(method,endpoint,body=null){
+// ─────────────────────────────────────────────────────────────
+// API
+// ─────────────────────────────────────────────────────────────
+async function api(method,url,body=null){
   try{
     const opts={method,headers:{'Content-Type':'application/json'}};
     if(body)opts.body=JSON.stringify(body);
-    const res=await fetch(`${API}${endpoint}`,opts);
-    const data=await res.json();
-    if(!data.ok&&data.error)showToast(data.error,'error');
-    return data;
-  }catch(e){showToast(`Connection error: ${e.message}`,'error');return{ok:false,error:e.message};}
+    const r=await fetch(url,opts);
+    return await r.json();
+  }catch(e){toast('Connection error: '+e.message,'error');return{ok:false,error:e.message};}
 }
 
-// ── INIT ──────────────────────────────────────────────────────
-function initApp(){
-  document.querySelectorAll('.nav-item').forEach(el=>{
-    el.addEventListener('click',()=>goPage(el.dataset.page));
-  });
+// ─────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────
+function init(){
+  buildAgentPages();
+  buildAgentsGrid();
+  document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>goPage(el.dataset.page)));
   goPage('dashboard');
-  state.refreshInterval=setInterval(()=>{if(state.currentPage==='dashboard')loadDashboard();},30000);
-  setInterval(updateClock,60000);updateClock();
+  setInterval(tickClock,30000);tickClock();
+  setInterval(()=>{if(S.page==='dashboard')loadDash();},30000);
 }
 
-function updateClock(){
-  document.getElementById('lastSync').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-}
+function tickClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 
-// ── NAVIGATION ────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',company:'Company',quote:'Quote Agent',admin:'Admin Agent',ops:'Ops Agent',finance:'Finance Agent',marketing:'Marketing Agent',ghl:'GHL CRM',knowledge:'Knowledge Agent',tasks:'Tasks',activity:'Activity Log'};
+// ─────────────────────────────────────────────────────────────
+// NAV
+// ─────────────────────────────────────────────────────────────
+const PAGE_TITLES={dashboard:'Dashboard',hq:'HQ Chat',quote:'Quote Agent',admin:'Admin Agent',ops:'Ops Agent',finance:'Finance Agent',marketing:'Marketing Agent',knowledge:'Knowledge Agent',tasks:'Tasks',activity:'Activity Log'};
 
 function goPage(page){
-  state.currentPage=page;
+  S.page=page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
-  const pg=document.getElementById(`page-${page}`);
-  if(pg)pg.classList.add('active');
-  document.querySelectorAll(`[data-page="${page}"]`).forEach(n=>n.classList.add('active'));
+  document.getElementById('page-'+page)?.classList.add('active');
+  document.querySelectorAll('[data-page="'+page+'"]').forEach(n=>n.classList.add('active'));
   document.getElementById('pageTitle').textContent=PAGE_TITLES[page]||page;
-  // Load page data
-  const loaders={dashboard:loadDashboard,company:loadCompany,quote:loadQuotePage,admin:loadAdminPage,ops:loadOps,finance:loadFinance,marketing:loadMarketing,ghl:loadGHL,knowledge:loadKnowledge,tasks:loadTasks,activity:loadActivity};
-  if(loaders[page])loaders[page]();
+  if(page==='dashboard')loadDash();
+  if(page==='tasks')loadTasks('pending');
+  if(page==='activity')loadActivity(20);
 }
 
-// ── TOAST ─────────────────────────────────────────────────────
-function showToast(msg,type='info',dur=4000){
-  const t=document.createElement('div');
-  t.className=`toast ${type}`;t.textContent=msg;
-  document.getElementById('toastContainer').appendChild(t);
-  setTimeout(()=>t.remove(),dur);
+// ─────────────────────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────────────────────
+function toast(msg,type='info',dur=4000){
+  const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;
+  document.getElementById('toasts').appendChild(t);setTimeout(()=>t.remove(),dur);
 }
 
-// ── MODAL ─────────────────────────────────────────────────────
-function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+// ─────────────────────────────────────────────────────────────
+// BUILD AGENT PAGES
+// ─────────────────────────────────────────────────────────────
+function buildAgentPages(){
+  AGENTS.forEach(a=>{
+    const page=document.getElementById('page-'+a.id);if(!page)return;
+    page.innerHTML=`
+      <div class="agent-page-grid">
+        <div class="agent-info-card">
+          <div class="ai-header">
+            <div class="ai-icon" style="background:${a.color}1a">${a.emoji}</div>
+            <div class="ai-name">${a.name}</div>
+            <div class="ai-role">${a.role}</div>
+          </div>
+          <div class="ai-desc">${a.desc}</div>
+          <div class="ai-caps">
+            <div class="cap-title">Capabilities</div>
+            ${a.skills.map(s=>`<div class="cap-item"><div class="cap-bullet" style="background:${a.color}">·</div><div class="cap-text">${s}</div></div>`).join('')}
+          </div>
+        </div>
+        <div class="chat-box">
+          <div class="chat-top">
+            <div class="chat-top-dot" style="background:${a.color}"></div>
+            <div class="chat-top-name">${a.name}</div>
+            <div class="chat-top-sub">online · ${a.role}</div>
+          </div>
+          <div class="chat-msgs" id="msgs-${a.id}">
+            <div class="chat-welcome">
+              <div class="chat-welcome-emoji">${a.emoji}</div>
+              <div class="chat-welcome-title">Chat with ${a.name}</div>
+              <div class="chat-welcome-text">${a.desc}</div>
+              <div class="suggestions">
+                ${a.suggestions.map(s=>`<div class="sug" onclick="suggest('${a.id}',\`${s}\`)">${s}</div>`).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="chat-footer">
+            <input class="chat-input" id="input-${a.id}" placeholder="Ask ${a.name}…" onkeydown="if(event.key==='Enter'){event.preventDefault();sendChat('${a.id}');}">
+            <button class="chat-send" onclick="sendChat('${a.id}')">Send</button>
+          </div>
+        </div>
+      </div>`;
+  });
+}
 
-// ── CHAT ──────────────────────────────────────────────────────
-async function sendChat(agent,message){
-  if(!message||!message.trim())return;
-  const inputEl=document.getElementById(`input-${agent}`);
-  if(inputEl)inputEl.value='';
-  if(!state.chatHistories[agent])state.chatHistories[agent]=[];
-  appendMsg(agent,message,'user');
-  showThinking(agent);
-  state.chatHistories[agent].push({role:'user',content:message});
-  const endpoint=`/${agent}/chat`;
-  const data=await api('POST',endpoint,{message,history:state.chatHistories[agent].slice(-10)});
-  hideThinking(agent);
-  if(data.text){
-    appendMsg(agent,data.text,'agent');
-    state.chatHistories[agent].push({role:'assistant',content:data.text});
+// ─────────────────────────────────────────────────────────────
+// BUILD AGENTS GRID (dashboard)
+// ─────────────────────────────────────────────────────────────
+function buildAgentsGrid(){
+  document.getElementById('agents-grid').innerHTML=AGENTS.map(a=>`
+    <div class="agent-card" onclick="goPage('${a.id}')">
+      <div class="ac-header">
+        <div class="ac-icon" style="background:${a.color}1a">${a.emoji}</div>
+        <div><div class="ac-name">${a.name}</div><div class="ac-role">${a.role}</div></div>
+      </div>
+      <div class="ac-desc">${a.desc}</div>
+      <div class="ac-skills">${a.skills.slice(0,3).map(s=>`<span class="skill-tag">${s}</span>`).join('')}</div>
+      <div class="ac-footer">
+        <div class="ac-status"><div class="status-dot" style="background:${a.color}"></div>Online</div>
+        <button class="btn sm" style="background:${a.color}1a;color:${a.color};border-color:${a.color}44" onclick="event.stopPropagation();goPage('${a.id}')">Chat →</button>
+      </div>
+    </div>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────────────────────
+async function loadDash(){
+  const [dash,tasks]=await Promise.all([api('GET','/api/dashboard'),api('GET','/api/tasks?status=pending')]);
+  if(!dash.ok)return;
+
+  // Stats
+  document.getElementById('sv-pipeline').textContent=dash.pipeline?.total??0;
+  const active=dash.rentals?.active??0, ending=dash.rentals?.endingIn48h??0, overdue=dash.rentals?.overdue??0;
+  setStat('st-active','sv-active',active,active>0?'good':'');
+  setStat('st-ending','sv-ending',ending,ending>0?'warn':'');
+  setStat('st-overdue','sv-overdue',overdue,overdue>0?'danger':'');
+  document.getElementById('sv-revenue').textContent=fmtMoney(dash.finance?.pipelineRevenue??0);
+
+  // Alerts
+  const aa=[];
+  if(overdue>0)aa.push(`<div class="alert alert-red">🚨 ${overdue} rental${overdue>1?'s':''} overdue</div>`);
+  if(ending>0)aa.push(`<div class="alert alert-yellow">⚠️ ${ending} rental${ending>1?'s':''} ending in 48h</div>`);
+  document.getElementById('dash-alerts').innerHTML=aa.join('');
+
+  // Jobs today
+  const jobs=dash.ops?.today??[];
+  document.getElementById('jobs-count').textContent=`${jobs.length} today`;
+  document.getElementById('dash-jobs').innerHTML=jobs.length?jobs.map(j=>`
+    <div class="job-item">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+        <span class="job-id">${j.jobId}</span>
+        <span class="pill" style="background:${j.type==='delivery'?'#eff6ff':'#fdf4ff'};color:${j.type==='delivery'?'#1d4ed8':'#7e22ce'}">${j.type==='delivery'?'🚚 Delivery':'📥 Pickup'}</span>
+      </div>
+      <div class="job-name">${j.customerName??'—'}</div>
+      <div class="job-detail">${j.deliveryAddress??''} · ${j.driverName??'—'}</div>
+    </div>`).join(''):'<div class="empty-state">No jobs today</div>';
+
+  // Pipeline
+  const pl=dash.pipeline?.recent??[];
+  document.getElementById('dash-pipeline').innerHTML=pl.length?pl.map(j=>`<tr>
+    <td style="font-weight:700">${j.jobId}</td>
+    <td>${j.customerName??'—'}</td>
+    <td><span class="pill" style="background:${(STAGE_COLORS[j.stage]??'#94a3b8')}22;color:${STAGE_COLORS[j.stage]??'#94a3b8'}">${j.stage??'—'}</span></td>
+    <td style="font-weight:700">${fmtMoney(j.total)}</td>
+    <td style="color:var(--text-3)">${j.startDate??'—'}</td></tr>`).join('')
+    :'<tr><td colspan="5" class="empty-state">No jobs in pipeline</td></tr>';
+
+  // Tasks preview
+  const t=(tasks.tasks??[]).filter(x=>x.status==='pending').slice(0,3);
+  document.getElementById('dash-tasks').innerHTML=t.length?t.map(x=>taskHTML(x)).join(''):'<div class="empty-state">No pending tasks</div>';
+
+  // Activity preview
+  const act=await api('GET','/api/activity?limit=5');
+  renderActivity('dash-activity',act.logs??[]);
+}
+
+function setStat(cardId,valId,val,cls){
+  document.getElementById(valId).textContent=val;
+  document.getElementById(cardId).className='stat'+(cls?' '+cls:'');
+}
+
+// ─────────────────────────────────────────────────────────────
+// TASKS
+// ─────────────────────────────────────────────────────────────
+async function loadTasks(status='pending'){
+  const data=await api('GET','/api/tasks?status='+status);
+  const tasks=data.tasks??[];
+  document.getElementById('tasks-list').innerHTML=tasks.length?tasks.map(t=>taskHTML(t,true)).join(''):'<div class="empty-state">No tasks</div>';
+}
+
+function taskHTML(t,showBtn=false){
+  const pb={high:'badge-high',medium:'badge-med',low:'badge-low'};
+  return `<div class="task-item">
+    <div style="flex:1">
+      <div class="task-title">${t.title}</div>
+      <div class="task-desc">${t.description??''}</div>
+      <div class="task-meta">
+        <span class="badge ${pb[t.priority]??''}">${(t.priority??'').toUpperCase()}</span>
+        <span style="color:${AGENT_COLORS[t.agent]??'#666'};font-size:10px;font-weight:700">${t.agent??''}</span>
+        <span>${fmtAgo(t.createdAt)}</span>
+      </div>
+    </div>
+    ${showBtn&&t.status==='pending'?`<button class="btn sm primary" onclick="doneTask('${t.id}')">Done</button>`:''}
+  </div>`;
+}
+
+async function doneTask(id){
+  await api('POST','/api/tasks/'+id+'/complete');
+  toast('Task completed','success');loadTasks('pending');
+}
+
+// ─────────────────────────────────────────────────────────────
+// ACTIVITY
+// ─────────────────────────────────────────────────────────────
+async function loadActivity(limit=20){
+  const data=await api('GET','/api/activity?limit='+limit);
+  renderActivity('activity-list',data.logs??[]);
+}
+
+function renderActivity(containerId,logs){
+  const el=document.getElementById(containerId);if(!el)return;
+  el.innerHTML=logs.length?logs.map(l=>`
+    <div class="activity-item">
+      <div class="activity-dot" style="background:${AGENT_COLORS[l.agent]??'#94a3b8'}"></div>
+      <div>
+        <div class="activity-text">${l.description??l.action??''}</div>
+        <div class="activity-meta"><span style="color:${AGENT_COLORS[l.agent]??'#666'};font-weight:600;font-size:10px">${l.agent??''}</span> · ${fmtAgo(l.timestamp)}</div>
+      </div>
+    </div>`).join(''):'<div class="empty-state">No activity</div>';
+}
+
+// ─────────────────────────────────────────────────────────────
+// CHAT (per agent)
+// ─────────────────────────────────────────────────────────────
+async function sendChat(agentId){
+  const inputEl=document.getElementById('input-'+agentId);
+  const msg=inputEl.value.trim();if(!msg)return;
+  inputEl.value='';
+  if(!S.histories[agentId])S.histories[agentId]=[];
+  document.querySelector('#msgs-'+agentId+' .chat-welcome')?.remove();
+  addMsg(agentId,msg,'user');
+  addThinking(agentId);
+  S.histories[agentId].push({role:'user',content:msg});
+  const data=await api('POST','/'+agentId+'/chat',{message:msg,history:S.histories[agentId].slice(-10)});
+  rmThinking(agentId);
+  const reply=data.text??data.error??'No response';
+  addMsg(agentId,reply,'bot');
+  S.histories[agentId].push({role:'assistant',content:reply});
+  if(data.action)toast('Action: '+data.action.action,'success');
+}
+
+function suggest(agentId,text){
+  const el=document.getElementById('input-'+agentId);if(el){el.value=text;sendChat(agentId);}
+}
+
+// ─────────────────────────────────────────────────────────────
+// HQ CHAT
+// ─────────────────────────────────────────────────────────────
+function setHQAgent(el,agent){
+  document.querySelectorAll('.hq-pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');S.hqAgent=agent;
+  document.getElementById('hq-label').textContent=el.textContent.trim();
+}
+
+async function sendHQ(){
+  const inputEl=document.getElementById('input-hq');
+  const msg=inputEl.value.trim();if(!msg)return;
+  inputEl.value='';
+  if(!S.histories.hq)S.histories.hq=[];
+  document.querySelector('#msgs-hq .chat-welcome')?.remove();
+  addMsg('hq',msg,'user');
+  addThinking('hq');
+  S.histories.hq.push({role:'user',content:msg});
+  const endpoint=S.hqAgent==='auto'?'/chat':'/'+S.hqAgent+'/chat';
+  const data=await api('POST',endpoint,{message:msg,history:S.histories.hq.slice(-10)});
+  rmThinking('hq');
+  const agentId=data.agent??S.hqAgent;
+  if(agentId&&agentId!=='auto'){
+    const lbl=document.createElement('div');
+    lbl.className='agent-reply-label';
+    lbl.textContent=agentId+' agent';
+    lbl.style.color=AGENT_COLORS[agentId]??'#666';
+    document.getElementById('msgs-hq').appendChild(lbl);
   }
-  if(data.action){showToast(`Action: ${data.action.action}`,'success');setTimeout(()=>goPage(state.currentPage),1000);}
-  if(data.error&&!data.text)appendMsg(agent,`Error: ${data.error}`,'agent');
+  const reply=data.text??data.error??'No response';
+  addMsg('hq',reply,'bot');
+  S.histories.hq.push({role:'assistant',content:reply});
 }
 
-function appendMsg(agent,text,role){
-  const container=document.getElementById(`msgs-${agent}`);
-  if(!container)return;
-  const div=document.createElement('div');
-  div.className=`msg ${role}`;div.textContent=text;
-  container.appendChild(div);
-  container.scrollTop=container.scrollHeight;
-}
+function hqSug(text){const el=document.getElementById('input-hq');if(el){el.value=text;sendHQ();}}
 
-function showThinking(agent){
-  const c=document.getElementById(`msgs-${agent}`);if(!c)return;
-  const d=document.createElement('div');d.className='msg thinking';d.id=`thinking-${agent}`;
-  d.innerHTML='<span class="thinking-dots"><span>●</span><span>●</span><span>●</span></span>';
+// ─────────────────────────────────────────────────────────────
+// CHAT HELPERS
+// ─────────────────────────────────────────────────────────────
+function addMsg(agentId,text,role){
+  const c=document.getElementById('msgs-'+agentId);if(!c)return;
+  const d=document.createElement('div');d.className='msg '+role;d.textContent=text;
   c.appendChild(d);c.scrollTop=c.scrollHeight;
 }
-function hideThinking(agent){const el=document.getElementById(`thinking-${agent}`);if(el)el.remove();}
-
-// ── FLOAT CHAT ────────────────────────────────────────────────
-function toggleFloatChat(){document.getElementById('floatChatPanel').classList.toggle('open');}
-async function sendFloatChat(){
-  const input=document.getElementById('float-input');
-  const msg=input.value.trim();if(!msg)return;
-  input.value='';
-  const agent=document.getElementById('floatAgent').value;
-  const c=document.getElementById('float-msgs');
-  const um=document.createElement('div');um.className='msg user';um.textContent=msg;c.appendChild(um);
-  const tm=document.createElement('div');tm.className='msg thinking';tm.id='float-thinking';
-  tm.innerHTML='<span class="thinking-dots"><span>●</span><span>●</span><span>●</span></span>';
-  c.appendChild(tm);c.scrollTop=c.scrollHeight;
-  const endpoint=agent==='auto'?'/chat':`/${agent}/chat`;
-  const data=await api('POST',endpoint,{message:msg});
-  document.getElementById('float-thinking')?.remove();
-  const am=document.createElement('div');am.className='msg agent';am.textContent=data.text||data.error||'No response';
-  c.appendChild(am);c.scrollTop=c.scrollHeight;
+function addThinking(agentId){
+  const c=document.getElementById('msgs-'+agentId);if(!c)return;
+  const d=document.createElement('div');d.className='msg thinking';d.id='tk-'+agentId;
+  d.innerHTML='<div class="thinking-dots"><span></span><span></span><span></span></div>';
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
 }
+function rmThinking(agentId){document.getElementById('tk-'+agentId)?.remove();}
 
-// ── QUICK ACTIONS ─────────────────────────────────────────────
-function toggleQAMenu(){document.getElementById('qaMenu').classList.toggle('open');}
-function toggleQA(){goPage('activity');}
-document.addEventListener('click',e=>{if(!e.target.closest('.qa-btn')&&!e.target.closest('#qaMenu'))document.getElementById('qaMenu').classList.remove('open');});
-async function quickSweep(){showToast('Running reminder sweep...','info');const d=await api('POST','/finance/sweep');showToast(d.ok?`Sweep done: ${d.sent48h?.length||0} sent`:'Sweep failed',d.ok?'success':'error');}
-async function quickLearn(){const url=prompt('URL to learn from:');if(url){showToast('Learning...','info');const d=await api('POST','/knowledge/learn',{url,priority:'high'});showToast(d.ok?'Learned!':'Failed',d.ok?'success':'error');}}
-async function quickBriefing(){showToast('Sending morning briefing...','info');const d=await api('POST','/admin/briefing');showToast(d.ok?'Briefing sent!':'Failed',d.ok?'success':'error');}
-function quickNewQuote(){goPage('quote');}
-
-// ── HELPERS ───────────────────────────────────────────────────
-function fmtMoney(n){return'$'+(n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
-function fmtDate(d){if(!d)return'--';try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return d;}}
-function fmtTime(d){if(!d)return'--';try{return new Date(d).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}catch{return '';}}
-function fmtAgo(d){if(!d)return'--';const diff=Date.now()-new Date(d);const m=Math.floor(diff/60000);if(m<1)return'just now';if(m<60)return`${m}m ago`;const h=Math.floor(m/60);if(h<24)return`${h}h ago`;return`${Math.floor(h/24)}d ago`;}
-function stagePill(s){const c=STAGE_CONFIG[s]||{color:'#555',label:s};return`<span class="pill pill-${s}" style="background:${c.color}22;color:${c.color};border:1px solid ${c.color}44">${c.label||s}</span>`;}
-function agentBadge(agent){const c=AGENT_COLORS[agent]||'#666';return`<span class="agent-badge" style="background:${c}22;color:${c}">${agent}</span>`;}
-function priorityBadge(p){const colors={high:'#ef4444',medium:'#f59e0b',low:'#22c55e'};const c=colors[p]||'#666';const e={high:'🔴',medium:'🟡',low:'🟢'};return`<span style="font-size:11px;color:${c};font-weight:700">${e[p]||'⚪'} ${(p||'').toUpperCase()}</span>`;}
-function toggleEl(id){const el=document.getElementById(id);el.classList.toggle('open');}
-
-// ── DASHBOARD ─────────────────────────────────────────────────
-async function loadDashboard(){
-  state.lastRefresh=new Date();
-  const [dash,tasksData]=await Promise.all([api('GET','/api/dashboard'),api('GET','/api/tasks?status=pending')]);
-  if(!dash.ok)return;
-  const d=dash;
-  // Stats
-  document.getElementById('s-pipeline').textContent=d.pipeline?.total||0;
-  const active=d.rentals?.active||0;
-  const sc_active=document.getElementById('sc-active');
-  sc_active.querySelector('.stat-value').textContent=active;
-  sc_active.className='stat-card'+(active>0?' yellow':'');
-  const end48=d.rentals?.endingIn48h||0;
-  const sc_48=document.getElementById('sc-48h');
-  sc_48.querySelector('.stat-value').textContent=end48;
-  sc_48.className='stat-card'+(end48>0?' red':'');
-  const ov=d.rentals?.overdue||0;
-  const sc_ov=document.getElementById('sc-overdue');
-  sc_ov.querySelector('.stat-value').textContent=ov;
-  sc_ov.className='stat-card'+(ov>0?' red':'');
-  document.getElementById('s-revenue').textContent=fmtMoney(d.finance?.pipelineRevenue||0);
-  const tCount=tasksData.tasks?.filter(t=>t.status==='pending').length||0;
-  const sc_t=document.getElementById('sc-tasks');
-  sc_t.querySelector('.stat-value').textContent=tCount;
-  sc_t.className='stat-card'+(tCount>0?' red':'');
-  // Alerts
-  const alerts=document.getElementById('dash-alerts');
-  alerts.innerHTML='';
-  if(ov>0)alerts.innerHTML+=`<div class="alert alert-red">🚨 ${ov} rental${ov>1?'s':''} OVERDUE — ${(d.rentals.overdueJobs||[]).map(j=>j.jobId).join(', ')}</div>`;
-  if(end48>0)alerts.innerHTML+=`<div class="alert alert-yellow">⚠️ ${end48} rental${end48>1?'s':''} ending in 48h</div>`;
-  const pendingApprovals=await api('GET','/admin/approvals');
-  if(pendingApprovals.approvals?.length>0)alerts.innerHTML+=`<div class="alert alert-blue">📋 ${pendingApprovals.approvals.length} pending approval${pendingApprovals.approvals.length>1?'s':''}</div>`;
-  // Pipeline table
-  const pipeline=d.pipeline?.recent||[];
-  document.getElementById('dash-pipeline-sub').textContent=`${d.pipeline?.total||0} total jobs`;
-  const tbody=document.getElementById('pipelineTbody');
-  if(!pipeline.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px">No jobs in pipeline</td></tr>';return;}
-  tbody.innerHTML=pipeline.map(j=>`<tr>
-    <td><span class="text-accent font-bold cursor-pointer" onclick="openJobModal('${j.jobId}')" style="cursor:pointer">${j.jobId}</span></td>
-    <td>${j.customerName||'--'}</td>
-    <td class="text-sm text-muted">${(j.equipment||[]).map(e=>e.name).join(', ')||'--'}</td>
-    <td>${stagePill(j.stage)}</td>
-    <td class="font-600">${fmtMoney(j.total)}</td>
-    <td class="text-sm">${j.startDate||'--'}</td>
-    <td class="text-sm">${j.endDate||'--'}</td>
-    <td><div class="flex gap8"><button class="btn" onclick="openJobModal('${j.jobId}')">👁️</button></div></td>
-  </tr>`).join('');
-  // Deliveries/pickups
-  const todayJobs=d.ops?.today||[];
-  const deliveries=todayJobs.filter(j=>j.type==='delivery');
-  const pickups=todayJobs.filter(j=>j.type==='pickup');
-  renderJobCards('dash-deliveries',deliveries,'No deliveries today');
-  renderJobCards('dash-pickups',pickups,'No pickups today');
-  // Tasks preview
-  const tasks=(tasksData.tasks||[]).filter(t=>t.status==='pending').slice(0,3);
-  const tEl=document.getElementById('dash-tasks');
-  if(!tasks.length){tEl.innerHTML='<div class="text-muted text-sm">No pending tasks</div>';return;}
-  tEl.innerHTML=tasks.map(t=>`<div class="task-card"><div class="task-header"><div class="task-title">${t.title}</div>${priorityBadge(t.priority)}</div><div class="text-sm text-muted">${t.description||''}</div><div class="flex gap8 mt8">${agentBadge(t.agent)}<span class="text-sm text-muted">${fmtAgo(t.createdAt)}</span><button class="btn success" onclick="completeTask('${t.id}')">✅ Complete</button></div></div>`).join('');
-  // Recent activity
-  const actData=await api('GET','/api/activity?limit=5');
-  renderActivityList('dash-activity',actData.logs||[]);
+// ─────────────────────────────────────────────────────────────
+// QUICK ACTIONS
+// ─────────────────────────────────────────────────────────────
+async function quickSweep(){
+  toast('Running reminder sweep…','info');
+  const d=await api('POST','/finance/sweep');
+  toast(d.ok?'Sweep done: '+(d.sent48h?.length??0)+' sent':'Sweep failed',d.ok?'success':'error');
+}
+async function quickBriefing(){
+  toast('Sending briefing…','info');
+  const d=await api('POST','/admin/briefing');
+  toast(d.ok?'Briefing sent!':'Failed to send briefing',d.ok?'success':'error');
 }
 
-function renderJobCards(containerId,jobs,emptyMsg){
-  const el=document.getElementById(containerId);
-  if(!el)return;
-  if(!jobs.length){el.innerHTML=`<div class="text-muted text-sm">${emptyMsg}</div>`;return;}
-  el.innerHTML=jobs.map(j=>`<div class="job-card">
-    <div class="job-card-header"><span class="job-id">${j.jobId}</span><span class="job-type ${j.type}">${j.type==='delivery'?'🚚 Delivery':'📥 Pickup'}</span></div>
-    <div class="job-customer">${j.customerName}</div>
-    <div class="job-detail">📍 ${j.deliveryAddress||'--'}</div>
-    <div class="job-detail">⏰ ${j.scheduledTime||'--'} · 🚚 ${j.driverName||'--'}</div>
-    <div class="job-detail">${(j.equipment||[]).map(e=>e.name).join(', ')||'--'}</div>
-    <div class="job-actions">
-      <div class="jab" onclick="openJobModal('${j.jobId}')">👁️ View</div>
-      <div class="jab green">✅ Complete</div>
-    </div>
-  </div>`).join('');
-}
-
-function renderActivityList(containerId,logs){
-  const el=document.getElementById(containerId);if(!el)return;
-  if(!logs.length){el.innerHTML='<div class="text-muted text-sm">No recent activity</div>';return;}
-  el.innerHTML=logs.map(l=>`<div class="activity-item">
-    <div class="activity-dot" style="background:${AGENT_COLORS[l.agent]||'#666'}"></div>
-    <div class="activity-body">
-      <div class="activity-header">${agentBadge(l.agent)}<span class="activity-time">${fmtAgo(l.timestamp)}</span></div>
-      <div class="activity-desc">${l.description||l.action}</div>
-    </div>
-  </div>`).join('');
-}
-
-// ── JOB MODAL ─────────────────────────────────────────────────
-async function openJobModal(jobId){
-  document.getElementById('jobModal-title').textContent=`Job ${jobId}`;
-  openModal('jobModal');
-  const data=await api('GET',`/admin/status/${jobId}`);
-  const j=data.job||{};const r=data.reservation||{};
-  document.getElementById('jobModal-body').innerHTML=`
-    <div class="flex gap8 mb12">${stagePill(j.stage)}<span class="font-bold text-accent">${fmtMoney(j.total)}</span></div>
-    <div class="grid-2 mb12" style="gap:8px">
-      <div><div class="stat-label">Customer</div><div class="font-600">${j.customerName||'--'}</div></div>
-      <div><div class="stat-label">Phone</div><div>${j.customerPhone||'--'}</div></div>
-      <div><div class="stat-label">Email</div><div class="text-sm">${j.customerEmail||'--'}</div></div>
-      <div><div class="stat-label">Address</div><div class="text-sm">${j.deliveryAddress||'--'}</div></div>
-      <div><div class="stat-label">Start</div><div>${j.startDate||'--'}</div></div>
-      <div><div class="stat-label">End</div><div>${j.endDate||'--'}</div></div>
-    </div>
-    <div class="section-title mb8">Equipment</div>
-    ${(j.equipment||[]).map(e=>`<div class="text-sm mb4">• ${e.name} × ${e.quantity} — ${fmtMoney(e.total)}</div>`).join('')||'<div class="text-muted text-sm">No equipment</div>'}
-    ${r.depositLink?`<div class="mt12"><a href="${r.depositLink}" target="_blank" class="btn">💳 Deposit Link</a></div>`:''}
-    ${r.balanceLink?`<div class="mt8"><a href="${r.balanceLink}" target="_blank" class="btn">💳 Balance Link</a></div>`:''}
-    <div class="mt12 text-sm text-muted">Created: ${fmtDate(j.createdAt)}</div>
-  `;
-}
-
-// ── COMPANY ───────────────────────────────────────────────────
-async function loadCompany(){
-  const [snap,cf]=await Promise.all([api('GET','/admin/snapshot'),loadCashflow(true)]);
-  if(!snap.ok){document.getElementById('company-content').innerHTML='<div class="card text-muted">No snapshot yet. <button class="btn" onclick="runOnboarding()">Run Onboarding</button></div>';return;}
-  const s=snap.snapshot;
-  const co=s.company||{};const eq=s.equipment||{};
-  document.getElementById('company-content').innerHTML=`
-    <div class="card">
-      <div class="section-title mb12">🦍 ${co.name||'Gorilla Rental'}</div>
-      <div class="grid-2" style="gap:8px">
-        <div><div class="stat-label">Phone</div><div>${co.phone||'--'}</div></div>
-        <div><div class="stat-label">Email</div><div>${co.email||'--'}</div></div>
-        <div><div class="stat-label">Website</div><div>${co.website||'--'}</div></div>
-        <div><div class="stat-label">Location</div><div>${co.location||'South Florida'}</div></div>
-      </div>
-    </div>`;
-  // Fleet grid
-  const units=eq.units||[];
-  document.getElementById('fleet-grid').innerHTML=units.map(u=>`<div class="card">
-    <div class="font-bold mb4">${u.name}</div>
-    <div class="text-sm text-muted mb8">SKU: ${u.sku}</div>
-    <div class="text-sm">Daily: ${u.dailyLabel||'--'}</div>
-    <div class="text-sm">Weekly: ${u.weeklyLabel||'--'}</div>
-    <div class="text-sm">Monthly: ${u.monthlyLabel||'--'}</div>
-    <div class="mt8"><span class="pill" style="background:rgba(34,197,94,.2);color:#86efac">Available</span></div>
-  </div>`).join('');
-}
-
-async function loadCashflow(skipRender=false){
-  const month=document.getElementById('cashflowMonth')?.value||new Date().toISOString().slice(0,7);
-  const [sum,rows]=await Promise.all([api('GET',`/admin/cashflow/summary?month=${month}`),api('GET','/admin/cashflow')]);
-  if(skipRender)return;
-  const netEl=document.getElementById('cf-net');
-  document.getElementById('cf-income').textContent=fmtMoney(sum.income||0);
-  document.getElementById('cf-expenses').textContent=fmtMoney(sum.expenses||0);
-  const net=sum.net||0;netEl.textContent=fmtMoney(net);netEl.style.color=net>=0?'var(--success)':'var(--danger)';
-  const entries=(rows.rows||[]).filter(r=>String(r.date||'').slice(0,7)===month).reverse();
-  const tb=document.getElementById('cashflowTbody');
-  if(!entries.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">No entries this month</td></tr>';return;}
-  tb.innerHTML=entries.map(e=>`<tr>
-    <td>${e.date||'--'}</td><td>${e.description||'--'}</td><td>${e.category||'--'}</td>
-    <td><span class="pill ${e.type==='income'?'':'pill-cancelled'}" style="background:${e.type==='income'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${e.type==='income'?'#86efac':'#fca5a5'}">${e.type}</span></td>
-    <td class="font-600" style="color:${e.type==='income'?'var(--success)':'var(--danger)'}">${fmtMoney(e.amount)}</td>
-    <td class="text-sm text-muted">${e.jobId||'--'}</td>
-  </tr>`).join('');
-}
-
-async function runOnboarding(){showToast('Starting onboarding...','info');await api('POST','/admin/onboard');showToast('Onboarding started (1-2 min)','success');}
-function openAddCashflow(){document.getElementById('cf-date').value=new Date().toISOString().slice(0,10);openModal('cashflowModal');}
-async function submitCashflow(){
-  const entry={date:document.getElementById('cf-date').value,description:document.getElementById('cf-desc').value,category:document.getElementById('cf-category').value,amount:parseFloat(document.getElementById('cf-amount').value)||0,type:document.getElementById('cf-type').value,jobId:document.getElementById('cf-job').value||null};
-  const d=await api('POST','/admin/cashflow/entry',entry);
-  if(d.ok){closeModal('cashflowModal');showToast('Entry added','success');loadCashflow();}
-}
-
-// ── QUOTE ─────────────────────────────────────────────────────
-async function loadQuotePage(){
-  await loadQuotePipeline();
-  const actData=await api('GET','/api/activity?agent=quote&limit=5');
-  renderActivityList('quote-activity',actData.logs||[]);
-}
-async function loadQuotePipeline(){
-  const data=await api('GET','/quote/pipeline');
-  const pipeline=data.pipeline||[];
-  document.getElementById('qs-total').textContent=pipeline.length;
-  document.getElementById('qs-value').textContent=fmtMoney(pipeline.reduce((s,j)=>s+(j.total||0),0));
-  document.getElementById('qs-sent').textContent=pipeline.filter(j=>j.stage==='quote_sent').length;
-  document.getElementById('qs-built').textContent=pipeline.filter(j=>j.stage==='quote_built').length;
-  const tb=document.getElementById('quoteTbody');
-  if(!pipeline.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">No quotes yet</td></tr>';return;}
-  tb.innerHTML=[...pipeline].reverse().map(j=>`<tr>
-    <td><span class="text-accent font-bold" style="cursor:pointer" onclick="openJobModal('${j.jobId}')">${j.jobId}</span></td>
-    <td>${j.customerName||'--'}</td>
-    <td class="text-sm text-muted">${(j.equipment||[]).map(e=>e.name).join(', ')||'--'}</td>
-    <td>${stagePill(j.stage)}</td>
-    <td class="font-600">${fmtMoney(j.total)}</td>
-    <td class="text-sm">${fmtDate(j.createdAt)}</td>
-    <td><div class="flex gap8"><button class="btn" onclick="openJobModal('${j.jobId}')">👁️</button></div></td>
-  </tr>`).join('');
-}
-
-// ── ADMIN ─────────────────────────────────────────────────────
-async function loadAdminPage(){
-  await Promise.all([loadAdminReservations(),loadAdminApprovals()]);
-}
-async function loadAdminReservations(){
-  const data=await api('GET','/admin/reservations');
-  const reservations=data.reservations||[];
-  const tb=document.getElementById('reservationsTbody');
-  if(!reservations.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">No reservations yet</td></tr>';return;}
-  tb.innerHTML=[...reservations].reverse().map(r=>`<tr>
-    <td><span class="text-accent font-bold" style="cursor:pointer" onclick="openJobModal('${r.jobId}')">${r.jobId}</span></td>
-    <td>${r.customerName||'--'}</td><td>${r.startDate||'--'}</td><td>${r.endDate||'--'}</td>
-    <td class="font-600">${fmtMoney(r.total)}</td><td class="font-600" style="color:var(--warning)">${fmtMoney(r.balanceDue)}</td>
-    <td><span class="pill pill-reserved">${r.status||'reserved'}</span></td>
-  </tr>`).join('');
-}
-async function loadAdminApprovals(){
-  const data=await api('GET','/admin/approvals');
-  const approvals=data.approvals||[];
-  const el=document.getElementById('approvals-list');
-  if(!approvals.length){el.innerHTML='<div class="text-muted text-sm">No pending approvals ✅</div>';return;}
-  el.innerHTML=approvals.map(a=>`<div class="approval-card">
-    <div class="font-600">${a.message?.slice(0,80)||a.id}...</div>
-    <div class="approval-meta">${a.id} · ${fmtAgo(a.createdAt)}</div>
-    <div class="approval-actions">
-      <button class="btn success" onclick="respondApproval('${a.id}','YES')">✅ Approve</button>
-      <button class="btn danger" onclick="respondApproval('${a.id}','NO')">❌ Deny</button>
-    </div>
-  </div>`).join('');
-  document.getElementById('notifCount').textContent=approvals.length;
-  const badge=document.getElementById('notifBadge');badge.textContent=approvals.length;badge.style.display=approvals.length?'block':'none';
-}
-async function respondApproval(approvalId,response){
-  const d=await api('POST','/admin/approval/respond',{approvalId,response});
-  showToast(d.ok?`${response==='YES'?'Approved':'Denied'}`:'Failed',d.ok?'success':'error');
-  loadAdminApprovals();
-}
-
-// ── OPS ───────────────────────────────────────────────────────
-async function loadOps(){
-  const [todayData,upcomingData]=await Promise.all([api('GET','/ops/today'),api('GET','/ops/upcoming')]);
-  const today=todayData.jobs||[];const upcoming=upcomingData.jobs||[];
-  const deliveries=today.filter(j=>j.type==='delivery');
-  const pickups=today.filter(j=>j.type==='pickup');
-  renderJobCards('ops-deliveries',deliveries,'No deliveries today');
-  renderJobCards('ops-pickups',pickups,'No pickups today');
-  // Upcoming grouped by date
-  const byDate={};
-  upcoming.forEach(j=>{(byDate[j.scheduledDate]=byDate[j.scheduledDate]||[]).push(j);});
-  const upEl=document.getElementById('ops-upcoming');
-  if(!upcoming.length){upEl.innerHTML='<div class="text-muted text-sm">No upcoming jobs</div>';return;}
-  upEl.innerHTML=Object.entries(byDate).map(([date,jobs])=>`
-    <div class="date-group-header">${new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
-    ${jobs.map(j=>`<div class="job-card mb8">
-      <div class="job-card-header"><span class="job-id">${j.jobId}</span><span class="job-type ${j.type}">${j.type==='delivery'?'🚚':'📥'} ${j.type}</span></div>
-      <div class="job-customer">${j.customerName}</div>
-      <div class="job-detail">📍 ${j.deliveryAddress||'--'} · ⏰ ${j.scheduledTime||'TBD'}</div>
-      <div class="job-detail">${(j.equipment||[]).map(e=>e.name).join(', ')||'--'}</div>
-    </div>`).join('')}
-  `).join('');
-  // Driver assignments
-  const andreiJobs=today.filter(j=>j.driverName==='Andrei');
-  const nazarJobs=today.filter(j=>j.driverName==='Nazar');
-  document.getElementById('driver-andrei-jobs').textContent=andreiJobs.length?`${andreiJobs.length} job(s) today`:'No jobs today';
-  document.getElementById('driver-nazar-jobs').textContent=nazarJobs.length?`${nazarJobs.length} job(s) today`:'No jobs today';
-}
-
-// ── FINANCE ───────────────────────────────────────────────────
-async function loadFinance(){
-  const [activeData,reportData]=await Promise.all([api('GET','/finance/active'),api('GET','/finance/report?period=month')]);
-  const a=activeData;const r=reportData.report||{};
-  document.getElementById('fin-active').textContent=a.total||0;
-  const end48=a.endingIn48h?.length||0;
-  const finSc48=document.getElementById('fin-sc-48h');
-  finSc48.querySelector('.stat-value').textContent=end48;
-  finSc48.className='stat-card'+(end48>0?' yellow':'');
-  const ov=a.overdue?.length||0;
-  const finScOv=document.getElementById('fin-sc-overdue');
-  finScOv.querySelector('.stat-value').textContent=ov;
-  finScOv.className='stat-card'+(ov>0?' red':'');
-  document.getElementById('fin-revenue').textContent=fmtMoney(r.totalRevenue||0);
-  document.getElementById('fin-active-rev').textContent=fmtMoney(r.activeRevenue||0);
-  document.getElementById('fin-pipeline-rev').textContent=fmtMoney(r.pipelineRevenue||0);
-  const allActive=[...(a.active||[]),...(a.endingIn48h||[]),...(a.endingIn24h||[]),...(a.overdue||[])];
-  const tb=document.getElementById('financeTbody');
-  if(!allActive.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">No active rentals</td></tr>';return;}
-  tb.innerHTML=allActive.map(j=>{
-    const isOverdue=j.hoursRemaining<0;const isEnding=j.hoursRemaining>=0&&j.hoursRemaining<=48;
-    return`<tr class="${isOverdue?'overdue':isEnding?'ending-soon':''}">
-      <td><span class="text-accent font-bold">${j.jobId}</span></td>
-      <td>${j.customerName}</td><td>${j.endDate||'--'}</td>
-      <td style="color:${isOverdue?'var(--danger)':isEnding?'var(--warning)':'var(--text-primary)'}">${isOverdue?`${Math.abs(j.hoursRemaining)}h LATE`:`${j.hoursRemaining}h`}</td>
-      <td class="font-600">${fmtMoney(j.total)}</td>
-      <td><div class="flex gap8">
-        <button class="btn" onclick="sendChat('finance','Send 48h reminder for ${j.jobId}')">📧 Remind</button>
-        <button class="btn" onclick="sendChat('finance','Extend rental ${j.jobId}')">📅 Extend</button>
-      </div></td>
-    </tr>`;
-  }).join('');
-}
-
-// ── MARKETING ─────────────────────────────────────────────────
-async function loadMarketing(){
-  const [leadsData,statsData]=await Promise.all([api('GET','/marketing/leads'),api('GET','/marketing/stats')]);
-  const stats=statsData.stats||{};
-  document.getElementById('mkt-total').textContent=stats.totalLeads||0;
-  document.getElementById('mkt-new').textContent=stats.newLeads||0;
-  document.getElementById('mkt-contacted').textContent=stats.contactedLeads||0;
-  document.getElementById('mkt-converted').textContent=stats.convertedLeads||0;
-  document.getElementById('mkt-rate').textContent=stats.conversionRate||'0%';
-  document.getElementById('mkt-posts').textContent=stats.postsGenerated||0;
-  const leads=leadsData.leads||[];
-  const tb=document.getElementById('leadsTbody');
-  if(!leads.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">No leads yet</td></tr>';return;}
-  tb.innerHTML=leads.map(l=>`<tr>
-    <td class="font-600">${l.name||'--'}</td><td>${l.source||'--'}</td>
-    <td class="text-sm text-muted">${l.equipment||'--'}</td>
-    <td><span class="pill lead-${l.status||'new'}">${l.status||'new'}</span></td>
-    <td class="text-sm">${fmtDate(l.createdAt)}</td>
-    <td><div class="flex gap8">
-      <button class="btn" onclick="goPage('quote')">→ Quote</button>
-    </div></td>
-  </tr>`).join('');
-}
-
-async function generatePost(){
-  const type=document.getElementById('postType').value;
-  const el=document.getElementById('post-output');
-  el.textContent='Generating...';el.style.color='var(--text-muted)';
-  const d=await api('POST','/marketing/post',{type});
-  if(d.ok){el.textContent=d.post||'No content';el.style.color='var(--text-primary)';}
-  else{el.textContent='Failed to generate';el.style.color='var(--danger)';}
-}
-
-async function generateListing(){
-  const sku=document.getElementById('listingSku').value;
-  const el=document.getElementById('listing-output');
-  el.textContent='Generating...';el.style.color='var(--text-muted)';
-  const d=await api('POST','/marketing/listing',{sku});
-  if(d.ok){el.textContent=d.listing||'No content';el.style.color='var(--text-primary)';}
-  else{el.textContent='Failed to generate';el.style.color='var(--danger)';}
-}
-
-// ── KNOWLEDGE ─────────────────────────────────────────────────
-async function loadKnowledge(){
-  const cat=document.getElementById('kb-cat-filter')?.value||'';
-  const data=await api('GET',`/knowledge${cat?`?category=${cat}`:''}`);
-  const entries=data.entries||[];
-  document.getElementById('kb-total').textContent=entries.length;
-  document.getElementById('kb-updated').textContent=data.lastUpdated?fmtDate(data.lastUpdated):'--';
-  const el=document.getElementById('kb-entries');
-  if(!entries.length){el.innerHTML='<div class="text-muted text-sm">No knowledge entries yet</div>';return;}
-  el.innerHTML=[...entries].reverse().slice(0,30).map(e=>`<div class="kb-item" onclick="toggleKbItem(this)">
-    <div class="kb-item-header">
-      <div class="kb-title">${e.title||'Untitled'}</div>
-      <span class="pill" style="background:${AGENT_COLORS.knowledge}22;color:var(--teal)">${e.category}</span>
-    </div>
-    <div class="text-sm text-muted">${fmtDate(e.learnedAt)} · ${e.type}</div>
-    <div class="kb-summary">${e.summary||''}</div>
-  </div>`).join('');
-}
-
-function toggleKbItem(el){el.querySelector('.kb-summary').classList.toggle('expanded');}
-
-function switchKbTab(mode,tabEl){
-  kbMode=mode;
-  document.querySelectorAll('.tab-row .tab').forEach(t=>t.classList.remove('active'));
-  tabEl.classList.add('active');
-  document.getElementById('kb-mode').textContent=mode==='general'?'General Query':'Engineering Query';
-}
-
-async function sendKbQuery(mode,question){
-  if(!question||!question.trim())return;
-  const inputEl=document.getElementById('input-knowledge');if(inputEl)inputEl.value='';
-  const agent='knowledge';
-  appendMsg(agent,question,'user');
-  showThinking(agent);
-  const endpoint=mode==='engineering'?'/knowledge/engineering':'/knowledge/query';
-  const data=await api('POST',endpoint,{question});
-  hideThinking(agent);
-  if(data.answer)appendMsg(agent,data.answer,'agent');
-  else if(data.error)appendMsg(agent,`Error: ${data.error}`,'agent');
-}
-
-async function quickLearnUrl(){
-  const url=document.getElementById('learnUrl')?.value?.trim();
-  if(!url){showToast('Enter a URL first','warning');return;}
-  showToast('Learning...','info');
-  const d=await api('POST','/knowledge/learn',{url,priority:'high'});
-  showToast(d.ok?'Learned successfully!':'Failed to learn',d.ok?'success':'error');
-  if(d.ok)loadKnowledge();
-}
-
-async function teachKnowledge(){
-  const title=document.getElementById('teachTitle')?.value?.trim();
-  const content=document.getElementById('teachContent')?.value?.trim();
-  const category=document.getElementById('teachCategory')?.value;
-  if(!title||!content){showToast('Title and content required','warning');return;}
-  showToast('Teaching...','info');
-  const d=await api('POST','/knowledge/teach',{title,content,category});
-  showToast(d.ok?'Added to knowledge base!':'Failed',d.ok?'success':'error');
-  if(d.ok){document.getElementById('teachTitle').value='';document.getElementById('teachContent').value='';loadKnowledge();}
-}
-
-// ── TASKS ─────────────────────────────────────────────────────
-async function loadTasks(){
-  const status=document.getElementById('tf-status')?.value||'';
-  const agent=document.getElementById('tf-agent')?.value||'';
-  const priority=document.getElementById('tf-priority')?.value||'';
-  let url='/api/tasks?';
-  if(status)url+=`status=${status}&`;if(agent)url+=`agent=${agent}&`;if(priority)url+=`priority=${priority}&`;
-  const data=await api('GET',url);
-  state.allTasks=data.tasks||[];
-  renderTasksList(state.allTasks);
-  // Stats
-  document.getElementById('t-pending').textContent=state.allTasks.filter(t=>t.status==='pending').length;
-  document.getElementById('t-high').textContent=state.allTasks.filter(t=>t.priority==='high'&&t.status==='pending').length;
-  document.getElementById('ts-total').textContent=data.total||0;
-  document.getElementById('ts-pending').textContent=state.allTasks.filter(t=>t.status==='pending').length;
-  document.getElementById('ts-high').textContent=state.allTasks.filter(t=>t.priority==='high').length;
-  const today=new Date().toISOString().slice(0,10);
-  document.getElementById('ts-done-today').textContent=state.allTasks.filter(t=>t.completedAt?.startsWith(today)).length;
-  document.getElementById('ts-ai').textContent=state.allTasks.filter(t=>t.createdBy&&t.createdBy!=='system'&&t.createdBy!=='user').length;
-}
-
-function filterTasks(){
-  const search=document.getElementById('tf-search')?.value?.toLowerCase()||'';
-  const filtered=state.allTasks.filter(t=>(t.title+t.description).toLowerCase().includes(search));
-  renderTasksList(filtered);
-}
-
-function renderTasksList(tasks){
-  const el=document.getElementById('tasks-list');
-  if(!tasks.length){el.innerHTML='<div class="text-muted text-sm">No tasks found</div>';return;}
-  el.innerHTML=tasks.map(t=>`<div class="task-card">
-    <div class="task-header">
-      <div class="task-title">${t.title}</div>
-      ${priorityBadge(t.priority)}
-    </div>
-    <div class="text-sm text-muted mb8">${t.description||''}</div>
-    <div class="flex gap8 items-center">
-      ${agentBadge(t.agent)}
-      ${t.jobId?`<span class="text-sm text-accent">${t.jobId}</span>`:''}
-      <span class="text-sm text-muted">${fmtAgo(t.createdAt)}</span>
-      ${t.dueDate?`<span class="text-sm" style="color:var(--warning)">Due: ${fmtDate(t.dueDate)}</span>`:''}
-    </div>
-    <div class="task-actions">
-      ${t.status==='pending'?`<button class="btn" onclick="updateTaskStatus('${t.id}','in_progress')">▶️ Start</button>`:''}
-      ${t.status!=='completed'?`<button class="btn success" onclick="completeTask('${t.id}')">✅ Complete</button>`:''}
-      ${t.status!=='dismissed'?`<button class="btn danger" onclick="dismissTask('${t.id}')">❌ Dismiss</button>`:''}
-      <span class="pill ${t.status==='completed'?'pill-completed':t.status==='pending'?'pill-quote_sent':''}">${t.status}</span>
-    </div>
-  </div>`).join('');
-}
-
-async function completeTask(taskId){
-  const d=await api('POST',`/api/tasks/${taskId}/complete`);
-  if(d.ok){showToast('Task completed!','success');loadTasks();}
-}
-async function dismissTask(taskId){
-  const d=await api('POST',`/api/tasks/${taskId}/dismiss`);
-  if(d.ok){showToast('Task dismissed','info');loadTasks();}
-}
-async function updateTaskStatus(taskId,status){
-  const d=await api('POST',`/api/tasks/${taskId}/status`,{status});
-  if(d.ok)loadTasks();
-}
-function openCreateTask(){openModal('taskModal');}
-async function submitCreateTask(){
-  const title=document.getElementById('task-title')?.value?.trim();
-  if(!title){showToast('Title required','warning');return;}
-  const d=await api('POST','/api/tasks',{title,description:document.getElementById('task-desc')?.value,priority:document.getElementById('task-priority')?.value,agent:document.getElementById('task-agent')?.value,jobId:document.getElementById('task-job')?.value||null,dueDate:document.getElementById('task-due')?.value||null});
-  if(d.ok){closeModal('taskModal');showToast('Task created!','success');loadTasks();}
-}
-
-// ── ACTIVITY ──────────────────────────────────────────────────
-async function loadActivity(){
-  const hours=document.getElementById('act-hours')?.value||168;
-  const data=await api('GET',`/api/activity?limit=500&hours=${hours}`);
-  state.actLogs=data.logs||[];
-  renderActivity();
-  buildHourChart();
-}
-function setActAgent(agent,tabEl){
-  state.actAgent=agent;
-  document.querySelectorAll('#agent-filter-btns .tab').forEach(t=>t.classList.remove('active'));
-  tabEl.classList.add('active');
-  renderActivity();
-}
-function renderActivity(){
-  const search=document.getElementById('act-search')?.value?.toLowerCase()||'';
-  let logs=state.actLogs;
-  if(state.actAgent)logs=logs.filter(l=>l.agent===state.actAgent);
-  if(search)logs=logs.filter(l=>(l.description+l.action+l.agent).toLowerCase().includes(search));
-  // Stats
-  const today=new Date().toISOString().slice(0,10);
-  const todayLogs=state.actLogs.filter(l=>l.timestamp?.startsWith(today));
-  document.getElementById('act-total').textContent=todayLogs.length;
-  document.getElementById('act-errors').textContent=todayLogs.filter(l=>l.status==='error').length;
-  const agentCounts={};state.actLogs.forEach(l=>{agentCounts[l.agent]=(agentCounts[l.agent]||0)+1;});
-  const topAgent=Object.entries(agentCounts).sort((a,b)=>b[1]-a[1])[0]||['--',0];
-  document.getElementById('act-agent').textContent=topAgent[0];
-  document.getElementById('act-last').textContent=logs[0]?fmtAgo(logs[0].timestamp):'--';
-  const el=document.getElementById('activity-timeline');
-  if(!logs.length){el.innerHTML='<div class="text-muted text-sm" style="padding:16px">No activity found</div>';return;}
-  el.innerHTML=logs.slice(0,100).map(l=>`<div class="activity-item">
-    <div class="activity-dot" style="background:${AGENT_COLORS[l.agent]||'#666'}"></div>
-    <div class="activity-body">
-      <div class="activity-header">${agentBadge(l.agent)}<span class="text-sm" style="color:${l.status==='error'?'var(--danger)':l.status==='success'?'var(--success)':'var(--text-muted)'}">${l.status}</span><span class="activity-time">${fmtAgo(l.timestamp)}</span></div>
-      <div class="activity-desc">${l.description||l.action}</div>
-      ${l.jobId?`<span class="text-sm text-accent">${l.jobId}</span>`:''}
-      ${Object.keys(l.metadata||{}).length?`<div class="activity-expand" onclick="this.nextSibling.style.display=this.nextSibling.style.display==='block'?'none':'block'">▶ metadata</div><div class="activity-meta">${JSON.stringify(l.metadata,null,2)}</div>`:'' }
-    </div>
-  </div>`).join('');
-}
-
-function buildHourChart(){
-  const today=new Date().toISOString().slice(0,10);
-  const todayLogs=state.actLogs.filter(l=>l.timestamp?.startsWith(today));
-  const hours=Array(24).fill(0);
-  todayLogs.forEach(l=>{const h=new Date(l.timestamp).getHours();hours[h]++;});
-  const max=Math.max(...hours,1);
-  const el=document.getElementById('hourChart');
-  el.innerHTML=hours.map((c,i)=>`<div class="hour-bar" title="${i}:00 — ${c} actions" style="height:${Math.max(2,Math.round(c/max*56))}px;opacity:${c?1:0.15}"></div>`).join('');
-}
-
-function exportActivityCSV(){
-  const logs=state.actLogs;
-  const csv=['ID,Agent,Action,Status,Description,JobID,Timestamp'].concat(logs.map(l=>`${l.id},${l.agent},${l.action},${l.status},"${(l.description||'').replace(/"/g,"''")}",${l.jobId||''},${l.timestamp}`)).join('\n');
-  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='activity-log.csv';a.click();
-}
-
-// ── GHL CRM ───────────────────────────────────────────────────
-let ghlContactsAll = [];
-
-async function loadGHL() {
-  await Promise.all([loadGHLSnapshot(), loadGHLContacts(), loadGHLScrapeHistory()]);
-}
-
-async function loadGHLSnapshot() {
-  const data = await api('GET', '/ghl/snapshot');
-  const snap = data.snapshot;
-  if (!snap) return;
-  // Stats row
-  document.getElementById('ghl-total-contacts').textContent = snap.contacts?.total ?? '--';
-  document.getElementById('ghl-new-today').textContent = snap.contacts?.recent ?? '--';
-  document.getElementById('ghl-open-opps').textContent = snap.pipeline?.open ?? '--';
-  document.getElementById('ghl-pipeline-value').textContent = snap.pipeline?.totalValue != null ? fmtMoney(snap.pipeline.totalValue) : '$--';
-  document.getElementById('ghl-active-convos').textContent = snap.conversations?.active ?? '--';
-  // Snapshot panel
-  document.getElementById('ghl-snap-total').textContent = snap.contacts?.total ?? '--';
-  document.getElementById('ghl-snap-new').textContent = snap.contacts?.recent ?? '--';
-  document.getElementById('ghl-snap-open').textContent = snap.pipeline?.open ?? '--';
-  document.getElementById('ghl-snap-won').textContent = snap.pipeline?.won ?? '--';
-  document.getElementById('ghl-snap-value').textContent = snap.pipeline?.totalValue != null ? fmtMoney(snap.pipeline.totalValue) : '$--';
-  document.getElementById('ghl-snap-active').textContent = snap.conversations?.active ?? '--';
-  // Tags
-  const tags = snap.contacts?.byTag || {};
-  const topTags = Object.entries(tags).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  document.getElementById('ghl-tags-list').innerHTML = topTags.length
-    ? topTags.map(([t,c]) => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><div style="flex:1;height:6px;background:var(--bg-secondary);border-radius:3px"><div style="width:${Math.min(100,(c/Math.max(...Object.values(tags)))*100)}%;height:100%;background:var(--accent);border-radius:3px"></div></div><span style="min-width:60px">${t.slice(0,20)}</span><span style="color:var(--text-muted)">${c}</span></div>`).join('')
-    : '<div class="text-muted text-sm">No tags</div>';
-  // Stages
-  const stages = snap.pipeline?.byStage || {};
-  document.getElementById('ghl-stages-list').innerHTML = Object.entries(stages).length
-    ? Object.entries(stages).map(([s,c]) => `<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>${s}</span><span class="text-accent font-bold">${c}</span></div>`).join('')
-    : '<div class="text-muted text-sm">No stages</div>';
-  // Recent convos
-  const recent = snap.conversations?.recent || [];
-  document.getElementById('ghl-recent-convos').innerHTML = recent.length
-    ? recent.map(c => `<div style="margin-bottom:6px;padding:6px;background:var(--bg-secondary);border-radius:6px"><div class="font-600">${c.contact||'Unknown'} ${c.unread>0?`<span style="color:var(--danger)">(${c.unread} unread)</span>`:''}</div><div class="text-muted text-sm">${(c.lastMessage||'').slice(0,50)}</div><div class="text-muted" style="font-size:10px">${fmtAgo(c.time)}</div></div>`).join('')
-    : '<div class="text-muted text-sm">No recent conversations</div>';
-}
-
-async function loadGHLContacts() {
-  const data = await api('GET', '/ghl/contacts');
-  ghlContactsAll = data.contacts || [];
-  renderGHLContacts(ghlContactsAll);
-}
-
-function renderGHLContacts(contacts) {
-  const tbody = document.getElementById('ghl-contacts-tbody');
-  if (!contacts.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">No contacts found</td></tr>'; return; }
-  tbody.innerHTML = contacts.slice(0, 100).map(c => {
-    const tags = (c.tags || []).slice(0, 3).map(t => `<span class="pill" style="background:rgba(246,236,14,.1);color:var(--accent);margin:1px">${t.slice(0,20)}</span>`).join('');
-    const county = (c.tags || []).find(t => t.startsWith('county -'))?.replace('county - ', '') || '--';
-    return `<tr>
-      <td class="font-600">${c.name || c.firstName || '--'}</td>
-      <td>${c.phone || '--'}</td>
-      <td>${c.email || '--'}</td>
-      <td>${tags}</td>
-      <td>${county}</td>
-      <td>${fmtDate(c.dateAdded)}</td>
-      <td><button class="jab" onclick="openGHLSMS('${(c.phone||'').replace(/'/g,'')}','${(c.name||'').replace(/'/g,'')}')">💬 SMS</button><button class="jab" onclick="promptGHLTag('${c.id}')">🏷 Tag</button></td>
-    </tr>`;
-  }).join('');
-}
-
-function filterGHLContacts() {
-  const search = document.getElementById('ghl-search')?.value?.toLowerCase() || '';
-  const county = document.getElementById('ghl-county-filter')?.value?.toLowerCase() || '';
-  let filtered = ghlContactsAll;
-  if (search) filtered = filtered.filter(c => (c.name+c.phone+c.email+'').toLowerCase().includes(search));
-  if (county) filtered = filtered.filter(c => (c.tags||[]).some(t => t.toLowerCase().includes(county)));
-  renderGHLContacts(filtered);
-}
-
-async function loadGHLScrapeHistory() {
-  const data = await api('GET', '/scraper/history');
-  const history = data.history || [];
-  document.getElementById('scrape-runs').textContent = history.length;
-  const totalAdded = history.reduce((s,h) => s + (h.added||0), 0);
-  document.getElementById('scrape-total-added').textContent = totalAdded;
-  document.getElementById('scrape-last-run').textContent = history.length ? fmtDate(history[history.length-1].date) : '--';
-  const tbody = document.getElementById('scrape-history-tbody');
-  if (!history.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px">No scrape history yet</td></tr>'; return; }
-  tbody.innerHTML = [...history].reverse().slice(0, 20).map(h => `<tr>
-    <td>${fmtDate(h.date)}</td>
-    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${h.areas||'--'}</td>
-    <td>${h.categories||'--'}</td>
-    <td>${h.found||0}</td>
-    <td style="color:var(--success)">${h.added||0}</td>
-    <td style="color:var(--text-muted)">${h.skipped||0}</td>
-    <td style="color:${h.errors?'var(--danger)':'var(--text-muted)'}">${h.errors||0}</td>
-  </tr>`).join('');
-}
-
-async function runGHLScrape() {
-  const area = document.getElementById('scrape-area')?.value;
-  const category = document.getElementById('scrape-category')?.value;
-  const maxResults = parseInt(document.getElementById('scrape-max')?.value) || 20;
-  showToast(`Starting scrape: ${area} / ${category}...`, 'info');
-  const d = await api('POST', '/scraper/run', { areas: [area], categories: [category], maxTotal: maxResults, maxPerSearch: 10 });
-  showToast(d.ok ? 'Scrape started in background! Check history for results.' : 'Failed to start scrape', d.ok ? 'success' : 'error');
-}
-
-async function runGHLQuickTest() {
-  const area = document.getElementById('scrape-area')?.value;
-  const category = document.getElementById('scrape-category')?.value;
-  showToast('Running quick test (3 results)...', 'info');
-  const d = await api('POST', '/scraper/quick', { area, category, maxResults: 3 });
-  if (d.ok) {
-    showToast(`Quick test done: ${d.found||0} found, ${d.added||0} added`, 'success');
-    loadGHLScrapeHistory();
-  } else {
-    showToast('Quick test failed: ' + (d.error||'unknown'), 'error');
-  }
-}
-
-function openGHLSMS(phone, name) {
-  const to = document.getElementById('sms-to');
-  if (to) to.value = phone;
-  showToast(`Phone set to ${phone}`, 'info');
-}
-
-async function promptGHLTag(contactId) {
-  const tag = prompt('Enter tag to add:');
-  if (!tag) return;
-  const d = await api('POST', `/ghl/contacts/${contactId}/tags`, { tags: [tag] });
-  showToast(d.ok ? `Tag "${tag}" added!` : 'Failed to add tag', d.ok ? 'success' : 'error');
-}
-
-async function sendGHLSMS() {
-  const to = document.getElementById('sms-to')?.value?.trim();
-  const message = document.getElementById('sms-message')?.value?.trim();
-  const from = document.getElementById('sms-from')?.value || null;
-  if (!to || !message) { showToast('Phone and message required', 'warning'); return; }
-  showToast('Sending SMS...', 'info');
-  const body = { to, message };
-  if (from) body.from = from;
-  const d = await api('POST', '/ghl/sms', body);
-  if (d.ok) {
-    showToast('SMS sent!', 'success');
-    document.getElementById('sms-message').value = '';
-  } else {
-    showToast('SMS failed: ' + (d.error || 'unknown'), 'error');
-  }
+// ─────────────────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────────────────
+function fmtMoney(n){return'$'+(n??0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function fmtAgo(d){
+  if(!d)return'—';const diff=Date.now()-new Date(d);const m=Math.floor(diff/60000);
+  if(m<1)return'just now';if(m<60)return m+'m ago';
+  const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';
 }
 </script>
 </body>
