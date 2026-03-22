@@ -93,10 +93,3 @@ async function handleTelegramCommand(chatId, text, fromName) {
     await sendTelegram('⚠️ Agent unavailable. Try again in a moment.');
   }
 }
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
