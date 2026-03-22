@@ -55,7 +55,14 @@ export async function requestApproval(approvalId, message, metadata = {}) {
   approvals.push(approval);
   saveApprovals(approvals);
 
-  await notifyAndrei(message);
+  // Primary: Telegram inline keyboard (tap to approve/deny)
+  try {
+    const { sendApprovalRequest } = await import('./telegram.js');
+    await sendApprovalRequest(approvalId, message, metadata);
+  } catch {}
+
+  // Backup: WhatsApp SMS
+  await notifyAndrei(message).catch(() => {});
 
   console.log(`[WhatsApp] ✅ Approval requested: ${approvalId}`);
   return approvalId;
