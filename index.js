@@ -104,10 +104,14 @@ app.post('/chat', async (req, res) => {
     const target = agent || detectAgent(message);
     let result;
 
-    if (target === 'admin')      result = await adminChat(message, history || []);
-    else if (target === 'ops')   result = await opsChat(message, history || []);
+    if (target === 'admin')           result = await adminChat(message, history || []);
+    else if (target === 'ops')        result = await opsChat(message, history || []);
     else if (target === 'finance')    result = await financeChat(message, history || []);
     else if (target === 'marketing')  result = await marketingChat(message, history || []);
+    else if (target === 'knowledge' || target === 'chip') {
+      const { gorillaIQ } = await import('./gorilla-iq.js');
+      result = await gorillaIQ(message, 'api');
+    }
     else                              result = await quoteChat(message, history || []);
 
     res.json({ ok: true, agent: target, ...result });
