@@ -151,6 +151,13 @@ async function handleTextMessage(message) {
     return;
   }
 
+  if (text === '/clear') {
+    const { clearContext } = await import('./gorilla-iq.js');
+    clearContext(chatId);
+    await sendTelegram('🧹 Context cleared. Starting fresh!', chatId);
+    return;
+  }
+
   if (text === '/help') {
     await sendTelegram(
       `🦍 <b>Gorilla IQ Commands</b>\n\n<b>Quotes</b>\n"Quote for 40ft boom lift, 7 days, Miami"\n\n<b>Payments</b>\n"Stripe link $500 for deposit"\n\n<b>Ops</b>\n"Today's deliveries"\n"Schedule pickup for Job GR-2026-0012"\n\n<b>Finance</b>\n"Monthly revenue report"\n"Any rentals ending soon?"\n\n<b>Admin</b>\n"Send contract for GR-2026-0010"\n"Receipt" + attach photo\n\n<b>Marketing</b>\n"Add lead: John Smith, contractor, 305-555-0100"\n\n/status — System overview`,

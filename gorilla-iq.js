@@ -14,14 +14,16 @@ const client = new Anthropic({ apiKey: CONFIG.ANTHROPIC_KEY });
 const contexts = new Map(); // chatId → { history, lastAt }
 
 function getContext(chatId) {
-  const now = Date.now();
-  const ctx = contexts.get(chatId);
-  if (!ctx || now - ctx.lastAt > 30 * 60 * 1000) {
-    contexts.set(chatId, { history: [], lastAt: now });
-    return [];
+  if (!contexts.has(chatId)) {
+    contexts.set(chatId, { history: [], lastAt: Date.now() });
   }
-  ctx.lastAt = now;
+  const ctx = contexts.get(chatId);
+  ctx.lastAt = Date.now();
   return ctx.history;
+}
+
+export function clearContext(chatId) {
+  contexts.delete(chatId);
 }
 
 function pushContext(chatId, role, content) {
@@ -129,11 +131,13 @@ export async function gorillaIQ(message, chatId) {
 
   // Call agent
   const result = await callAgent(agent, message, history);
-  const reply  = result?.reply || result?.message || String(result ?? '⚠️ No response');
+  const reply  = result?.reply || result?.text || result?.message
+    || (typeof result === 'string' ? result : null)
+    || '⚠️ No response from agent';
 
-  // Update context
+  // Update context (only store if we have real content)
   pushContext(chatId, 'user', message);
-  pushContext(chatId, 'assistant', reply);
+  if (reply && reply !== '⚠️ No response from agent') pushContext(chatId, 'assistant', reply);
 
   return { agent, intent, reply };
 }
