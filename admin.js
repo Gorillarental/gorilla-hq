@@ -803,6 +803,17 @@ export async function adminChat(message, history = []) {
       return { text: `Balance link sent: ${result.paymentLink}`, ...result };
     }
 
+    // "stripe link $300" / "payment link $300" / "create a $300 link" / "$300 payment link"
+    const quickLinkMatch = msg.match(/(?:stripe|payment)\s+link[^\d]*\$?([\d,.]+)|(?:create|generate|send|give)[^\d]*\$?([\d,.]+)[^\d]*(?:stripe|payment)?\s*link|\$?([\d,.]+)\s+(?:stripe|payment)\s*link/);
+    if (quickLinkMatch) {
+      const raw    = quickLinkMatch[1] || quickLinkMatch[2] || quickLinkMatch[3];
+      const amount = parseFloat(raw.replace(/,/g, ''));
+      if (amount > 0) {
+        const link = await createStripePaymentLink(amount, { description: `Gorilla Rental Payment — $${amount}` });
+        return { text: `Payment link for $${amount}:\n${link}`, paymentLink: link, amount };
+      }
+    }
+
     // "check late rentals"
     if (/check late rentals/.test(msg)) {
       const count = await checkLateRentals();
@@ -866,8 +877,9 @@ ACTIONS:
 {"action":"morning_briefing"}
 {"action":"monthly_report"}
 {"action":"pending_approvals"}
+{"action":"create_payment_link","amount":300,"description":"Optional description"}
 
-IMPORTANT: You CAN and SHOULD log expenses and income directly using add_expense or add_income. When someone says "log $200 gas expense" or "record a payment" — use the action immediately. Never tell the user to log it elsewhere.${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
+IMPORTANT: You CAN and SHOULD log expenses and income directly using add_expense or add_income. When someone asks for a payment link or Stripe link with a dollar amount — even without a job ID — use create_payment_link immediately. When someone says "log $200 gas expense" or "record a payment" — use the action immediately. Never tell the user to log it elsewhere.${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
 
   const messages = [...history, { role: 'user', content: message }];
   const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
@@ -892,6 +904,11 @@ IMPORTANT: You CAN and SHOULD log expenses and income directly using add_expense
       else if (action.action === 'morning_briefing')           result = await sendMorningBriefing();
       else if (action.action === 'monthly_report')             result = await sendMonthlyReport();
       else if (action.action === 'pending_approvals')          result = await listPendingApprovals();
+      else if (action.action === 'create_payment_link') {
+        const link = await createStripePaymentLink(action.amount, { description: action.description || `Gorilla Rental Payment — $${action.amount}` });
+        result = { paymentLink: link, amount: action.amount };
+        return { text: `Payment link for $${action.amount}:\n${link}`, action, result };
+      }
       return { text, action, result };
     } catch (e) { return { text, error: e.message }; }
   }
