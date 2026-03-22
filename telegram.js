@@ -84,12 +84,13 @@ async function handleTelegramCommand(chatId, text, fromName) {
     return;
   }
 
-  // Forward everything else to the main agent (chip)
+  // Forward to admin agent by default
   try {
-    const { chipChat } = await import('./chip.js');
-    const reply = await chipChat(text, `telegram_${chatId}`);
-    if (reply) await sendTelegram(escapeHtml(reply));
-  } catch {
+    const { adminChat } = await import('./admin.js');
+    const reply = await adminChat(text);
+    if (reply) await sendTelegram(escapeHtml(String(reply)));
+  } catch (err) {
+    console.error('[Telegram] Agent error:', err);
     await sendTelegram('⚠️ Agent unavailable. Try again in a moment.');
   }
 }
