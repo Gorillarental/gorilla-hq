@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 import { CONFIG, PRICING } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { generateQuotePDF } from './quote-pdf.js';
-import { getPipeline, upsertJob, updateJob, getJob, dbAddCashflow, dbGetCashflow, dbGetCashflowSummary } from './db.js';
+import { getPipeline, upsertJob, updateJob, getJob, dbAddCashflow, dbGetCashflow, dbGetCashflowSummary, dbUpsertReservation, dbGetReservation, dbGetAllReservations } from './db.js';
 import { readCashflow as spReadCashflow, addCashflowEntry as spAddCashflowEntry, uploadReceipt, listReceipts, getCashflowSummary as spGetCashflowSummary } from './sharepoint.js';
 
 // ─── Cashflow helpers (DB-backed, SharePoint optional) ─────
@@ -157,6 +157,20 @@ async function generateContractHTML(res) {
 </body></html>`;
 }
 
+// ─── Reservation helpers (DB + file) ──────────────────────
+
+async function getReservation(jobId) {
+  const dbRes = await dbGetReservation(jobId).catch(() => null);
+  if (dbRes) return dbRes;
+  return readJSON(DATA.reservations).find(r => r.jobId === jobId) || null;
+}
+
+async function getAllReservationsData() {
+  const dbRes = await dbGetAllReservations().catch(() => []);
+  if (dbRes.length) return dbRes;
+  return readJSON(DATA.reservations);
+}
+
 // ─── Pipeline helpers ──────────────────────────────────────
 
 export async function getJobById(jobId) {
@@ -220,7 +234,7 @@ export async function createReservation(jobId) {
   });
 
   const reservations = readJSON(DATA.reservations);
-  const reservation  = {
+  const reservation = {
     jobId,
     customerName:    job.customerName,
     customerEmail:   job.customerEmail,
@@ -242,6 +256,7 @@ export async function createReservation(jobId) {
   };
   reservations.push(reservation);
   writeJSON(DATA.reservations, reservations);
+  await dbUpsertReservation(reservation);
 
   await updateJob(jobId, { stage: 'reserved', balanceLink, reservedAt: new Date().toISOString() });
 
@@ -252,7 +267,7 @@ export async function createReservation(jobId) {
 }
 
 export async function sendReservationConfirmation(jobId) {
-  const res = readJSON(DATA.reservations).find(r => r.jobId === jobId);
+  const res = await getReservation(jobId);
   if (!res) throw new Error(`Reservation ${jobId} not found`);
 
   await sendEmailWithPDF({
@@ -288,7 +303,7 @@ ${CONFIG.BRAND.PHONE} | ${CONFIG.BRAND.EMAIL}
 }
 
 export async function createContract(jobId) {
-  const res = readJSON(DATA.reservations).find(r => r.jobId === jobId);
+  const res = await getReservation(jobId);
   if (!res) throw new Error(`Reservation ${jobId} not found`);
 
   const html = await generateContractHTML(res);
@@ -327,7 +342,7 @@ ${CONFIG.BRAND.PHONE} | ${CONFIG.BRAND.EMAIL}
 }
 
 export async function createInvoice(jobId, type = 'final') {
-  const res = readJSON(DATA.reservations).find(r => r.jobId === jobId);
+  const res = await getReservation(jobId);
   if (!res) throw new Error(`Reservation ${jobId} not found`);
 
   const invoice = {
@@ -358,7 +373,7 @@ export async function createInvoice(jobId, type = 'final') {
 export async function getReservationStatus(jobId) {
   return {
     job:          await getJob(jobId),
-    reservation:  readJSON(DATA.reservations).find(r => r.jobId === jobId),
+    reservation:  await getReservation(jobId),
     contract:     readJSON(DATA.contracts).find(c => c.jobId === jobId),
     invoices:     readJSON(DATA.invoices).filter(i => i.jobId === jobId),
   };
@@ -764,7 +779,7 @@ Keep it under 500 words, professional but readable via WhatsApp.`;
 
 export async function adminChat(message, history = []) {
   const pipeline     = await getPipeline();
-  const reservations = readJSON(DATA.reservations);
+  const reservations = await getAllReservationsData();
   const msg          = message.toLowerCase().trim();
 
   // ── Direct command handling ──────────────────────────────
@@ -931,7 +946,7 @@ export function adminRoutes(app) {
   app.post('/admin/contract',            async (req, res) => { try { res.json({ ok: true, ...await createContract(req.body.jobId) }); } catch (e) { res.status(500).json({ ok: false, error: e.message }); } });
   app.post('/admin/invoice',             async (req, res) => { try { res.json({ ok: true, invoice: await createInvoice(req.body.jobId, req.body.type || 'final') }); } catch (e) { res.status(500).json({ ok: false, error: e.message }); } });
   app.get('/admin/status/:jobId',        async (req, res) => { try { res.json({ ok: true, ...await getReservationStatus(req.params.jobId) }); } catch (e) { res.status(500).json({ ok: false, error: e.message }); } });
-  app.get('/admin/reservations',         async (req, res) => { try { res.json({ ok: true, reservations: readJSON(DATA.reservations) }); } catch (e) { res.status(500).json({ ok: false, error: e.message }); } });
+  app.get('/admin/reservations',         async (req, res) => { try { res.json({ ok: true, reservations: await getAllReservationsData() }); } catch (e) { res.status(500).json({ ok: false, error: e.message }); } });
 
   // 6I — Approval routes
   app.post('/admin/approval/respond', async (req, res) => {

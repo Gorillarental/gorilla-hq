@@ -3,6 +3,7 @@
 // ============================================================
 
 import { sendSMS } from './ghl.js';
+import { dbUpsertApproval, dbGetApproval, dbGetAllApprovals } from './db.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -31,6 +32,14 @@ function saveApprovals(approvals) {
   fs.writeFileSync(APPROVALS_FILE, JSON.stringify(approvals, null, 2));
 }
 
+async function loadApprovalsDB() {
+  try {
+    const dbRows = await dbGetAllApprovals();
+    if (dbRows.length) return dbRows;
+  } catch {}
+  return loadApprovals();
+}
+
 // ─── Notify Andrei ──────────────────────────────────────────
 
 export async function notifyAndrei(message) {
@@ -54,6 +63,7 @@ export async function requestApproval(approvalId, message, metadata = {}) {
 
   approvals.push(approval);
   saveApprovals(approvals);
+  await dbUpsertApproval(approval).catch(() => {});
 
   // Primary: Telegram inline keyboard (tap to approve/deny)
   try {
@@ -71,8 +81,9 @@ export async function requestApproval(approvalId, message, metadata = {}) {
 // ─── Check Approval ─────────────────────────────────────────
 
 export async function checkApproval(approvalId) {
-  const approvals = loadApprovals();
-  return approvals.find(a => a.id === approvalId) || null;
+  const dbRes = await dbGetApproval(approvalId).catch(() => null);
+  if (dbRes) return dbRes;
+  return loadApprovals().find(a => a.id === approvalId) || null;
 }
 
 // ─── Grant Approval ─────────────────────────────────────────
@@ -80,12 +91,13 @@ export async function checkApproval(approvalId) {
 export async function grantApproval(approvalId) {
   const approvals = loadApprovals();
   const idx = approvals.findIndex(a => a.id === approvalId);
-  if (idx === -1) throw new Error(`Approval ${approvalId} not found`);
-  approvals[idx].status     = 'approved';
-  approvals[idx].resolvedAt = new Date().toISOString();
-  saveApprovals(approvals);
+  const updates = { status: 'approved', resolvedAt: new Date().toISOString() };
+  if (idx !== -1) { Object.assign(approvals[idx], updates); saveApprovals(approvals); }
+  const dbRow = await dbGetApproval(approvalId).catch(() => null);
+  if (dbRow) await dbUpsertApproval({ ...dbRow, ...updates }).catch(() => {});
+  else if (idx === -1) throw new Error(`Approval ${approvalId} not found`);
   console.log(`[WhatsApp] ✅ Approved: ${approvalId}`);
-  return approvals[idx];
+  return idx !== -1 ? approvals[idx] : { id: approvalId, ...updates };
 }
 
 // ─── Deny Approval ──────────────────────────────────────────
@@ -93,25 +105,26 @@ export async function grantApproval(approvalId) {
 export async function denyApproval(approvalId) {
   const approvals = loadApprovals();
   const idx = approvals.findIndex(a => a.id === approvalId);
-  if (idx === -1) throw new Error(`Approval ${approvalId} not found`);
-  approvals[idx].status     = 'denied';
-  approvals[idx].resolvedAt = new Date().toISOString();
-  saveApprovals(approvals);
+  const updates = { status: 'denied', resolvedAt: new Date().toISOString() };
+  if (idx !== -1) { Object.assign(approvals[idx], updates); saveApprovals(approvals); }
+  const dbRow = await dbGetApproval(approvalId).catch(() => null);
+  if (dbRow) await dbUpsertApproval({ ...dbRow, ...updates }).catch(() => {});
+  else if (idx === -1) throw new Error(`Approval ${approvalId} not found`);
   console.log(`[WhatsApp] ❌ Denied: ${approvalId}`);
-  return approvals[idx];
+  return idx !== -1 ? approvals[idx] : { id: approvalId, ...updates };
 }
 
 // ─── List Pending ───────────────────────────────────────────
 
 export async function listPendingApprovals() {
-  const approvals = loadApprovals();
+  const approvals = await loadApprovalsDB();
   return approvals.filter(a => a.status === 'pending');
 }
 
 // ─── Stale Reminder ─────────────────────────────────────────
 
 export async function sendReminderIfStale() {
-  const approvals = loadApprovals();
+  const approvals = await loadApprovalsDB();
   const now       = Date.now();
 
   for (const approval of approvals) {
@@ -161,4 +174,7 @@ export async function sendReminderIfStale() {
   }
 
   saveApprovals(approvals);
+  for (const a of approvals) {
+    await dbUpsertApproval(a).catch(() => {});
+  }
 }

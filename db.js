@@ -52,7 +52,35 @@ export async function initDB() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
-  console.log('[DB] ✅ Pipeline + Cashflow tables ready');
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS reservations (
+      job_id     TEXT PRIMARY KEY,
+      data       JSONB        NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS deliveries (
+      id         TEXT PRIMARY KEY,
+      data       JSONB        NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS approvals (
+      id         TEXT PRIMARY KEY,
+      data       JSONB        NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS leads (
+      id         TEXT PRIMARY KEY,
+      data       JSONB        NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  console.log('[DB] ✅ All tables ready');
 }
 
 // ─── Get all jobs ──────────────────────────────────────────
@@ -111,6 +139,106 @@ export async function getJob(jobId) {
   }
   const { rows } = await p.query('SELECT data FROM pipeline WHERE job_id = $1', [jobId]);
   return rows[0]?.data || null;
+}
+
+// ─── Reservations ──────────────────────────────────────────
+export async function dbUpsertReservation(res) {
+  const p = getPool();
+  if (!p) return;
+  await p.query(
+    `INSERT INTO reservations (job_id, data) VALUES ($1, $2)
+     ON CONFLICT (job_id) DO UPDATE SET data = $2, updated_at = NOW()`,
+    [res.jobId, res]
+  );
+}
+
+export async function dbGetReservation(jobId) {
+  const p = getPool();
+  if (!p) return null;
+  const { rows } = await p.query('SELECT data FROM reservations WHERE job_id = $1', [jobId]);
+  return rows[0]?.data || null;
+}
+
+export async function dbGetAllReservations() {
+  const p = getPool();
+  if (!p) return [];
+  const { rows } = await p.query("SELECT data FROM reservations ORDER BY (data->>'createdAt') DESC");
+  return rows.map(r => r.data);
+}
+
+// ─── Deliveries ────────────────────────────────────────────
+export async function dbUpsertDelivery(delivery) {
+  const p = getPool();
+  if (!p) return;
+  const id = delivery.id || `DEL-${delivery.jobId}`;
+  await p.query(
+    `INSERT INTO deliveries (id, data) VALUES ($1, $2)
+     ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
+    [id, { ...delivery, id }]
+  );
+}
+
+export async function dbGetDeliveries(filter = {}) {
+  const p = getPool();
+  if (!p) return [];
+  const { rows } = await p.query("SELECT data FROM deliveries ORDER BY (data->>'scheduledDate') ASC");
+  let result = rows.map(r => r.data);
+  if (filter.date)   result = result.filter(d => d.scheduledDate === filter.date);
+  if (filter.status) result = result.filter(d => d.status === filter.status);
+  return result;
+}
+
+export async function dbUpdateDelivery(id, updates) {
+  const p = getPool();
+  if (!p) return;
+  const { rows } = await p.query('SELECT data FROM deliveries WHERE id = $1', [id]);
+  if (!rows.length) return;
+  const updated = { ...rows[0].data, ...updates };
+  await p.query('UPDATE deliveries SET data = $1, updated_at = NOW() WHERE id = $2', [updated, id]);
+  return updated;
+}
+
+// ─── Approvals ─────────────────────────────────────────────
+export async function dbUpsertApproval(approval) {
+  const p = getPool();
+  if (!p) return;
+  await p.query(
+    `INSERT INTO approvals (id, data) VALUES ($1, $2)
+     ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
+    [approval.id, approval]
+  );
+}
+
+export async function dbGetApproval(id) {
+  const p = getPool();
+  if (!p) return null;
+  const { rows } = await p.query('SELECT data FROM approvals WHERE id = $1', [id]);
+  return rows[0]?.data || null;
+}
+
+export async function dbGetAllApprovals() {
+  const p = getPool();
+  if (!p) return [];
+  const { rows } = await p.query("SELECT data FROM approvals ORDER BY (data->>'createdAt') DESC");
+  return rows.map(r => r.data);
+}
+
+// ─── Leads ─────────────────────────────────────────────────
+export async function dbUpsertLead(lead) {
+  const p = getPool();
+  if (!p) return;
+  await p.query(
+    `INSERT INTO leads (id, data) VALUES ($1, $2)
+     ON CONFLICT (id) DO UPDATE SET data = $2, created_at = NOW()`,
+    [lead.id, lead]
+  );
+}
+
+export async function dbGetAllLeads() {
+  const p = getPool();
+  if (!p) return [];
+  const { rows } = await p.query("SELECT data FROM leads ORDER BY created_at DESC");
+  return rows.map(r => r.data);
 }
 
 // ─── Cashflow file helpers ─────────────────────────────────

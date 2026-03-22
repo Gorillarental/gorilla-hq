@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 import { CONFIG, DRIVERS } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { sendSMS, getOrCreateContact, addNote } from './ghl.js';
-import { getPipeline, updateJob, getJob } from './db.js';
+import { getPipeline, updateJob, getJob, dbUpsertDelivery, dbGetDeliveries, dbUpdateDelivery } from './db.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -48,6 +48,17 @@ function readJSON(fp, fallback = []) {
 }
 function writeJSON(fp, data) { fs.writeFileSync(fp, JSON.stringify(data, null, 2)); }
 function getDriver(id) { return DRIVERS.find(d => d.id === id) || DRIVERS[0]; }
+
+async function loadDeliveries(filter = {}) {
+  try {
+    const dbRows = await dbGetDeliveries(filter);
+    if (dbRows.length) return dbRows;
+  } catch {}
+  let rows = readJSON(DATA.deliveries);
+  if (filter.date)   rows = rows.filter(d => d.scheduledDate === filter.date);
+  if (filter.status) rows = rows.filter(d => d.status === filter.status);
+  return rows;
+}
 
 function formatJobSheet(delivery) {
   return `🦍 GORILLA RENTAL — JOB SHEET
@@ -88,6 +99,7 @@ export async function scheduleDelivery(jobId, options = {}) {
   const deliveries = readJSON(DATA.deliveries);
   deliveries.push(delivery);
   writeJSON(DATA.deliveries, deliveries);
+  await dbUpsertDelivery(delivery).catch(() => {});
   await updateJob(jobId, { stage: 'delivery_scheduled', deliveryScheduledAt: new Date().toISOString() });
   await logActivity({ agent: 'ops', action: 'delivery_scheduled', description: `Delivery scheduled for ${jobId}`, jobId, status: 'success', notify: false }).catch(()=>{});
   console.log(`[Ops] ✅ Delivery scheduled: ${jobId} → ${driver.name} on ${delivery.scheduledDate}`);
@@ -115,29 +127,32 @@ export async function schedulePickup(jobId, options = {}) {
   const deliveries = readJSON(DATA.deliveries);
   deliveries.push(pickup);
   writeJSON(DATA.deliveries, deliveries);
+  await dbUpsertDelivery(pickup).catch(() => {});
   await updateJob(jobId, { stage: 'pickup_scheduled', pickupScheduledAt: new Date().toISOString() });
   console.log(`[Ops] ✅ Pickup scheduled: ${jobId} → ${driver.name} on ${pickup.scheduledDate}`);
   return pickup;
 }
 
 export async function notifyDriver(jobId, type = 'delivery') {
-  const deliveries = readJSON(DATA.deliveries);
+  const deliveries = await loadDeliveries();
   const delivery   = deliveries.find(d => d.jobId === jobId && d.type === type);
   if (!delivery) throw new Error(`No ${type} found for ${jobId}`);
   const driver   = getDriver(delivery.driverId);
   const jobSheet = formatJobSheet(delivery);
   const sms      = await sendSMS(driver.phone, jobSheet, { name: driver.name, tags: ['gorilla-driver'] });
   await sendEmailWithPDF({ to: driver.email || CONFIG.BRAND.EMAIL, subject: `🦍 Job Sheet — ${jobId} — ${type.toUpperCase()} — ${delivery.scheduledDate}`, body: jobSheet, attachments: [] });
-  const idx = deliveries.findIndex(d => d.jobId === jobId && d.type === type);
-  deliveries[idx].driverNotifiedAt = new Date().toISOString();
-  deliveries[idx].status = 'driver_notified';
-  writeJSON(DATA.deliveries, deliveries);
+  const updates = { driverNotifiedAt: new Date().toISOString(), status: 'driver_notified' };
+  const fileDeliveries = readJSON(DATA.deliveries);
+  const idx = fileDeliveries.findIndex(d => d.jobId === jobId && d.type === type);
+  if (idx >= 0) { Object.assign(fileDeliveries[idx], updates); writeJSON(DATA.deliveries, fileDeliveries); }
+  await dbUpdateDelivery(delivery.id, updates).catch(() => {});
   console.log(`[Ops] ✅ Driver ${driver.name} notified — ${jobId}`);
   return { sms };
 }
 
 export async function notifyCustomerDelivery(jobId) {
-  const delivery = readJSON(DATA.deliveries).find(d => d.jobId === jobId && d.type === 'delivery');
+  const allDels  = await loadDeliveries();
+  const delivery = allDels.find(d => d.jobId === jobId && d.type === 'delivery');
   if (!delivery) throw new Error(`No delivery found for ${jobId}`);
   const sms = await sendSMS(delivery.customerPhone,
     `Hi ${delivery.customerName}! Your Gorilla Rental equipment (${jobId}) is scheduled for delivery on ${delivery.scheduledDate} at ${delivery.scheduledTime}. Driver ${delivery.driverName} will call 30 min before arrival. Questions? ${CONFIG.BRAND.PHONE}`,
@@ -154,48 +169,57 @@ export async function notifyCustomerDelivery(jobId) {
 }
 
 export async function markDeliveryComplete(jobId, notes = '') {
-  const deliveries = readJSON(DATA.deliveries);
-  const idx        = deliveries.findIndex(d => d.jobId === jobId && d.type === 'delivery');
-  if (idx < 0) throw new Error(`No delivery found for ${jobId}`);
-  deliveries[idx].status = 'completed'; deliveries[idx].completedAt = new Date().toISOString(); deliveries[idx].completionNotes = notes;
-  writeJSON(DATA.deliveries, deliveries);
+  const allDels = await loadDeliveries();
+  const delivery = allDels.find(d => d.jobId === jobId && d.type === 'delivery');
+  if (!delivery) throw new Error(`No delivery found for ${jobId}`);
+  const updates = { status: 'completed', completedAt: new Date().toISOString(), completionNotes: notes };
+  const fileDeliveries = readJSON(DATA.deliveries);
+  const idx = fileDeliveries.findIndex(d => d.jobId === jobId && d.type === 'delivery');
+  if (idx >= 0) { Object.assign(fileDeliveries[idx], updates); writeJSON(DATA.deliveries, fileDeliveries); }
+  await dbUpdateDelivery(delivery.id, updates).catch(() => {});
   await updateJob(jobId, { stage: 'in_progress', deliveredAt: new Date().toISOString() });
-  try { const { contact } = await getOrCreateContact(deliveries[idx].customerPhone, { name: deliveries[idx].customerName }); if (contact?.id) await addNote(contact.id, `✅ Equipment delivered for ${jobId} on ${new Date().toLocaleDateString()}. ${notes}`); } catch {}
+  try { const { contact } = await getOrCreateContact(delivery.customerPhone, { name: delivery.customerName }); if (contact?.id) await addNote(contact.id, `✅ Equipment delivered for ${jobId} on ${new Date().toLocaleDateString()}. ${notes}`); } catch {}
   console.log(`[Ops] ✅ Delivery complete: ${jobId}`);
-  return deliveries[idx];
+  return { ...delivery, ...updates };
 }
 
 export async function markPickupComplete(jobId, inspectionNotes = '') {
-  const deliveries = readJSON(DATA.deliveries);
-  const idx        = deliveries.findIndex(d => d.jobId === jobId && d.type === 'pickup');
-  if (idx < 0) throw new Error(`No pickup found for ${jobId}`);
-  deliveries[idx].status = 'completed'; deliveries[idx].completedAt = new Date().toISOString(); deliveries[idx].inspectionNotes = inspectionNotes;
-  writeJSON(DATA.deliveries, deliveries);
+  const allDels  = await loadDeliveries();
+  const pickup   = allDels.find(d => d.jobId === jobId && d.type === 'pickup');
+  if (!pickup) throw new Error(`No pickup found for ${jobId}`);
+  const updates = { status: 'completed', completedAt: new Date().toISOString(), inspectionNotes };
+  const fileDeliveries = readJSON(DATA.deliveries);
+  const idx = fileDeliveries.findIndex(d => d.jobId === jobId && d.type === 'pickup');
+  if (idx >= 0) { Object.assign(fileDeliveries[idx], updates); writeJSON(DATA.deliveries, fileDeliveries); }
+  await dbUpdateDelivery(pickup.id, updates).catch(() => {});
   await updateJob(jobId, { stage: 'returned', returnedAt: new Date().toISOString() });
   const handoffs = readJSON(DATA.handoffs);
-  handoffs.push({ jobId, type: 'return_inspection', notes: inspectionNotes, driverId: deliveries[idx].driverId, timestamp: new Date().toISOString() });
+  handoffs.push({ jobId, type: 'return_inspection', notes: inspectionNotes, driverId: pickup.driverId, timestamp: new Date().toISOString() });
   writeJSON(DATA.handoffs, handoffs);
-  try { const { contact } = await getOrCreateContact(deliveries[idx].customerPhone, { name: deliveries[idx].customerName }); if (contact?.id) await addNote(contact.id, `📦 Equipment picked up for ${jobId} on ${new Date().toLocaleDateString()}. Inspection: ${inspectionNotes || 'OK'}`); } catch {}
+  try { const { contact } = await getOrCreateContact(pickup.customerPhone, { name: pickup.customerName }); if (contact?.id) await addNote(contact.id, `📦 Equipment picked up for ${jobId} on ${new Date().toLocaleDateString()}. Inspection: ${inspectionNotes || 'OK'}`); } catch {}
   console.log(`[Ops] ✅ Pickup complete: ${jobId}`);
-  return deliveries[idx];
+  return { ...pickup, ...updates };
 }
 
-export async function getTodaysJobs() {
-  const today = new Date().toISOString().split('T')[0];
-  return readJSON(DATA.deliveries).filter(d => d.scheduledDate === today && d.status !== 'completed').sort((a, b) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
+export async function getTodaysJobs(dateOverride) {
+  const today = dateOverride || new Date().toISOString().split('T')[0];
+  const rows  = await loadDeliveries({ date: today });
+  return rows.filter(d => d.status !== 'completed').sort((a, b) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
 }
 
 export async function getUpcomingJobs(days = 7) {
   const today  = new Date();
   const future = new Date(today.getTime() + days * 86400000);
-  return readJSON(DATA.deliveries).filter(d => { const dt = new Date(d.scheduledDate); return dt >= today && dt <= future && d.status !== 'completed'; }).sort((a, b) => new Date(a.scheduledDate) - new Date(b.scheduledDate));
+  const rows   = await loadDeliveries();
+  return rows.filter(d => { const dt = new Date(d.scheduledDate); return dt >= today && dt <= future && d.status !== 'completed'; }).sort((a, b) => new Date(a.scheduledDate) - new Date(b.scheduledDate));
 }
 
 export async function opsChat(message, history = []) {
   const pipeline  = await getPipeline();
   const today     = new Date().toISOString().split('T')[0];
-  const todayJobs = readJSON(DATA.deliveries).filter(d => d.scheduledDate === today);
-  const upcoming  = readJSON(DATA.deliveries).filter(d => d.scheduledDate > today && d.status !== 'completed').slice(0, 5);
+  const allDeliveries = await loadDeliveries();
+  const todayJobs = allDeliveries.filter(d => d.scheduledDate === today);
+  const upcoming  = allDeliveries.filter(d => d.scheduledDate > today && d.status !== 'completed').slice(0, 5);
 
   let knowledgeContext = '';
   try {
