@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 import { CONFIG, DRIVERS } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { sendSMS, getOrCreateContact, addNote } from './ghl.js';
-import { getPipeline, updateJob } from './db.js';
+import { getPipeline, updateJob, getJob } from './db.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -67,8 +67,13 @@ Questions? Call Andrei: ${CONFIG.BRAND.PHONE}`.trim();
 }
 
 export async function scheduleDelivery(jobId, options = {}) {
-  const res = readJSON(DATA.reservations).find(r => r.jobId === jobId);
-  if (!res) throw new Error(`Reservation ${jobId} not found`);
+  let res = readJSON(DATA.reservations).find(r => r.jobId === jobId);
+  if (!res) {
+    // Fall back to DB pipeline job
+    const job = await getJob(jobId).catch(() => null);
+    if (!job) throw new Error(`Reservation ${jobId} not found`);
+    res = { ...job, equipment: job.equipment || [] };
+  }
   const driver   = getDriver(options.driverId || 'DRV-001');
   const delivery = {
     id: `DEL-${jobId}`, jobId, type: 'delivery',
@@ -90,8 +95,12 @@ export async function scheduleDelivery(jobId, options = {}) {
 }
 
 export async function schedulePickup(jobId, options = {}) {
-  const res = readJSON(DATA.reservations).find(r => r.jobId === jobId);
-  if (!res) throw new Error(`Reservation ${jobId} not found`);
+  let res = readJSON(DATA.reservations).find(r => r.jobId === jobId);
+  if (!res) {
+    const job = await getJob(jobId).catch(() => null);
+    if (!job) throw new Error(`Reservation ${jobId} not found`);
+    res = { ...job, equipment: job.equipment || [] };
+  }
   const driver = getDriver(options.driverId || 'DRV-001');
   const pickup = {
     id: `PCK-${jobId}`, jobId, type: 'pickup',
