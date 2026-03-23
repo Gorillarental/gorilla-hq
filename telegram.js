@@ -171,7 +171,13 @@ async function handleTextMessage(message) {
   try {
     const { gorillaIQ } = await import('./gorilla-iq.js');
     const result = await gorillaIQ(text, chatId);
-    if (result.reply) {
+    const jobId = result.agentResult?.jobId;
+    if (result.action?.action === 'build_quote' && jobId) {
+      await sendInlineKeyboard(chatId, escapeHtml(result.reply), [[
+        { text: '📧 Send Quote', callback_data: `send_quote:${jobId}` },
+        { text: '❌ Cancel',     callback_data: `cancel_quote:${jobId}` },
+      ]]);
+    } else if (result.reply) {
       await sendTelegram(escapeHtml(result.reply), chatId);
     }
   } catch (err) {
@@ -250,6 +256,28 @@ async function handleCallbackQuery(query) {
 
   if (!approvalId) {
     await answerCallbackQuery(callbackId, '⚠️ Invalid action');
+    return;
+  }
+
+  if (action === 'send_quote') {
+    await answerCallbackQuery(callbackId, '📧 Sending...');
+    try {
+      const { sendQuote } = await import('./quotes.js');
+      await sendQuote(approvalId);
+      await editMessageText(chatId, messageId,
+        `✅ <b>Quote sent!</b> — ${approvalId}\n${query.message?.text ?? ''}`
+      );
+    } catch (e) {
+      await sendTelegram(`⚠️ Failed to send quote: ${e.message}`, chatId);
+    }
+    return;
+  }
+
+  if (action === 'cancel_quote') {
+    await answerCallbackQuery(callbackId, '❌ Cancelled');
+    await editMessageText(chatId, messageId,
+      `❌ <b>Quote not sent</b> — ${approvalId}\n${query.message?.text ?? ''}`
+    );
     return;
   }
 

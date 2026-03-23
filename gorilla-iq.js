@@ -204,7 +204,7 @@ export async function gorillaIQ(message, chatId) {
     autoCreateTask(agent, result.action, result.result).catch(() => {});
   }
 
-  return { agent, intent, reply };
+  return { agent, intent, reply, action: result?.action || null, agentResult: result?.result || null };
 }
 
 // ─── Quick status summary (used by /status command) ───────────
