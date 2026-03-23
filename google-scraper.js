@@ -31,27 +31,29 @@ async function getLoggerFunctions() {
   return mod;
 }
 
+// Standard tags per the marketing agent system prompt
+// Each category maps to: typeTag (TYPE_*), intentTag (NEED_*), sourceTag always SRC_GOOGLE, statusTag always STAGE_NEW
 export const BUSINESS_CATEGORIES = [
-  { query: 'general contractor',               tag: 'type - general contractor',    category: 'Construction' },
-  { query: 'construction company',             tag: 'type - construction',          category: 'Construction' },
-  { query: 'roofing contractor',               tag: 'type - roofing',               category: 'Construction' },
-  { query: 'facade contractor',                tag: 'type - facade',                category: 'Construction' },
-  { query: 'concrete contractor',              tag: 'type - concrete',              category: 'Construction' },
-  { query: 'painting contractor commercial',   tag: 'type - painter',               category: 'Construction' },
-  { query: 'electrical contractor commercial', tag: 'type - electrical',            category: 'Construction' },
-  { query: 'HVAC contractor commercial',       tag: 'type - hvac',                  category: 'Construction' },
-  { query: 'framing contractor',               tag: 'type - framing',               category: 'Construction' },
-  { query: 'drywall contractor',               tag: 'type - drywall',               category: 'Construction' },
-  { query: 'property management company',      tag: 'type - property management',   category: 'Property' },
-  { query: 'facilities management',            tag: 'type - facilities',            category: 'Property' },
-  { query: 'building maintenance',             tag: 'type - building maintenance',  category: 'Property' },
-  { query: 'commercial real estate',           tag: 'type - commercial real estate',category: 'Property' },
-  { query: 'sign company',                     tag: 'type - signage',               category: 'Specialty' },
-  { query: 'window cleaning commercial',       tag: 'type - window cleaning',       category: 'Specialty' },
-  { query: 'solar panel installation',         tag: 'type - solar',                 category: 'Specialty' },
-  { query: 'tree service commercial',          tag: 'type - tree service',          category: 'Specialty' },
-  { query: 'event production company',         tag: 'type - events',                category: 'Events' },
-  { query: 'film production company',          tag: 'type - film production',       category: 'Events' },
+  { query: 'general contractor',               typeTag: 'TYPE_CONTRACTOR', intentTag: 'NEED_UNKNOWN',       category: 'Construction' },
+  { query: 'construction company',             typeTag: 'TYPE_GENERAL',    intentTag: 'NEED_UNKNOWN',       category: 'Construction' },
+  { query: 'roofing contractor',               typeTag: 'TYPE_ROOFING',    intentTag: 'NEED_BOOM_LIFT',     category: 'Construction' },
+  { query: 'glazing contractor',               typeTag: 'TYPE_GLAZING',    intentTag: 'NEED_BOOM_LIFT',     category: 'Construction' },
+  { query: 'concrete contractor',              typeTag: 'TYPE_CONCRETE',   intentTag: 'NEED_POST_SHORES',   category: 'Construction' },
+  { query: 'restoration company',              typeTag: 'TYPE_CONTRACTOR', intentTag: 'NEED_BOOM_LIFT',     category: 'Construction' },
+  { query: 'painting contractor commercial',   typeTag: 'TYPE_CONTRACTOR', intentTag: 'NEED_SCISSOR_LIFT',  category: 'Construction' },
+  { query: 'electrical contractor commercial', typeTag: 'TYPE_CONTRACTOR', intentTag: 'NEED_SCISSOR_LIFT',  category: 'Construction' },
+  { query: 'HVAC contractor commercial',       typeTag: 'TYPE_CONTRACTOR', intentTag: 'NEED_SCISSOR_LIFT',  category: 'Construction' },
+  { query: 'framing contractor',               typeTag: 'TYPE_CONTRACTOR', intentTag: 'NEED_SCAFFOLD',      category: 'Construction' },
+  { query: 'drywall contractor',               typeTag: 'TYPE_CONTRACTOR', intentTag: 'NEED_SCAFFOLD',      category: 'Construction' },
+  { query: 'property management company',      typeTag: 'TYPE_GENERAL',    intentTag: 'NEED_UNKNOWN',       category: 'Property' },
+  { query: 'facilities management',            typeTag: 'TYPE_GENERAL',    intentTag: 'NEED_SCISSOR_LIFT',  category: 'Property' },
+  { query: 'building maintenance',             typeTag: 'TYPE_GENERAL',    intentTag: 'NEED_SCISSOR_LIFT',  category: 'Property' },
+  { query: 'sign company',                     typeTag: 'TYPE_CONTRACTOR', intentTag: 'NEED_BOOM_LIFT',     category: 'Specialty' },
+  { query: 'window cleaning commercial',       typeTag: 'TYPE_GLAZING',    intentTag: 'NEED_SCISSOR_LIFT',  category: 'Specialty' },
+  { query: 'solar panel installation',         typeTag: 'TYPE_CONTRACTOR', intentTag: 'NEED_SCISSOR_LIFT',  category: 'Specialty' },
+  { query: 'tree service commercial',          typeTag: 'TYPE_CONTRACTOR', intentTag: 'NEED_BOOM_LIFT',     category: 'Specialty' },
+  { query: 'event production company',         typeTag: 'TYPE_EVENT',      intentTag: 'NEED_SCISSOR_LIFT',  category: 'Events' },
+  { query: 'film production company',          typeTag: 'TYPE_EVENT',      intentTag: 'NEED_SCISSOR_LIFT',  category: 'Events' },
 ];
 
 export const SEARCH_AREAS = [
@@ -185,10 +187,12 @@ export async function scrapeAndAddToGHL(options = {}) {
             company: details.name,
             source:  'Google Places Scraper',
             tags: [
-              'src - cold outreach',
-              category.tag,
-              `county - ${area.county.toLowerCase().replace(/ /g, '-')}`,
-              `city - ${area.name.toLowerCase().replace(/ /g, '-')}`,
+              'SRC_GOOGLE',
+              category.typeTag,
+              category.intentTag,
+              'STAGE_NEW',
+              `county-${area.county.toLowerCase().replace(/ /g, '-')}`,
+              `city-${area.name.toLowerCase().replace(/ /g, '-')}`,
             ],
           });
 

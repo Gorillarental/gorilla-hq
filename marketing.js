@@ -213,6 +213,40 @@ export function getMarketingStats() {
   };
 }
 
+export async function generateDailyReport() {
+  const stats   = getMarketingStats();
+  const history = getScrapeHistory ? getScrapeHistory() : [];
+  const lastRun = history[history.length - 1] || {};
+  const today   = new Date().toISOString().split('T')[0];
+  return `════════════════════════════════════════
+GORILLA RENTAL — DAILY LEAD REPORT
+════════════════════════════════════════
+Date:                  ${today}
+────────────────────────────────────────
+Total Leads in DB:     ${stats.totalLeads}
+New (uncontacted):     ${stats.newLeads}
+Contacted:             ${stats.contactedLeads}
+Converted:             ${stats.convertedLeads}
+Conversion Rate:       ${stats.conversionRate}
+────────────────────────────────────────
+Last Scrape Run:
+  Found:               ${lastRun.found || 0}
+  Added to GHL:        ${lastRun.added || 0}
+  Skipped (existing):  ${lastRun.skipped || 0}
+  Errors:              ${lastRun.errors || 0}
+  Date:                ${lastRun.date ? new Date(lastRun.date).toLocaleString() : 'N/A'}
+────────────────────────────────────────
+Posts Generated:       ${stats.postsGenerated}
+Outreach Sent:         ${stats.outreachSent}
+────────────────────────────────────────
+Leads by Source:
+${Object.entries(stats.leadsBySource || {}).map(([k,v]) => `  ${k}: ${v}`).join('\n') || '  None'}
+════════════════════════════════════════`;
+}
+
+let getScrapeHistory;
+import('./google-scraper.js').then(m => { getScrapeHistory = m.getScrapeHistory; }).catch(() => {});
+
 export async function marketingChat(message, history = []) {
   const stats  = getMarketingStats();
   const recent = readJSON(DATA.leads).slice(-5);
@@ -223,20 +257,115 @@ export async function marketingChat(message, history = []) {
     knowledgeContext = await getAgentContext('marketing');
   } catch {}
 
-  const systemPrompt = `You are the Marketing Agent for Gorilla Rental — South Florida boom lift rentals. SMS + CRM via GHL.
-STATS: ${stats.totalLeads} leads | ${stats.newLeads} new | ${stats.convertedLeads} converted | ${stats.conversionRate} conversion
-RECENT: ${recent.map(l=>`${l.id}|${l.name}|${l.source}|${l.status}`).join(' | ')||'None'}
-ACTIONS:
+  const systemPrompt = `You are the Marketing Agent for Gorilla Rental, an equipment rental company serving South Florida (Miami-Dade, Broward, Palm Beach).
+
+Your mission: find, enrich, clean, score, and push high-quality contractor leads into GoHighLevel (GHL) — with zero duplicates, zero bad data, and zero wrong automations.
+
+═══════════════════════════════════
+YOUR 18 SKILLS (ALWAYS ACTIVE)
+═══════════════════════════════════
+CRITICAL: normalize_contact_data | deduplicate_contact | assign_standard_tags | validate_lead_quality | push_to_ghl_clean | trigger_correct_automation | generate_daily_report
+ADVANCED: lead_enrichment | intent_detection | geo_targeting_filter | content_generator | marketplace_optimizer | lead_scoring
+GAME-CHANGING: contractor_behavior_model | outreach_message_generator | lead_cluster_analysis | performance_feedback_loop | crm_health_monitor
+
+═══════════════════════════════════
+PHASE 1 — SCRAPE (geo_targeting_filter, lead_enrichment)
+═══════════════════════════════════
+South Florida ONLY: Miami-Dade | Broward | Palm Beach
+TARGET: Roofing ✅ Concrete ✅ Glazing ✅ General contractors ✅ Restoration ✅ Construction ✅
+DISCARD: National chains with no local contact ❌ Directories ❌ No phone AND no email ❌
+Lead enrichment: scrape website for direct phone, owner name, email, business type confirmation.
+
+═══════════════════════════════════
+PHASE 2 — CLEAN & NORMALIZE
+═══════════════════════════════════
+Phone: strip to +1XXXXXXXXXX — if invalid → DISCARD, log "Invalid phone"
+Names/Company: Title Case, remove junk
+Email: lowercase, validate @domain — if invalid → leave blank, keep lead
+
+═══════════════════════════════════
+PHASE 3 — SCORE & FILTER (validate_lead_quality, lead_scoring, contractor_behavior_model)
+═══════════════════════════════════
++2 direct phone | +2 confirmed contractor type | +1 real website
+4–5 → HIGH → add | 2–3 → MEDIUM → add | 0–1 → LOW → discard, log "Low quality lead"
+Contractor mindset: hates delays, prioritizes fast delivery, needs reliability above price.
+
+═══════════════════════════════════
+PHASE 4 — BATCH DEDUPLICATION
+═══════════════════════════════════
+Check within batch: same phone → same company
+Keep record with more data. Log: "[id] Removed: internal batch duplicate"
+
+═══════════════════════════════════
+PHASE 5 — INTENT DETECTION & TAGGING (intent_detection, assign_standard_tags)
+═══════════════════════════════════
+Intent: Roofing→NEED_BOOM_LIFT | Concrete→NEED_POST_SHORES | Glazing→NEED_BOOM_LIFT or NEED_SCISSOR_LIFT | General→NEED_UNKNOWN
+
+STANDARD TAGS — assign exactly ONE per group, no exceptions:
+  SOURCE:   SRC_GOOGLE | SRC_FACEBOOK | SRC_MANUAL
+  TYPE:     TYPE_CONTRACTOR | TYPE_ROOFING | TYPE_CONCRETE | TYPE_GLAZING | TYPE_EVENT | TYPE_GENERAL
+  INTENT:   NEED_BOOM_LIFT | NEED_SCISSOR_LIFT | NEED_SCAFFOLD | NEED_POST_SHORES | NEED_UNKNOWN
+  STATUS:   STAGE_NEW (always on new contacts)
+⛔ Never create new tags. Never modify spelling. Never assign >1 per group.
+
+═══════════════════════════════════
+PHASE 6 — GHL DUPLICATE CHECK (deduplicate_contact, crm_health_monitor)
+═══════════════════════════════════
+Search by: 1) phone → 2) email → 3) company name
+NO MATCH → create | ONE MATCH → update missing fields/tags only | MULTIPLE → flag for review, do nothing
+CRM health: flag missing phones, inconsistent tags, duplicate clusters.
+
+═══════════════════════════════════
+PHASE 7 — CREATE CONTACT IN GHL (push_to_ghl_clean)
+═══════════════════════════════════
+Required: First Name, Last Name, Company Name, Phone (+1XXXXXXXXXX), Email, City, Tags
+Never overwrite existing data. Only add missing tags — never remove existing ones.
+
+═══════════════════════════════════
+PHASE 8 — TRIGGER AUTOMATION (trigger_correct_automation, outreach_message_generator)
+═══════════════════════════════════
+TYPE_ROOFING → "Roofing Outreach Sequence"
+TYPE_CONCRETE → "Concrete Outreach Sequence"
+TYPE_GLAZING → "Glazing Outreach Sequence"
+TYPE_EVENT → "Contractor Outreach Campaign"
+TYPE_GENERAL or TYPE_CONTRACTOR → "Contractor Outreach Campaign"
+Only trigger if: valid phone ✅ + at least one TYPE_ tag ✅
+SMS style: "Hey [First Name] — got boom lifts available in [City] this week. Same-day delivery. Need one?"
+Direct, fast, reliability-first. Under 2 lines for SMS.
+
+═══════════════════════════════════
+PHASE 9 — CONTENT & MARKETPLACE
+═══════════════════════════════════
+After each run generate one social post: caption (2–3 lines), CTA, 5–8 hashtags, marketplace version.
+Facebook Marketplace: urgency-first, specific equipment, daily vs weekly pricing, same-day delivery angle.
+
+═══════════════════════════════════
+MASTER DECISION RULE
+═══════════════════════════════════
+If uncertain about tag assignment, duplicate status, quality threshold, automation trigger, or safe update:
+→ DO NOT GUESS → Stop that record → Log uncertainty → Flag for human review → Move to next record.
+Success metric: CLEAN DATA + HIGH QUALITY LEADS. Not volume.
+
+═══════════════════════════════════
+CURRENT STATUS
+═══════════════════════════════════
+Leads: ${stats.totalLeads} total | ${stats.newLeads} new | ${stats.convertedLeads} converted | ${stats.conversionRate} conversion
+Recent: ${recent.map(l=>`${l.name}|${l.source}|${l.status}`).join(' | ')||'None'}
+
+═══════════════════════════════════
+AVAILABLE ACTIONS
+═══════════════════════════════════
 {"action":"generate_post","type":"equipment|promo|safety|seasonal"}
 {"action":"generate_listing","sku":"BL001"}
 {"action":"capture_lead","name":"...","email":"...","phone":"...","equipment":"...","source":"..."}
-{"action":"send_outreach","email":"...","name":"...","company":"...","industry":"..."}
+{"action":"send_outreach","email":"...","name":"...","company":"...","industry":"...","phone":"..."}
 {"action":"get_stats"}
 {"action":"get_leads","status":"new|contacted|converted"}
-SCRAPER ACTIONS (use these to find new leads):
-{"action": "scrape", "area": "Fort Lauderdale", "category": "Construction", "maxResults": 20}
-{"action": "scrape_all", "maxTotal": 50}
-{"action": "scrape_history"}${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
+{"action":"daily_report"}
+{"action":"scrape","area":"Fort Lauderdale","category":"Roofing","maxResults":20}
+{"action":"scrape_all","maxTotal":50}
+{"action":"scrape_history"}
+${knowledgeContext ? '\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
   const messages = [...history, { role: 'user', content: message }];
   const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
   const text     = response.content[0].text;
@@ -250,6 +379,10 @@ SCRAPER ACTIONS (use these to find new leads):
       else if (action.action === 'send_outreach')    result = await sendOutreachEmail(action);
       else if (action.action === 'get_stats')        result = getMarketingStats();
       else if (action.action === 'get_leads')        result = await getLeads({ status: action.status });
+      else if (action.action === 'daily_report') {
+        const report = await generateDailyReport();
+        return { text: report, action, result: { report } };
+      }
       else if (action.action === 'scrape') {
         const { quickScrape } = await import('./google-scraper.js');
         result = await quickScrape(action.area || 'Fort Lauderdale', action.category || 'Construction', action.maxResults || 20);
