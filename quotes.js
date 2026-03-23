@@ -61,21 +61,29 @@ const BOOQABLE_PRODUCT_IDS = {
 async function lookupBooqableCustomer(query) {
   try {
     const { BASE_URL, API_KEY } = CONFIG.BOOQABLE;
-    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` };
-    // Try by name first, then by email
-    const url = query.includes('@')
-      ? `${BASE_URL}/customers?q[email_eq]=${encodeURIComponent(query)}`
-      : `${BASE_URL}/customers?q[name_cont]=${encodeURIComponent(query)}`;
-    const res  = await fetch(url, { headers });
-    const data = await res.json();
-    const customers = data?.customers || [];
-    if (!customers.length) return null;
-    const c = customers[0];
+    const q = (query || '').toLowerCase().trim();
+    // Fetch all customers (Booqable v1 filter endpoint has bugs — filter client-side)
+    let page = 1, found = null;
+    while (!found && page <= 5) {
+      const res  = await fetch(`${BASE_URL}/customers?per_page=100&page=${page}&api_key=${API_KEY}`);
+      const data = await res.json();
+      const customers = data?.customers || [];
+      if (!customers.length) break;
+      found = customers.find(c =>
+        (c.email && c.email.toLowerCase() === q) ||
+        (c.name  && c.name.toLowerCase().includes(q)) ||
+        (c.properties_attributes?.phone && c.properties_attributes.phone.replace(/\D/g,'').includes(q.replace(/\D/g,'')))
+      );
+      if (customers.length < 100) break;
+      page++;
+    }
+    if (!found) return null;
+    const props = found.properties_attributes || {};
     return {
-      name:    c.name,
-      email:   c.email,
-      phone:   c.phone,
-      address: c.address1 || c.city || '',
+      name:    found.name,
+      email:   found.email,
+      phone:   props.phone || found.phone || '',
+      address: props.main_address || found.address1 || found.city || '',
     };
   } catch {
     return null;
