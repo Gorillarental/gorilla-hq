@@ -57,6 +57,31 @@ const BOOQABLE_PRODUCT_IDS = {
   T001:  '3551cc84-26dc-4498-bb43-98c5d0c3e853',
 };
 
+// ─── Booqable customer lookup ──────────────────────────────────
+async function lookupBooqableCustomer(query) {
+  try {
+    const { BASE_URL, API_KEY } = CONFIG.BOOQABLE;
+    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` };
+    // Try by name first, then by email
+    const url = query.includes('@')
+      ? `${BASE_URL}/customers?q[email_eq]=${encodeURIComponent(query)}`
+      : `${BASE_URL}/customers?q[name_cont]=${encodeURIComponent(query)}`;
+    const res  = await fetch(url, { headers });
+    const data = await res.json();
+    const customers = data?.customers || [];
+    if (!customers.length) return null;
+    const c = customers[0];
+    return {
+      name:    c.name,
+      email:   c.email,
+      phone:   c.phone,
+      address: c.address1 || c.city || '',
+    };
+  } catch {
+    return null;
+  }
+}
+
 // ─── Booqable ─────────────────────────────────────────────────
 async function createBooqableOrder(quote) {
   const { BASE_URL, API_KEY } = CONFIG.BOOQABLE;
@@ -301,6 +326,9 @@ To build a quote, collect:
 3. Rental period (start date, end date or duration)
 4. Delivery address
 
+If the customer says their info is already in Booqable, look them up immediately:
+{"action": "lookup_customer", "query": "their name or email"}
+
 When you have all info, respond with a JSON action block:
 {"action": "build_quote", "customerName": "...", "customerEmail": "...", "customerPhone": "...", "deliveryAddress": "...", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "duration": "X days/weeks/months", "items": [{"sku": "BL001", "quantity": 1, "days": 7}]}
 
@@ -330,6 +358,28 @@ ${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
         result = await buildQuote(action);
       } else if (action.action === 'send_quote') {
         result = await sendQuote(action.jobId);
+      } else if (action.action === 'lookup_customer') {
+        result = await lookupBooqableCustomer(action.query || action.name || action.email || '');
+        if (result) {
+          // Re-run with customer info injected so agent can immediately build the quote
+          const followUp = [...messages,
+            { role: 'assistant', content: text },
+            { role: 'user', content: `Customer found in Booqable: Name: ${result.name}, Email: ${result.email}, Phone: ${result.phone || 'not on file'}, Address: ${result.address || 'ask for delivery address'}. Now build the quote with the equipment and dates they mentioned.` },
+          ];
+          const followUpRes = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages: followUp });
+          const followUpText = followUpRes.content[0].text;
+          const followUpAction = extractActionJSON(followUpText);
+          if (followUpAction) {
+            try {
+              const fa = JSON.parse(followUpAction);
+              if (fa.action === 'build_quote') result = await buildQuote(fa);
+              return { text: followUpText, action: fa, result };
+            } catch {}
+          }
+          return { text: followUpText, action, result };
+        } else {
+          return { text: `${text}\n\n⚠️ No customer found in Booqable for "${action.query}". Could you confirm your name or email?`, action, result: null };
+        }
       }
 
       return { text, action, result };
