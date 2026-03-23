@@ -423,6 +423,27 @@ app.get('/admin/snapshot', (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
+// ─── Knowledge + Chip chat routes ──────────────────────────────
+app.post('/knowledge/chat', async (req, res) => {
+  try {
+    const { message, history } = req.body;
+    if (!message) return res.status(400).json({ ok: false, error: 'message required' });
+    const { gorillaIQ } = await import('./gorilla-iq.js');
+    const result = await gorillaIQ(message, 'knowledge-ui');
+    res.json({ ok: true, agent: 'knowledge', text: result.reply, reply: result.reply });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.post('/chip/chat', async (req, res) => {
+  try {
+    const { message, history } = req.body;
+    if (!message) return res.status(400).json({ ok: false, error: 'message required' });
+    const { gorillaIQ } = await import('./gorilla-iq.js');
+    const result = await gorillaIQ(message, 'chip-ui');
+    res.json({ ok: true, agent: 'chip', text: result.reply, reply: result.reply });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 // ─── Error handler ─────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('[Server] Error:', err.message);
