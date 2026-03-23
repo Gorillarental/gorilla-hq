@@ -6,12 +6,17 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { CONFIG } from './config.js';
+import { dbGetConversation, dbSaveConversation, dbClearConversation } from './db.js';
+import { createTask } from './logger.js';
 
 const client = new Anthropic({ apiKey: CONFIG.ANTHROPIC_KEY });
 
-// ─── Conversation context per chat ID ────────────────────────
-// Stores last 20 messages. Auto-expires after 30 min silence.
-const contexts = new Map(); // chatId → { history, lastAt }
+// ─── Agents with unlimited persistent memory (DB-backed) ─────
+const PERSISTENT_AGENTS = new Set(['marketing', 'knowledge', 'chip']);
+const MAX_HISTORY = 40; // 20 turns for non-persistent agents
+
+// ─── In-memory context (fallback / non-persistent agents) ────
+const contexts = new Map(); // chatId → { history, agent, lastAt }
 
 function getContext(chatId) {
   if (!contexts.has(chatId)) {
@@ -22,17 +27,32 @@ function getContext(chatId) {
   return ctx.history;
 }
 
-export function clearContext(chatId) {
+export async function clearContext(chatId) {
   contexts.delete(chatId);
+  await dbClearConversation(chatId).catch(() => {});
 }
 
-function pushContext(chatId, role, content) {
-  const ctx = contexts.get(chatId);
-  if (!ctx) return;
-  ctx.history.push({ role, content });
-  // Keep last 20 messages (10 turns)
-  if (ctx.history.length > 20) ctx.history.splice(0, 2);
-  ctx.lastAt = Date.now();
+async function loadHistory(chatId, agent) {
+  if (PERSISTENT_AGENTS.has(agent)) {
+    const dbHistory = await dbGetConversation(chatId, agent).catch(() => []);
+    if (dbHistory.length) return dbHistory;
+  }
+  return getContext(chatId);
+}
+
+async function pushContext(chatId, agent, role, content) {
+  if (PERSISTENT_AGENTS.has(agent)) {
+    // Load current, append, save — no cap for persistent agents
+    const current = await dbGetConversation(chatId, agent).catch(() => []);
+    current.push({ role, content });
+    await dbSaveConversation(chatId, agent, current).catch(() => {});
+  } else {
+    const ctx = contexts.get(chatId);
+    if (!ctx) return;
+    ctx.history.push({ role, content });
+    if (ctx.history.length > MAX_HISTORY) ctx.history.splice(0, 2);
+    ctx.lastAt = Date.now();
+  }
 }
 
 // ─── Agent routing map ────────────────────────────────────────
@@ -120,14 +140,54 @@ Reply only with the message text — no extra commentary.`,
   }
 }
 
+// ─── Auto-task creation after any agent action ────────────────
+async function autoCreateTask(agent, action, result) {
+  if (!action?.action) return;
+  const jobId = action.jobId || result?.jobId || result?.reservation?.jobId || null;
+  const taskMap = {
+    build_quote:              `Follow up — Quote ${jobId} — deposit needed`,
+    send_quote:               `Quote sent ${jobId} — await deposit confirmation`,
+    lookup_customer:          null, // no task for lookups
+    create_reservation:       `Reservation created ${jobId} — send contract`,
+    send_confirmation:        `Confirmation sent ${jobId} — await contract signature`,
+    send_contract:            `Contract sent ${jobId} — await signed return`,
+    create_invoice:           `Invoice created for ${jobId}`,
+    request_deposit_approval: `Deposit approval pending — ${jobId}`,
+    request_balance_approval: `Balance approval pending — ${jobId}`,
+    create_payment_link:      `Payment link created — collect $${action.amount || '?'}`,
+    schedule_delivery:        `Delivery scheduled ${jobId} — notify driver + customer`,
+    schedule_pickup:          `Pickup scheduled ${jobId} — notify driver`,
+    notify_driver:            `Driver notified ${jobId} — confirm day-of`,
+    notify_customer:          `Customer notified ${jobId}`,
+    mark_delivered:           `Equipment delivered ${jobId} — schedule pickup`,
+    mark_picked_up:           `Pickup complete ${jobId} — create final invoice`,
+    send_48h:                 `48h reminder sent — ${jobId} — monitor response`,
+    send_24h:                 `24h alert sent — ${jobId} — escalate if no reply`,
+    extend:                   `Extension confirmed ${jobId} → ${action.newEndDate}`,
+    reminder_sweep:           `Reminder sweep done — review overdue list`,
+    capture_lead:             `New lead captured — follow up within 24h`,
+    send_outreach:            `Outreach sent — follow up in 3 days`,
+  };
+  const title = taskMap[action.action];
+  if (title === null) return; // explicitly skipped
+  await createTask({
+    title:       title || `${agent}: ${action.action}${jobId ? ` — ${jobId}` : ''}`,
+    agent,
+    jobId,
+    priority:    'medium',
+    createdBy:   'gorilla-iq',
+    description: `Auto-created after ${action.action}`,
+  }).catch(() => {});
+}
+
 // ─── Main entry point ─────────────────────────────────────────
 export async function gorillaIQ(message, chatId) {
   // Classify
   const { agent, intent } = await classifyMessage(message);
   console.log(`[Gorilla IQ] Chat ${chatId} → Agent: ${agent} | Intent: ${intent}`);
 
-  // Get conversation history
-  const history = getContext(chatId);
+  // Get conversation history (DB-backed for persistent agents)
+  const history = await loadHistory(chatId, agent);
 
   // Call agent
   const result = await callAgent(agent, message, history);
@@ -136,8 +196,13 @@ export async function gorillaIQ(message, chatId) {
     || '⚠️ No response from agent';
 
   // Update context (only store if we have real content)
-  pushContext(chatId, 'user', message);
-  if (reply && reply !== '⚠️ No response from agent') pushContext(chatId, 'assistant', reply);
+  await pushContext(chatId, agent, 'user', message);
+  if (reply && reply !== '⚠️ No response from agent') await pushContext(chatId, agent, 'assistant', reply);
+
+  // Auto-create a task whenever an agent takes an action
+  if (result?.action) {
+    autoCreateTask(agent, result.action, result.result).catch(() => {});
+  }
 
   return { agent, intent, reply };
 }

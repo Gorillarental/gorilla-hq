@@ -80,6 +80,14 @@ export async function initDB() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS conversations (
+      chat_id    TEXT PRIMARY KEY,
+      agent      TEXT         NOT NULL,
+      history    JSONB        NOT NULL DEFAULT '[]',
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
   console.log('[DB] ✅ All tables ready');
 }
 
@@ -239,6 +247,34 @@ export async function dbGetAllLeads() {
   if (!p) return [];
   const { rows } = await p.query("SELECT data FROM leads ORDER BY created_at DESC");
   return rows.map(r => r.data);
+}
+
+// ─── Conversations (persistent chat history) ───────────────
+export async function dbGetConversation(chatId, agent) {
+  const p = getPool();
+  if (!p) return [];
+  const { rows } = await p.query(
+    'SELECT history FROM conversations WHERE chat_id = $1 AND agent = $2',
+    [chatId, agent]
+  );
+  return rows[0]?.history || [];
+}
+
+export async function dbSaveConversation(chatId, agent, history) {
+  const p = getPool();
+  if (!p) return;
+  await p.query(
+    `INSERT INTO conversations (chat_id, agent, history, updated_at)
+     VALUES ($1, $2, $3, NOW())
+     ON CONFLICT (chat_id) DO UPDATE SET history = $3, updated_at = NOW()`,
+    [chatId, agent, JSON.stringify(history)]
+  );
+}
+
+export async function dbClearConversation(chatId) {
+  const p = getPool();
+  if (!p) return;
+  await p.query('DELETE FROM conversations WHERE chat_id = $1', [chatId]);
 }
 
 // ─── Cashflow file helpers ─────────────────────────────────
