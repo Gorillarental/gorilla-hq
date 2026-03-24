@@ -13,6 +13,7 @@ import { CONFIG, EQUIPMENT_CATALOG, PRICING } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { sendSMS, getOrCreateContact, addNote, addTag, upsertOpportunity, scheduleGHLSocialPost, getGHLSocialAccounts } from './ghl.js';
 import { logActivity, createTask } from './logger.js';
+import { loadSkills } from './skills.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -272,6 +273,7 @@ export async function marketingChat(message, history = []) {
     knowledgeContext = await getAgentContext('marketing');
   } catch {}
 
+  const agentSkills = loadSkills(['figure-it-out']);
   const systemPrompt = `You are the Marketing Agent for Gorilla Rental, an equipment rental company serving South Florida (Miami-Dade, Broward, Palm Beach).
 
 Your mission: find, enrich, clean, score, and push high-quality contractor leads into GoHighLevel (GHL) — with zero duplicates, zero bad data, and zero wrong automations.
@@ -385,7 +387,7 @@ AVAILABLE ACTIONS
 {"action":"scrape","area":"Fort Lauderdale","category":"Roofing","maxResults":20}
 {"action":"scrape_all","maxTotal":50}
 {"action":"scrape_history"}
-${knowledgeContext ? '\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
+${knowledgeContext ? '\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}${agentSkills}`;
   const messages = [...history, { role: 'user', content: message }];
   const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
   const text     = response.content[0].text;
