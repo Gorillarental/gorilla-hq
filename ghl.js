@@ -514,30 +514,40 @@ export async function generateGHLBriefing() {
 export async function getGHLSocialAccounts() {
   try {
     const data = await ghl('GET', `/social-media-posting/${LOCATION_ID}/accounts`);
-    return data?.accounts || [];
+    return data?.results?.accounts || [];
   } catch (e) {
     console.warn(`[GHL] Social accounts warning: ${e.message}`);
     return [];
   }
 }
 
-export async function scheduleGHLSocialPost({ summary, scheduleDate = null, platforms = null }) {
+// userId for the location owner (Andrei)
+const GHL_OWNER_USER_ID = 'JipNwuPok4nvD4pwoKcH';
+
+export async function scheduleGHLSocialPost({ summary, scheduleDate = null, accountIds = null }) {
   try {
-    // If no platforms provided, use all connected accounts
-    if (!platforms) {
+    if (!accountIds) {
       const accounts = await getGHLSocialAccounts();
-      if (!accounts.length) throw new Error('No connected social accounts found in GHL Social Planner');
-      platforms = accounts.map(a => ({ platform: a.type, id: a.id, type: 'account' }));
+      // Exclude Google Business (different API) and expired/deleted
+      // Also exclude Instagram/TikTok for text-only posts (they require media)
+      const social = accounts.filter(a =>
+        a.platform === 'facebook' && !a.isExpired && !a.deleted
+      );
+      if (!social.length) throw new Error('No connected Facebook account found in GHL Social Planner');
+      accountIds = social.map(a => a.id);
     }
 
     const body = {
       summary,
-      platforms,
-      type: scheduleDate ? 'scheduled' : 'now',
+      type: 'post',
+      status: scheduleDate ? 'scheduled' : 'published',
+      userId: GHL_OWNER_USER_ID,
+      accountIds,
+      media: [],
     };
     if (scheduleDate) body.scheduleDate = scheduleDate;
 
-    const data = await ghl('POST', `/social-media-posting/${LOCATION_ID}/post`, body);
+    const data = await ghl('POST', `/social-media-posting/${LOCATION_ID}/posts`, body);
     console.log(`[GHL] ✅ Social post ${scheduleDate ? 'scheduled' : 'published'}`);
     return { ok: true, post: data };
   } catch (e) {

@@ -129,7 +129,7 @@ export async function getLeads(filters = {}) {
 }
 
 export async function pushPostToGHL(postText, scheduleDate = null) {
-  return scheduleGHLSocialPost({ summary: postText, scheduleDate });
+  return scheduleGHLSocialPost({ summary: postText, scheduleDate: scheduleDate || null });
 }
 
 export async function generateSocialPost(type = 'equipment', options = {}) {
