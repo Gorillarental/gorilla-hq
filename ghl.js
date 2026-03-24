@@ -509,6 +509,43 @@ export async function generateGHLBriefing() {
   return lines.join('\n');
 }
 
+// ─── SOCIAL PLANNER ───────────────────────────────────────────
+
+export async function getGHLSocialAccounts() {
+  try {
+    const data = await ghl('GET', `/social-media-posting/${LOCATION_ID}/accounts`);
+    return data?.accounts || [];
+  } catch (e) {
+    console.warn(`[GHL] Social accounts warning: ${e.message}`);
+    return [];
+  }
+}
+
+export async function scheduleGHLSocialPost({ summary, scheduleDate = null, platforms = null }) {
+  try {
+    // If no platforms provided, use all connected accounts
+    if (!platforms) {
+      const accounts = await getGHLSocialAccounts();
+      if (!accounts.length) throw new Error('No connected social accounts found in GHL Social Planner');
+      platforms = accounts.map(a => ({ platform: a.type, id: a.id, type: 'account' }));
+    }
+
+    const body = {
+      summary,
+      platforms,
+      type: scheduleDate ? 'scheduled' : 'now',
+    };
+    if (scheduleDate) body.scheduleDate = scheduleDate;
+
+    const data = await ghl('POST', `/social-media-posting/${LOCATION_ID}/post`, body);
+    console.log(`[GHL] ✅ Social post ${scheduleDate ? 'scheduled' : 'published'}`);
+    return { ok: true, post: data };
+  } catch (e) {
+    console.warn(`[GHL] Social post warning: ${e.message}`);
+    return { ok: false, error: e.message };
+  }
+}
+
 // ─── LEGACY ALIASES ───────────────────────────────────────────
 export async function addTag(contactId, tags = []) {
   return addTags(contactId, tags);

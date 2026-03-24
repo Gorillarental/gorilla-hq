@@ -11,7 +11,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { CONFIG, EQUIPMENT_CATALOG, PRICING } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
-import { sendSMS, getOrCreateContact, addNote, addTag, upsertOpportunity } from './ghl.js';
+import { sendSMS, getOrCreateContact, addNote, addTag, upsertOpportunity, scheduleGHLSocialPost, getGHLSocialAccounts } from './ghl.js';
 import { logActivity, createTask } from './logger.js';
 
 function extractActionJSON(text) {
@@ -128,6 +128,10 @@ export async function getLeads(filters = {}) {
   return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
+export async function pushPostToGHL(postText, scheduleDate = null) {
+  return scheduleGHLSocialPost({ summary: postText, scheduleDate });
+}
+
 export async function generateSocialPost(type = 'equipment', options = {}) {
   const equipment = options.equipment
     ? EQUIPMENT_CATALOG.find(e => e.name?.toLowerCase().includes(options.equipment.toLowerCase())) || EQUIPMENT_CATALOG[0]
@@ -153,7 +157,18 @@ export async function generateSocialPost(type = 'equipment', options = {}) {
 
   await logActivity({ agent: 'marketing', action: 'post_generated', description: `Social post generated: ${type} — ${equipment?.name || 'general'}`, status: 'success', notify: false }).catch(() => {});
   console.log(`[Marketing] ✅ Post generated (${type})`);
-  return { post, type, equipment: equipment?.name };
+
+  let ghlResult = null;
+  if (options.publish || options.scheduleDate) {
+    ghlResult = await pushPostToGHL(post, options.scheduleDate || null);
+    if (ghlResult?.ok) {
+      console.log(`[Marketing] ✅ Post pushed to GHL Social Planner`);
+    } else {
+      console.warn(`[Marketing] ⚠️ GHL Social Planner push failed: ${ghlResult?.error}`);
+    }
+  }
+
+  return { post, type, equipment: equipment?.name, ghlResult };
 }
 
 export async function sendOutreachEmail(contractor) {
@@ -356,6 +371,11 @@ Recent: ${recent.map(l=>`${l.name}|${l.source}|${l.status}`).join(' | ')||'None'
 AVAILABLE ACTIONS
 ═══════════════════════════════════
 {"action":"generate_post","type":"equipment|promo|safety|seasonal"}
+{"action":"generate_post","type":"equipment","publish":true}
+{"action":"generate_post","type":"equipment","scheduleDate":"2024-01-01T14:00:00Z"}
+{"action":"schedule_post","text":"...","scheduleDate":"2024-01-01T14:00:00Z"}
+{"action":"schedule_post","text":"..."}
+{"action":"get_social_accounts"}
 {"action":"generate_listing","sku":"BL001"}
 {"action":"capture_lead","name":"...","email":"...","phone":"...","equipment":"...","source":"..."}
 {"action":"send_outreach","email":"...","name":"...","company":"...","industry":"...","phone":"..."}
@@ -373,8 +393,18 @@ ${knowledgeContext ? '\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
   if (matched) {
     try {
       const action = JSON.parse(matched); let result = null; let responseText = text;
-      if (action.action === 'generate_post')     result = await generateSocialPost(action.type || 'equipment', action);
-      else if (action.action === 'generate_listing') result = await generateEquipmentListing(action.sku);
+      if (action.action === 'generate_post')         result = await generateSocialPost(action.type || 'equipment', action);
+      else if (action.action === 'schedule_post') {
+        result = await pushPostToGHL(action.text, action.scheduleDate || null);
+        responseText = result?.ok
+          ? `✅ Post ${action.scheduleDate ? `scheduled for ${action.scheduleDate}` : 'published now'} on GHL Social Planner.`
+          : `⚠️ GHL Social Planner push failed: ${result?.error}`;
+      } else if (action.action === 'get_social_accounts') {
+        result = await getGHLSocialAccounts();
+        responseText = result?.length
+          ? `Connected accounts: ${result.map(a => `${a.type} (${a.name || a.id})`).join(', ')}`
+          : 'No social accounts connected in GHL Social Planner.';
+      } else if (action.action === 'generate_listing') result = await generateEquipmentListing(action.sku);
       else if (action.action === 'capture_lead')     result = await captureLead(action);
       else if (action.action === 'send_outreach')    result = await sendOutreachEmail(action);
       else if (action.action === 'get_stats')        result = getMarketingStats();
