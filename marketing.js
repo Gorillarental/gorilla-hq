@@ -232,7 +232,8 @@ export function getMarketingStats() {
 
 export async function generateDailyReport() {
   const stats   = getMarketingStats();
-  const history = getScrapeHistory ? getScrapeHistory() : [];
+  const { getScrapeHistory: _getScrapeHistory } = await import('./google-scraper.js').catch(() => ({}));
+  const history = _getScrapeHistory ? _getScrapeHistory() : [];
   const lastRun = history[history.length - 1] || {};
   const today   = new Date().toISOString().split('T')[0];
   return `════════════════════════════════════════
@@ -260,9 +261,6 @@ Leads by Source:
 ${Object.entries(stats.leadsBySource || {}).map(([k,v]) => `  ${k}: ${v}`).join('\n') || '  None'}
 ════════════════════════════════════════`;
 }
-
-let getScrapeHistory;
-import('./google-scraper.js').then(m => { getScrapeHistory = m.getScrapeHistory; }).catch(() => {});
 
 export async function marketingChat(message, history = []) {
   const stats  = getMarketingStats();

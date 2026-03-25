@@ -9,7 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname  = path.dirname(fileURLToPath(import.meta.url));
-const GOOGLE_KEY = process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyBCk5rBmg6ahRRxEp3bss4hPqZEYBiPkeM';
+const GOOGLE_KEY = process.env.GOOGLE_MAPS_API_KEY;
 const SCRAPE_LOG       = path.join(__dirname, 'data/scrape-log.json');
 const SCRAPED_IDS_FILE = path.join(__dirname, 'data/scraped-place-ids.json');
 

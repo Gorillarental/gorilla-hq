@@ -11,8 +11,8 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GHL_API     = 'https://services.leadconnectorhq.com';
-const API_KEY     = process.env.GHL_API_KEY || 'pFDvfLzOeOna5ezhIvnA';
-const LOCATION_ID = process.env.GHL_LOCATION_ID || 'pit-61d8d93a-3573-490c-b3e8-d4f6db68333d';
+const API_KEY     = process.env.GHL_API_KEY;
+const LOCATION_ID = process.env.GHL_LOCATION_ID;
 
 // Phone numbers
 const PHONES = {
