@@ -17,6 +17,7 @@ import { sendEmailWithPDF } from './chip.js';
 import { generateQuotePDF } from './quote-pdf.js';
 import { getPipeline, upsertJob, updateJob, getJob, dbAddCashflow, dbGetCashflow, dbGetCashflowSummary, dbUpsertReservation, dbGetReservation, dbGetAllReservations } from './db.js';
 import { BOOQABLE_TOOLS, dispatchBooqableTool } from './booqable.js';
+import { MEMORY_TOOLS, dispatchMemoryTool } from './memory.js';
 import { readCashflow as spReadCashflow, addCashflowEntry as spAddCashflowEntry, uploadReceipt, listReceipts, getCashflowSummary as spGetCashflowSummary } from './sharepoint.js';
 
 // ─── Cashflow helpers (DB-backed, SharePoint optional) ─────
@@ -903,21 +904,27 @@ ACTIONS:
 
 BOOQABLE TOOLS: You have direct live access to Booqable via built-in tools. Use them to look up orders, customers, products, inventory, documents, payments, and more. Do not say you lack Booqable access — call the appropriate tool instead.
 
+MEMORY TOOLS: You have persistent long-term memory via MEMORY_SEARCH, MEMORY_ADD, MEMORY_LIST, MEMORY_DELETE. Search memory for past decisions, customer notes, or contract details. Save important facts after key admin actions.
+
 IMPORTANT: You CAN and SHOULD log expenses and income directly using add_expense or add_income. When someone asks for a payment link or Stripe link with a dollar amount — even without a job ID — use create_payment_link immediately. When someone says "log $200 gas expense" or "record a payment" — use the action immediately. Never tell the user to log it elsewhere.${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
 
   const messages = [...history, { role: 'user', content: message }];
-  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages, tools: BOOQABLE_TOOLS });
+  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS] });
 
-  // ── Booqable native tool calls ───────────────────────────────
+  // ── Tool calls (Booqable + Memory) ───────────────────────────
   if (response.stop_reason === 'tool_use') {
     const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
     const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
       type:        'tool_result',
       tool_use_id: tu.id,
-      content:     JSON.stringify(await dispatchBooqableTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
+      content:     JSON.stringify(await (
+        tu.name.startsWith('MEMORY_')   ? dispatchMemoryTool(tu.name, tu.input) :
+        tu.name.startsWith('BOOQABLE_') ? dispatchBooqableTool(tu.name, tu.input) :
+        Promise.resolve({ error: `Unknown tool: ${tu.name}` })
+      ).catch(e => ({ error: e.message }))),
     })));
     const followUp = await client.messages.create({
-      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: BOOQABLE_TOOLS,
+      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
       messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
     });
     const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');

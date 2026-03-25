@@ -15,6 +15,7 @@ import { sendEmailWithPDF } from './chip.js';
 import { generateQuotePDF, buildQuoteHTML, buildQuoteEmailHTML } from './quote-pdf.js';
 import { getPipeline, upsertJob, getJob, updateJob } from './db.js';
 import { BOOQABLE_TOOLS, dispatchBooqableTool } from './booqable.js';
+import { MEMORY_TOOLS, dispatchMemoryTool } from './memory.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -331,6 +332,8 @@ PIPELINE: ${pipeline.length} jobs total, ${pipeline.filter(j => j.stage === 'quo
 
 BOOQABLE TOOLS: You have direct live access to Booqable via built-in tools. Use them to look up customers, orders, products, inventory, and more. Do not say you lack Booqable access — call the appropriate tool instead. Prefer BOOQABLE_SEARCH_CUSTOMERS over the legacy lookup_customer action.
 
+MEMORY TOOLS: You have persistent long-term memory via MEMORY_SEARCH, MEMORY_ADD, MEMORY_LIST, MEMORY_DELETE. Search memory at the start of conversations to recall relevant customer history or notes. Save important facts after key interactions.
+
 To build a quote, collect:
 1. Customer name, email, phone
 2. Equipment needed (type + quantity)
@@ -354,23 +357,27 @@ ${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
     max_tokens: 2048,
     system:     systemPrompt,
     messages,
-    tools:      BOOQABLE_TOOLS,
+    tools:      [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
   });
 
-  // ── Booqable native tool calls ───────────────────────────────
+  // ── Tool calls (Booqable + Memory) ───────────────────────────
   if (response.stop_reason === 'tool_use') {
     const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
     const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
       type:        'tool_result',
       tool_use_id: tu.id,
-      content:     JSON.stringify(await dispatchBooqableTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
+      content:     JSON.stringify(await (
+        tu.name.startsWith('MEMORY_')  ? dispatchMemoryTool(tu.name, tu.input) :
+        tu.name.startsWith('BOOQABLE_') ? dispatchBooqableTool(tu.name, tu.input) :
+        Promise.resolve({ error: `Unknown tool: ${tu.name}` })
+      ).catch(e => ({ error: e.message }))),
     })));
     const followUp = await client.messages.create({
       model:      'claude-opus-4-6',
       max_tokens: 2048,
       system:     systemPrompt,
       messages:   [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
-      tools:      BOOQABLE_TOOLS,
+      tools:      [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
     });
     const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
     return { text, toolCalls: toolUseBlocks.map(t => ({ name: t.name, input: t.input })) };

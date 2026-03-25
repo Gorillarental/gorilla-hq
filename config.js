@@ -7,8 +7,9 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const CONFIG = {
-  ANTHROPIC_KEY: process.env.ANTHROPIC_KEY,
-  STRIPE_KEY:    process.env.STRIPE_KEY,
+  ANTHROPIC_KEY:    process.env.ANTHROPIC_KEY,
+  STRIPE_KEY:       process.env.STRIPE_KEY,
+  SUPERMEMORY_KEY:  process.env.SUPERMEMORY_API_KEY,
 
   BOOQABLE: {
     API_KEY:  process.env.BOOQABLE_API_KEY,

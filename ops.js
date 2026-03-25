@@ -15,6 +15,7 @@ import { sendEmailWithPDF } from './chip.js';
 import { sendSMS, getOrCreateContact, addNote } from './ghl.js';
 import { getPipeline, updateJob, getJob, dbUpsertDelivery, dbGetDeliveries, dbUpdateDelivery } from './db.js';
 import { BOOQABLE_TOOLS, dispatchBooqableTool } from './booqable.js';
+import { MEMORY_TOOLS, dispatchMemoryTool } from './memory.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -236,6 +237,8 @@ ACTIVE: ${pipeline.filter(j => ['reserved','contract_sent','delivery_scheduled',
 
 BOOQABLE TOOLS: You have direct live access to Booqable via built-in tools. Use them any time you need to look up orders, customers, inventory, plannings, stock items, or any other Booqable data. Do not say you lack Booqable access — call the appropriate tool instead.
 
+MEMORY TOOLS: You have persistent long-term memory via MEMORY_SEARCH, MEMORY_ADD, MEMORY_LIST, MEMORY_DELETE. Search memory for driver notes, delivery preferences, or job history. Save important operational notes after key events.
+
 INTERNAL ACTIONS (use JSON block for these):
 {"action":"schedule_delivery","jobId":"GR-2026-XXXX","date":"YYYY-MM-DD","time":"08:00 AM"}
 {"action":"schedule_pickup","jobId":"GR-2026-XXXX","date":"YYYY-MM-DD"}
@@ -246,18 +249,22 @@ INTERNAL ACTIONS (use JSON block for these):
 {"action":"todays_jobs"}
 {"action":"upcoming_jobs","days":7}${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
   const messages = [...history, { role: 'user', content: message }];
-  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages, tools: BOOQABLE_TOOLS });
+  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS] });
 
-  // ── Booqable native tool calls ───────────────────────────────
+  // ── Tool calls (Booqable + Memory) ───────────────────────────
   if (response.stop_reason === 'tool_use') {
     const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
     const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
       type:        'tool_result',
       tool_use_id: tu.id,
-      content:     JSON.stringify(await dispatchBooqableTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
+      content:     JSON.stringify(await (
+        tu.name.startsWith('MEMORY_')   ? dispatchMemoryTool(tu.name, tu.input) :
+        tu.name.startsWith('BOOQABLE_') ? dispatchBooqableTool(tu.name, tu.input) :
+        Promise.resolve({ error: `Unknown tool: ${tu.name}` })
+      ).catch(e => ({ error: e.message }))),
     })));
     const followUp = await client.messages.create({
-      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: BOOQABLE_TOOLS,
+      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
       messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
     });
     const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
