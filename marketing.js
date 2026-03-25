@@ -14,6 +14,7 @@ import { sendEmailWithPDF } from './chip.js';
 import { sendSMS, getOrCreateContact, addNote, addTag, upsertOpportunity, scheduleGHLSocialPost, getGHLSocialAccounts } from './ghl.js';
 import { logActivity, createTask } from './logger.js';
 import { loadSkills } from './skills.js';
+import { MEMORY_TOOLS, dispatchMemoryTool } from './memory.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -290,6 +291,8 @@ export async function marketingChat(message, history = []) {
 
   const systemPrompt = `You are the Marketing Agent for Gorilla Rental, an equipment rental company serving South Florida (Miami-Dade, Broward, Palm Beach).
 
+MEMORY TOOLS: You have persistent long-term memory via MEMORY_SEARCH, MEMORY_ADD, MEMORY_LIST, MEMORY_DELETE. Search memory for lead history, campaign notes, or competitor intel. Save important findings after key actions.
+
 Your mission: find, enrich, clean, score, and push high-quality contractor leads into GoHighLevel (GHL) — with zero duplicates, zero bad data, and zero wrong automations.
 
 ═══════════════════════════════════
@@ -403,8 +406,25 @@ AVAILABLE ACTIONS
 {"action":"scrape_history"}
 ${knowledgeContext ? '\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}${agentSkills}`;
   const messages = [...history, { role: 'user', content: message }];
-  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
-  const text     = response.content[0].text;
+  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages, tools: MEMORY_TOOLS });
+
+  // ── Memory tool calls ────────────────────────────────────────
+  if (response.stop_reason === 'tool_use') {
+    const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
+    const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
+      type:        'tool_result',
+      tool_use_id: tu.id,
+      content:     JSON.stringify(await dispatchMemoryTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
+    })));
+    const followUp = await client.messages.create({
+      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: MEMORY_TOOLS,
+      messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
+    });
+    const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    return { text, toolCalls: toolUseBlocks.map(t => ({ name: t.name, input: t.input })) };
+  }
+
+  const text     = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
   const matched = extractActionJSON(text);
   if (matched) {
     try {

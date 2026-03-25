@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { CONFIG } from './config.js';
+import { MEMORY_TOOLS, dispatchMemoryTool } from './memory.js';
 import { sendSMS } from './ghl.js';
 import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
@@ -357,24 +358,41 @@ export async function query(question, context = '') {
     .map(s => `[${s.entry.category}] ${s.entry.title}\n${s.entry.summary}\nKey Facts: ${(s.entry.keyFacts || []).join('; ')}`)
     .join('\n\n---\n\n');
 
-  const response = await client.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 1024,
-    system: `You are an expert aerial work platform engineer and South Florida rental industry specialist for Gorilla Rental — a boom lift and scissor lift rental company.
+  const systemPrompt = `You are an expert aerial work platform engineer and South Florida rental industry specialist for Gorilla Rental — a boom lift and scissor lift rental company.
 You have deep knowledge of equipment specifications, pricing, safety regulations, and the South Florida market.
 Answer questions accurately and helpfully using the knowledge base provided.
+MEMORY TOOLS: You have persistent long-term memory via MEMORY_SEARCH and MEMORY_ADD. Search memory for additional context before answering. Save important new facts learned.
 
 RELEVANT KNOWLEDGE BASE:
 ${relevantKnowledge || 'No directly relevant entries found.'}
 
-${context ? `ADDITIONAL CONTEXT:\n${context}` : ''}`,
+${context ? `ADDITIONAL CONTEXT:\n${context}` : ''}`;
+
+  const response = await client.messages.create({
+    model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt,
     messages: [{ role: 'user', content: question }],
+    tools: MEMORY_TOOLS,
   });
+
+  let finalText = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
+
+  if (response.stop_reason === 'tool_use') {
+    const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
+    const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
+      type: 'tool_result', tool_use_id: tu.id,
+      content: JSON.stringify(await dispatchMemoryTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
+    })));
+    const followUp = await client.messages.create({
+      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: MEMORY_TOOLS,
+      messages: [{ role: 'user', content: question }, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
+    });
+    finalText = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
+  }
 
   const sources = scored.filter(s => s.score > 0).slice(0, 5).map(s => ({ id: s.entry.id, title: s.entry.title, category: s.entry.category }));
 
   return {
-    answer:       response.content[0].text,
+    answer:       finalText,
     question,
     sourcesUsed:  sources.length,
     sources,
@@ -398,25 +416,42 @@ export async function engineeringQuery(question, jobContext = '') {
     .map(s => `[${s.entry.category}] ${s.entry.title}\n${s.entry.summary}\nTechnical: ${(s.entry.technicalKnowledge || []).join('; ')}`)
     .join('\n\n---\n\n');
 
-  const response = await client.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 1536,
-    system: `You are a senior aerial work platform engineer and safety expert with 20+ years of experience.
+  const engSystemPrompt = `You are a senior aerial work platform engineer and safety expert with 20+ years of experience.
 You have deep expertise in OSHA 1926.453, ANSI/SIA A92 standards, and Florida building codes.
 You specialize in boom lifts, scissor lifts, and aerial work platforms for construction, maintenance, and industrial applications.
 Provide technically precise, safety-conscious answers. Always cite relevant standards when applicable.
+MEMORY TOOLS: You have persistent long-term memory via MEMORY_SEARCH and MEMORY_ADD. Search memory for job history or past decisions before answering.
 
 KNOWLEDGE BASE:
 ${relevantKnowledge || 'No directly relevant entries found.'}
 
-${jobContext ? `JOB CONTEXT:\n${jobContext}` : ''}`,
+${jobContext ? `JOB CONTEXT:\n${jobContext}` : ''}`;
+
+  const response = await client.messages.create({
+    model: 'claude-opus-4-6', max_tokens: 2048, system: engSystemPrompt,
     messages: [{ role: 'user', content: question }],
+    tools: MEMORY_TOOLS,
   });
+
+  let finalText = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
+
+  if (response.stop_reason === 'tool_use') {
+    const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
+    const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
+      type: 'tool_result', tool_use_id: tu.id,
+      content: JSON.stringify(await dispatchMemoryTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
+    })));
+    const followUp = await client.messages.create({
+      model: 'claude-opus-4-6', max_tokens: 2048, system: engSystemPrompt, tools: MEMORY_TOOLS,
+      messages: [{ role: 'user', content: question }, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
+    });
+    finalText = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
+  }
 
   const sources = scored.filter(s => s.score > 0).slice(0, 5).map(s => ({ id: s.entry.id, title: s.entry.title, category: s.entry.category }));
 
   return {
-    answer:       response.content[0].text,
+    answer:       finalText,
     question,
     sourcesUsed:  sources.length,
     sources,

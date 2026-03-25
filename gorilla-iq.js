@@ -8,6 +8,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { CONFIG } from './config.js';
 import { dbGetConversation, dbSaveConversation, dbClearConversation } from './db.js';
 import { createTask } from './logger.js';
+import { MEMORY_TOOLS, dispatchMemoryTool } from './memory.js';
 
 const client = new Anthropic({ apiKey: CONFIG.ANTHROPIC_KEY });
 
@@ -107,27 +108,35 @@ async function callAgent(agent, message, history) {
         return await marketingChat(message, history);
       }
       case 'knowledge': {
-        const { teach, queryKnowledge } = await import('./knowledge.js');
-        // Simple knowledge query via Claude
-        const res = await client.messages.create({
-          model:      'claude-sonnet-4-6',
-          max_tokens: 600,
-          system:     'You are the Gorilla Rental knowledge agent. Answer concisely based on what you know about the rental business.',
-          messages:   [...history, { role: 'user', content: message }],
-        });
-        return { reply: res.content[0]?.text ?? 'No answer found.' };
+        const { query } = await import('./knowledge.js');
+        const result = await query(message);
+        return { reply: result.answer ?? 'No answer found.' };
       }
       case 'chip': {
-        // Customer service — Chip drafts the client message
+        const chipSystem = `You are Chip, a professional customer service agent for Gorilla Rental.
+Write short, warm, professional responses. Sign off as "Chip | Gorilla Rental".
+Reply only with the message text — no extra commentary.
+MEMORY TOOLS: You have persistent memory via MEMORY_SEARCH and MEMORY_ADD. Search memory for customer history before responding. Save important customer notes.`;
         const res = await client.messages.create({
           model:      'claude-sonnet-4-6',
-          max_tokens: 400,
-          system:     `You are Chip, a professional customer service agent for Gorilla Rental.
-Write short, warm, professional responses. Sign off as "Chip | Gorilla Rental".
-Reply only with the message text — no extra commentary.`,
-          messages: [...history, { role: 'user', content: message }],
+          max_tokens: 1024,
+          system:     chipSystem,
+          messages:   [...history, { role: 'user', content: message }],
+          tools:      MEMORY_TOOLS,
         });
-        return { reply: res.content[0]?.text ?? '' };
+        if (res.stop_reason === 'tool_use') {
+          const toolUseBlocks = res.content.filter(b => b.type === 'tool_use');
+          const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
+            type: 'tool_result', tool_use_id: tu.id,
+            content: JSON.stringify(await dispatchMemoryTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
+          })));
+          const followUp = await client.messages.create({
+            model: 'claude-sonnet-4-6', max_tokens: 1024, system: chipSystem, tools: MEMORY_TOOLS,
+            messages: [...history, { role: 'user', content: message }, { role: 'assistant', content: res.content }, { role: 'user', content: toolResults }],
+          });
+          return { reply: followUp.content.filter(b => b.type === 'text').map(b => b.text).join('') };
+        }
+        return { reply: res.content.filter(b => b.type === 'text').map(b => b.text).join('') };
       }
       default: {
         const { adminChat } = await import('./admin.js');
