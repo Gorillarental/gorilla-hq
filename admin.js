@@ -16,6 +16,7 @@ import { CONFIG, PRICING } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { generateQuotePDF } from './quote-pdf.js';
 import { getPipeline, upsertJob, updateJob, getJob, dbAddCashflow, dbGetCashflow, dbGetCashflowSummary, dbUpsertReservation, dbGetReservation, dbGetAllReservations } from './db.js';
+import { BOOQABLE_TOOLS, dispatchBooqableTool } from './booqable.js';
 import { readCashflow as spReadCashflow, addCashflowEntry as spAddCashflowEntry, uploadReceipt, listReceipts, getCashflowSummary as spGetCashflowSummary } from './sharepoint.js';
 
 // ─── Cashflow helpers (DB-backed, SharePoint optional) ─────
@@ -900,12 +901,31 @@ ACTIONS:
 {"action":"pending_approvals"}
 {"action":"create_payment_link","amount":300,"description":"Optional description"}
 
+BOOQABLE TOOLS: You have direct live access to Booqable via built-in tools. Use them to look up orders, customers, products, inventory, documents, payments, and more. Do not say you lack Booqable access — call the appropriate tool instead.
+
 IMPORTANT: You CAN and SHOULD log expenses and income directly using add_expense or add_income. When someone asks for a payment link or Stripe link with a dollar amount — even without a job ID — use create_payment_link immediately. When someone says "log $200 gas expense" or "record a payment" — use the action immediately. Never tell the user to log it elsewhere.${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
 
   const messages = [...history, { role: 'user', content: message }];
-  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
-  const text     = response.content[0].text;
+  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages, tools: BOOQABLE_TOOLS });
 
+  // ── Booqable native tool calls ───────────────────────────────
+  if (response.stop_reason === 'tool_use') {
+    const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
+    const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
+      type:        'tool_result',
+      tool_use_id: tu.id,
+      content:     JSON.stringify(await dispatchBooqableTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
+    })));
+    const followUp = await client.messages.create({
+      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: BOOQABLE_TOOLS,
+      messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
+    });
+    const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    return { text, toolCalls: toolUseBlocks.map(t => ({ name: t.name, input: t.input })) };
+  }
+
+  // ── Internal action dispatch ─────────────────────────────────
+  const text    = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
   const matched = extractActionJSON(text);
   if (matched) {
     try {

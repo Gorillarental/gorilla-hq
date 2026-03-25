@@ -14,6 +14,7 @@ import { CONFIG, DRIVERS } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { sendSMS, getOrCreateContact, addNote } from './ghl.js';
 import { getPipeline, updateJob, getJob, dbUpsertDelivery, dbGetDeliveries, dbUpdateDelivery } from './db.js';
+import { BOOQABLE_TOOLS, dispatchBooqableTool } from './booqable.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -232,7 +233,10 @@ DRIVERS: ${DRIVERS.map(d => `${d.name} (${d.phone})`).join(', ')}
 TODAY (${today}): ${todayJobs.map(d => `${d.type.toUpperCase()}|${d.jobId}|${d.customerName}|${d.scheduledTime}`).join(' | ') || 'None'}
 UPCOMING: ${upcoming.map(d => `${d.scheduledDate}|${d.type.toUpperCase()}|${d.jobId}`).join(' | ') || 'None'}
 ACTIVE: ${pipeline.filter(j => ['reserved','contract_sent','delivery_scheduled','in_progress'].includes(j.stage)).map(j => `${j.jobId}|${j.customerName}|${j.stage}`).join(' | ') || 'None'}
-ACTIONS:
+
+BOOQABLE TOOLS: You have direct live access to Booqable via built-in tools. Use them any time you need to look up orders, customers, inventory, plannings, stock items, or any other Booqable data. Do not say you lack Booqable access — call the appropriate tool instead.
+
+INTERNAL ACTIONS (use JSON block for these):
 {"action":"schedule_delivery","jobId":"GR-2026-XXXX","date":"YYYY-MM-DD","time":"08:00 AM"}
 {"action":"schedule_pickup","jobId":"GR-2026-XXXX","date":"YYYY-MM-DD"}
 {"action":"notify_driver","jobId":"GR-2026-XXXX","type":"delivery"}
@@ -242,13 +246,31 @@ ACTIONS:
 {"action":"todays_jobs"}
 {"action":"upcoming_jobs","days":7}${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
   const messages = [...history, { role: 'user', content: message }];
-  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
-  const text     = response.content[0].text;
+  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages, tools: BOOQABLE_TOOLS });
+
+  // ── Booqable native tool calls ───────────────────────────────
+  if (response.stop_reason === 'tool_use') {
+    const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
+    const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
+      type:        'tool_result',
+      tool_use_id: tu.id,
+      content:     JSON.stringify(await dispatchBooqableTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
+    })));
+    const followUp = await client.messages.create({
+      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: BOOQABLE_TOOLS,
+      messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
+    });
+    const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    return { text, toolCalls: toolUseBlocks.map(t => ({ name: t.name, input: t.input })) };
+  }
+
+  // ── Internal action dispatch ─────────────────────────────────
+  const text    = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
   const matched = extractActionJSON(text);
   if (matched) {
     try {
       const action = JSON.parse(matched); let result = null;
-      if (action.action === 'schedule_delivery')  result = await scheduleDelivery(action.jobId, action);
+      if (action.action === 'schedule_delivery')      result = await scheduleDelivery(action.jobId, action);
       else if (action.action === 'schedule_pickup')   result = await schedulePickup(action.jobId, action);
       else if (action.action === 'notify_driver')     result = await notifyDriver(action.jobId, action.type || 'delivery');
       else if (action.action === 'notify_customer')   result = await notifyCustomerDelivery(action.jobId);

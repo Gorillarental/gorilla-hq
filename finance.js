@@ -14,6 +14,7 @@ import { CONFIG, PRICING } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { sendSMS, getOrCreateContact, addNote, addTag } from './ghl.js';
 import { getPipeline, updateJob } from './db.js';
+import { BOOQABLE_TOOLS, dispatchBooqableTool } from './booqable.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -277,7 +278,10 @@ export async function financeChat(message, history = []) {
   const systemPrompt = `You are the Finance Agent for Gorilla Rental. SMS via GHL.
 ACTIVE: ${status.total} | 48h: ${status.endingIn48h.map(j=>j.jobId).join(',')||'none'} | 24h: ${status.endingIn24h.map(j=>j.jobId).join(',')||'none'} | Overdue: ${status.overdue.map(j=>j.jobId).join(',')||'none'}
 MONTH: Jobs:${monthReport.totalJobs} | Closed:$${monthReport.totalRevenue.toFixed(2)} | Active:$${monthReport.activeRevenue.toFixed(2)} | Pipeline:$${monthReport.pipelineRevenue.toFixed(2)} | Avg:$${monthReport.avgJobValue.toFixed(2)}
-ACTIONS:
+
+BOOQABLE TOOLS: You have direct live access to Booqable via built-in tools. Use them to look up orders, payments, documents, customers, and financial data. Do not say you lack Booqable access — call the appropriate tool instead.
+
+INTERNAL ACTIONS:
 {"action":"reminder_sweep"}
 {"action":"send_48h","jobId":"GR-2026-XXXX"}
 {"action":"send_24h","jobId":"GR-2026-XXXX"}
@@ -285,18 +289,36 @@ ACTIONS:
 {"action":"revenue_report","period":"month|week|year"}
 {"action":"check_rentals"}${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
   const messages = [...history, { role: 'user', content: message }];
-  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages });
-  const text     = response.content[0].text;
+  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages, tools: BOOQABLE_TOOLS });
+
+  // ── Booqable native tool calls ───────────────────────────────
+  if (response.stop_reason === 'tool_use') {
+    const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
+    const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
+      type:        'tool_result',
+      tool_use_id: tu.id,
+      content:     JSON.stringify(await dispatchBooqableTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
+    })));
+    const followUp = await client.messages.create({
+      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: BOOQABLE_TOOLS,
+      messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
+    });
+    const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    return { text, toolCalls: toolUseBlocks.map(t => ({ name: t.name, input: t.input })) };
+  }
+
+  // ── Internal action dispatch ─────────────────────────────────
+  const text    = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
   const matched = extractActionJSON(text);
   if (matched) {
     try {
       const action = JSON.parse(matched); let result = null;
-      if (action.action === 'reminder_sweep')    result = await runReminderSweep();
-      else if (action.action === 'send_48h')     result = await send48hReminder(action.jobId);
-      else if (action.action === 'send_24h')     result = await send24hAlert(action.jobId);
-      else if (action.action === 'extend')       result = await processExtension(action.jobId, action.newEndDate);
-      else if (action.action === 'revenue_report') result = await getRevenueReport(action.period || 'month');
-      else if (action.action === 'check_rentals')  result = await checkActiveRentals();
+      if (action.action === 'reminder_sweep')        result = await runReminderSweep();
+      else if (action.action === 'send_48h')         result = await send48hReminder(action.jobId);
+      else if (action.action === 'send_24h')         result = await send24hAlert(action.jobId);
+      else if (action.action === 'extend')           result = await processExtension(action.jobId, action.newEndDate);
+      else if (action.action === 'revenue_report')   result = await getRevenueReport(action.period || 'month');
+      else if (action.action === 'check_rentals')    result = await checkActiveRentals();
       return { text, action, result };
     } catch (e) { return { text, error: e.message }; }
   }

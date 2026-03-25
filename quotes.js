@@ -14,6 +14,7 @@ import { CONFIG, PRICING, EQUIPMENT_CATALOG } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
 import { generateQuotePDF, buildQuoteHTML, buildQuoteEmailHTML } from './quote-pdf.js';
 import { getPipeline, upsertJob, getJob, updateJob } from './db.js';
+import { BOOQABLE_TOOLS, dispatchBooqableTool } from './booqable.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -328,14 +329,15 @@ PRICING RULES:
 
 PIPELINE: ${pipeline.length} jobs total, ${pipeline.filter(j => j.stage === 'quote_sent').length} quotes sent
 
+BOOQABLE TOOLS: You have direct live access to Booqable via built-in tools. Use them to look up customers, orders, products, inventory, and more. Do not say you lack Booqable access — call the appropriate tool instead. Prefer BOOQABLE_SEARCH_CUSTOMERS over the legacy lookup_customer action.
+
 To build a quote, collect:
 1. Customer name, email, phone
 2. Equipment needed (type + quantity)
 3. Rental period (start date, end date or duration)
 4. Delivery address
 
-If the customer says their info is already in Booqable, look them up immediately:
-{"action": "lookup_customer", "query": "their name or email"}
+If the customer says their info is already in Booqable, look them up with the BOOQABLE_SEARCH_CUSTOMERS tool immediately.
 
 When you have all info, respond with a JSON action block:
 {"action": "build_quote", "customerName": "...", "customerEmail": "...", "customerPhone": "...", "deliveryAddress": "...", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "duration": "X days/weeks/months", "items": [{"sku": "BL001", "quantity": 1, "days": 7}]}
@@ -349,12 +351,33 @@ ${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
   const messages  = [...history, { role: 'user', content: message }];
   const response  = await client.messages.create({
     model:      'claude-opus-4-6',
-    max_tokens: 1024,
+    max_tokens: 2048,
     system:     systemPrompt,
     messages,
+    tools:      BOOQABLE_TOOLS,
   });
 
-  const text  = response.content[0].text;
+  // ── Booqable native tool calls ───────────────────────────────
+  if (response.stop_reason === 'tool_use') {
+    const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
+    const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
+      type:        'tool_result',
+      tool_use_id: tu.id,
+      content:     JSON.stringify(await dispatchBooqableTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
+    })));
+    const followUp = await client.messages.create({
+      model:      'claude-opus-4-6',
+      max_tokens: 2048,
+      system:     systemPrompt,
+      messages:   [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
+      tools:      BOOQABLE_TOOLS,
+    });
+    const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    return { text, toolCalls: toolUseBlocks.map(t => ({ name: t.name, input: t.input })) };
+  }
+
+  // ── Internal action dispatch ─────────────────────────────────
+  const text    = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
   const matched = extractActionJSON(text);
 
   if (matched) {
@@ -369,13 +392,12 @@ ${knowledgeContext ? '\n\nKNOWLEDGE BASE INTEL:\n' + knowledgeContext : ''}`;
       } else if (action.action === 'lookup_customer') {
         result = await lookupBooqableCustomer(action.query || action.name || action.email || '');
         if (result) {
-          // Re-run with customer info injected so agent can immediately build the quote
           const followUp = [...messages,
             { role: 'assistant', content: text },
             { role: 'user', content: `Customer found in Booqable: Name: ${result.name}, Email: ${result.email}, Phone: ${result.phone || 'not on file'}, Address: ${result.address || 'ask for delivery address'}. Now build the quote with the equipment and dates they mentioned.` },
           ];
-          const followUpRes = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 1024, system: systemPrompt, messages: followUp });
-          const followUpText = followUpRes.content[0].text;
+          const followUpRes = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages: followUp, tools: BOOQABLE_TOOLS });
+          const followUpText = followUpRes.content.filter(b => b.type === 'text').map(b => b.text).join('');
           const followUpAction = extractActionJSON(followUpText);
           if (followUpAction) {
             try {
