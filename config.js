@@ -33,6 +33,19 @@ export const CONFIG = {
     LOCATION_ID: process.env.GHL_LOCATION_ID,
   },
 
+  TELEGRAM: {
+    BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+    CHAT_ID:   process.env.TELEGRAM_CHAT_ID,
+  },
+
+  GOOGLE_MAPS_KEY: process.env.GOOGLE_MAPS_API_KEY,
+
+  MODELS: {
+    OPUS:   'claude-opus-4-6',
+    SONNET: 'claude-sonnet-4-6',
+    HAIKU:  'claude-haiku-4-5-20251001',
+  },
+
   BRAND: {
     NAME:    'Gorilla Rental',
     PHONE:   '+14474744549',
