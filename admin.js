@@ -870,6 +870,89 @@ export async function adminChat(message, history = []) {
       const lines    = receipts.map(r => `  - ${r.name} (${r.size} bytes)`).join('\n') || '  None';
       return { text: `Receipts for ${receiptsMatch[1]}:\n${lines}`, receipts };
     }
+
+    // "mark deposit paid for [name/quote]"
+    const markDepositMatch = msg.match(/mark deposit paid for\s+(.+)/);
+    if (markDepositMatch) {
+      const query = markDepositMatch[1].trim();
+      const resList = readJSON(DATA.reservations);
+      const res = resList.find(r =>
+        (r.quoteNumber || r.jobId || '').toLowerCase().includes(query.toLowerCase()) ||
+        (r.customerName || '').toLowerCase().includes(query.toLowerCase())
+      );
+      if (!res) return { text: `No reservation found for: ${query}` };
+      await triggerPostDepositFlow(res);
+      return { text: `Post-deposit flow triggered for ${res.customerName} (${res.quoteNumber || res.jobId}). Checklist, contract, invoice sent — ops notified.` };
+    }
+
+    // "resend contract to [name/quote]"
+    const resendContractMatch = msg.match(/resend contract to\s+(.+)/);
+    if (resendContractMatch) {
+      const query = resendContractMatch[1].trim();
+      const resList = readJSON(DATA.reservations);
+      const res = resList.find(r =>
+        (r.quoteNumber || r.jobId || '').toLowerCase().includes(query.toLowerCase()) ||
+        (r.customerName || '').toLowerCase().includes(query.toLowerCase())
+      );
+      if (!res) return { text: `No reservation found for: ${query}` };
+      const pdf = await generateContractPDFKit(res);
+      await sendEmailWithPDF({ to: res.customerEmail, subject: `Rental Agreement — ${res.quoteNumber || res.jobId} — Please Sign`, body: `Dear ${res.customerName},\n\nResent: please review, sign, and return the attached rental agreement.\n\n— Gorilla Rental\n${CONFIG.BRAND.PHONE}`, pdfBuffer: pdf, pdfName: `rental-agreement-${res.quoteNumber || res.jobId}.pdf` });
+      return { text: `Contract resent to ${res.customerEmail}` };
+    }
+
+    // "resend invoice to [name/quote]"
+    const resendInvoiceMatch = msg.match(/resend invoice to\s+(.+)/);
+    if (resendInvoiceMatch) {
+      const query = resendInvoiceMatch[1].trim();
+      const resList = readJSON(DATA.reservations);
+      const res = resList.find(r =>
+        (r.quoteNumber || r.jobId || '').toLowerCase().includes(query.toLowerCase()) ||
+        (r.customerName || '').toLowerCase().includes(query.toLowerCase())
+      );
+      if (!res) return { text: `No reservation found for: ${query}` };
+      const pdf = await generateInvoicePDFKit(res, res.balanceLink);
+      await sendEmailWithPDF({ to: res.customerEmail, subject: `Invoice INV-${res.quoteNumber || res.jobId} — Gorilla Rental`, body: `Dear ${res.customerName},\n\nResent: please find your invoice attached.\n\n— Gorilla Rental\n${CONFIG.BRAND.PHONE}`, pdfBuffer: pdf, pdfName: `invoice-INV-${res.quoteNumber || res.jobId}.pdf` });
+      return { text: `Invoice resent to ${res.customerEmail}` };
+    }
+
+    // "status of [name/quote]"
+    const statusOfMatch = msg.match(/status of\s+(.+)/);
+    if (statusOfMatch) {
+      const query = statusOfMatch[1].trim();
+      const resList = readJSON(DATA.reservations);
+      const res = resList.find(r =>
+        (r.quoteNumber || r.jobId || '').toLowerCase().includes(query.toLowerCase()) ||
+        (r.customerName || '').toLowerCase().includes(query.toLowerCase())
+      );
+      if (!res) return { text: `No reservation found for: ${query}` };
+      return { text: `Status: ${res.customerName} (${res.quoteNumber || res.jobId})\nStatus: ${res.status}\nDeposit paid: ${res.depositPaid ? 'Yes' : 'No'}\nChecklist: ${res.checklist_sent ? 'Sent' : 'Pending'}\nContract: ${res.contract_sent ? 'Sent' : 'Pending'}\nInvoice: ${res.invoice_sent ? 'Sent' : 'Pending'}\nOps notified: ${res.ops_handoff_sent ? 'Yes' : 'No'}`, reservation: res };
+    }
+
+    // "what's pending in admin" / "pending in admin"
+    if (/pending in admin|what.{0,5}s pending/.test(msg)) {
+      const resList = readJSON(DATA.reservations);
+      const pending = resList.filter(r => r.status === 'awaiting_deposit' || r.status === 'processing_admin');
+      if (!pending.length) return { text: 'No pending admin items.' };
+      const lines = pending.map(r => `  - ${r.customerName} | ${r.quoteNumber || r.jobId} | ${r.status}`).join('\n');
+      return { text: `Pending in Admin (${pending.length}):\n${lines}`, reservations: pending };
+    }
+
+    // "create balance payment link for [name/quote]"
+    const createBalanceLinkMatch = msg.match(/create balance payment link for\s+(.+)/);
+    if (createBalanceLinkMatch) {
+      const query = createBalanceLinkMatch[1].trim();
+      const resList = readJSON(DATA.reservations);
+      const res = resList.find(r =>
+        (r.quoteNumber || r.jobId || '').toLowerCase().includes(query.toLowerCase()) ||
+        (r.customerName || '').toLowerCase().includes(query.toLowerCase())
+      );
+      if (!res) return { text: `No reservation found for: ${query}` };
+      const total = res.total || res.grandTotal || 0;
+      const depositAmt = res.depositPaid || 250;
+      const balance = total - depositAmt;
+      const link = await createStripePaymentLink(balance, { jobId: res.quoteNumber || res.jobId, type: 'balance', description: `Balance — ${res.quoteNumber || res.jobId}` });
+      return { text: `Balance payment link for ${res.customerName} ($${balance.toFixed(2)}):\n${link}`, paymentLink: link };
+    }
   } catch (cmdErr) {
     console.error('[Admin] Command error:', cmdErr.message);
     return { text: `Error: ${cmdErr.message}`, error: cmdErr.message };
@@ -1092,6 +1175,445 @@ MEMORY TOOLS: Use MEMORY_SEARCH at the start of any job conversation to recall h
   return { text };
 }
 
+// ─── Handoff helpers ────────────────────────────────────────
+
+const DATA_HANDOFFS = path.join(__dirname, 'data/handoffs.json');
+const DATA_DRIVERS_FILE = path.join(__dirname, 'data/drivers.json');
+
+function readHandoffs() {
+  try {
+    if (!fs.existsSync(DATA_HANDOFFS)) { fs.writeFileSync(DATA_HANDOFFS, JSON.stringify({ handoffs: [] }, null, 2)); return []; }
+    const raw = JSON.parse(fs.readFileSync(DATA_HANDOFFS, 'utf8'));
+    return Array.isArray(raw) ? raw : (raw.handoffs || []);
+  } catch { return []; }
+}
+
+function writeHandoffs(list) {
+  fs.writeFileSync(DATA_HANDOFFS, JSON.stringify({ handoffs: list }, null, 2));
+}
+
+export function readPendingHandoffs(type) {
+  const all = readHandoffs();
+  return all.filter(h => h.type === type && (h.status === 'pending_admin' || h.status === 'pending_ops'));
+}
+
+export function markHandoffReceived(id) {
+  const list = readHandoffs();
+  const idx = list.findIndex(h => h.id === id);
+  if (idx >= 0) { list[idx].status = 'received'; list[idx].receivedAt = new Date().toISOString(); }
+  writeHandoffs(list);
+}
+
+// ─── PDF generation helpers ─────────────────────────────────
+
+async function generateInspectionChecklistPDF(reservation) {
+  const PDFDocument = (await import('pdfkit')).default;
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 40, size: 'LETTER' });
+    const chunks = [];
+    doc.on('data', c => chunks.push(c));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    const q = reservation.quoteNumber || reservation.jobId || '';
+    const yellow = '#f6ec0e';
+
+    // Header
+    doc.rect(0, 0, doc.page.width, 70).fill('#09090b');
+    doc.fillColor(yellow).fontSize(20).font('Helvetica-Bold').text('GORILLA RENTAL', 40, 18);
+    doc.fillColor('#ffffff').fontSize(11).font('Helvetica').text('Pre-Rental Equipment Inspection Checklist', 40, 44);
+    doc.fillColor('#09090b').rect(0, 70, doc.page.width, 3).fill(yellow);
+    doc.moveDown(3);
+
+    // Order info
+    doc.fillColor('#09090b').fontSize(11).font('Helvetica-Bold').text('ORDER INFORMATION', 40, 90);
+    doc.font('Helvetica').fontSize(10);
+    doc.text(`Order #: ${q}`, 40, 108);
+    doc.text(`Customer: ${reservation.customerName || ''}`, 40, 122);
+    doc.text(`Equipment: ${(reservation.equipment || []).map(e => `${e.name} x${e.quantity || 1}`).join(', ')}`, 40, 136);
+    doc.text(`Rental Period: ${reservation.startDate || ''} to ${reservation.endDate || ''}`, 40, 150);
+    doc.text(`Delivery Address: ${reservation.deliveryAddress || 'TBD'}`, 40, 164);
+
+    // Checklist sections
+    const sections = [
+      { title: 'GENERAL CONDITION', items: ['Frame and structure — no visible cracks or damage', 'All decals and warning labels in place', 'Battery charge / fuel level adequate', 'Tires / tracks in good condition', 'All pins and fasteners secure'] },
+      { title: 'HYDRAULICS', items: ['No hydraulic leaks detected', 'Boom extends and retracts smoothly', 'Lift platform raises and lowers properly', 'Hydraulic fluid level OK', 'All cylinders operate without hesitation'] },
+      { title: 'SAFETY SYSTEMS', items: ['Emergency lowering system functional', 'All safety interlocks operational', 'Platform guardrails in place and secure', 'Horn / alarm functional', 'Load capacity placard visible'] },
+      { title: 'DELIVERY CONDITION', items: ['Equipment clean and presentable', 'Operating manual present in platform box', 'All accessories included per order', 'Keys / remote controls included', 'Any pre-existing damage documented below'] },
+    ];
+
+    let y = 200;
+    for (const section of sections) {
+      if (y > 650) { doc.addPage(); y = 40; }
+      doc.rect(40, y, doc.page.width - 80, 18).fill('#09090b');
+      doc.fillColor(yellow).fontSize(9).font('Helvetica-Bold').text(section.title, 46, y + 4);
+      y += 24;
+      doc.fillColor('#09090b').font('Helvetica').fontSize(9);
+      for (const item of section.items) {
+        doc.rect(46, y + 1, 10, 10).stroke('#333333');
+        doc.text(item, 62, y + 1);
+        y += 16;
+      }
+      y += 8;
+    }
+
+    // Notes
+    y += 8;
+    doc.font('Helvetica-Bold').fontSize(10).fillColor('#09090b').text('PRE-EXISTING DAMAGE / NOTES:', 40, y);
+    y += 16;
+    doc.rect(40, y, doc.page.width - 80, 60).stroke('#cccccc');
+
+    // Signatures
+    y += 80;
+    doc.moveTo(40, y).lineTo(250, y).stroke('#333333');
+    doc.moveTo(310, y).lineTo(530, y).stroke('#333333');
+    doc.fontSize(9).fillColor('#555555').text('Driver Signature / Date', 40, y + 4);
+    doc.text('Customer Signature / Date', 310, y + 4);
+
+    // Footer
+    doc.fontSize(8).fillColor('#999999').text(`Gorilla Rental · ${CONFIG.BRAND.PHONE} · ${CONFIG.BRAND.EMAIL}`, 40, doc.page.height - 30, { align: 'center' });
+
+    doc.end();
+  });
+}
+
+async function generateContractPDFKit(reservation) {
+  const PDFDocument = (await import('pdfkit')).default;
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 40, size: 'LETTER' });
+    const chunks = [];
+    doc.on('data', c => chunks.push(c));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    const q = reservation.quoteNumber || reservation.jobId || '';
+    const yellow = '#f6ec0e';
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Header
+    doc.rect(0, 0, doc.page.width, 70).fill('#09090b');
+    doc.fillColor(yellow).fontSize(20).font('Helvetica-Bold').text('GORILLA RENTAL', 40, 18);
+    doc.fillColor('#ffffff').fontSize(11).font('Helvetica').text('RENTAL AGREEMENT', 40, 44);
+    doc.fillColor('#09090b').rect(0, 70, doc.page.width, 3).fill(yellow);
+
+    let y = 90;
+    doc.fillColor('#09090b').fontSize(9).font('Helvetica').text(`Agreement Date: ${today}`, 40, y);
+    doc.text(`Order #: ${q}`, 310, y);
+    y += 24;
+
+    // Parties
+    doc.font('Helvetica-Bold').fontSize(10).text('PARTIES', 40, y);
+    y += 14;
+    doc.font('Helvetica').fontSize(9);
+    doc.text(`Rental Company: Gorilla Rental · ${CONFIG.BRAND.PHONE} · ${CONFIG.BRAND.EMAIL}`, 40, y);
+    y += 13;
+    doc.text(`Customer: ${reservation.customerName || ''}   Email: ${reservation.customerEmail || ''}   Phone: ${reservation.customerPhone || ''}`, 40, y);
+    y += 13;
+    doc.text(`Delivery Address: ${reservation.deliveryAddress || 'TBD'}`, 40, y);
+    y += 20;
+
+    // Equipment
+    doc.font('Helvetica-Bold').fontSize(10).text('EQUIPMENT & RENTAL PERIOD', 40, y);
+    y += 14;
+    // Table header
+    doc.rect(40, y, doc.page.width - 80, 16).fill('#09090b');
+    doc.fillColor(yellow).fontSize(8).font('Helvetica-Bold');
+    doc.text('Equipment', 46, y + 3);
+    doc.text('Qty', 260, y + 3);
+    doc.text('Start', 310, y + 3);
+    doc.text('End', 380, y + 3);
+    doc.text('Amount', 450, y + 3);
+    y += 16;
+    doc.fillColor('#09090b').font('Helvetica').fontSize(9);
+    for (const e of (reservation.equipment || [])) {
+      doc.text(e.name || '', 46, y);
+      doc.text(String(e.quantity || 1), 260, y);
+      doc.text(reservation.startDate || '', 310, y);
+      doc.text(reservation.endDate || '', 380, y);
+      doc.text(`$${(e.total || 0).toFixed(2)}`, 450, y);
+      y += 14;
+    }
+    y += 6;
+
+    // Financial summary
+    const subtotal = reservation.subtotal || 0;
+    const tax = reservation.tax || 0;
+    const total = reservation.total || reservation.grandTotal || 0;
+    const deposit = reservation.depositPaid || 250;
+    const balance = total - deposit;
+
+    doc.font('Helvetica-Bold').fontSize(9);
+    const summaryRows = [
+      ['Subtotal', `$${subtotal.toFixed(2)}`],
+      ['Delivery Fee', '$200.00'],
+      ['Tax (7%)', `$${tax.toFixed(2)}`],
+      ['TOTAL', `$${total.toFixed(2)}`],
+      ['Deposit Paid', `-$${deposit.toFixed(2)}`],
+      ['BALANCE DUE', `$${balance.toFixed(2)}`],
+    ];
+    for (const [label, val] of summaryRows) {
+      doc.text(label, 380, y);
+      doc.text(val, 480, y);
+      y += 14;
+    }
+    y += 10;
+
+    // T&C
+    doc.font('Helvetica-Bold').fontSize(10).text('TERMS & CONDITIONS', 40, y);
+    y += 14;
+    const terms = [
+      '1. PAYMENT: A deposit of $' + deposit.toFixed(2) + ' is required to confirm. Balance of $' + balance.toFixed(2) + ' is due on or before delivery.',
+      '2. CANCELLATION: Cancellations less than 48 hours before the rental start date forfeit the deposit.',
+      '3. DAMAGE: Customer is responsible for all damage, theft, loss, or misuse during the rental period.',
+      '4. EXTENSIONS: Extension requests must be made at least 24 hours before the return date, subject to availability.',
+      '5. OPERATORS: Customer shall ensure only trained and authorized operators use the equipment.',
+      '6. DELIVERY & ACCESS: Customer must ensure safe site access for delivery and pickup. The $200 delivery fee is non-refundable.',
+      '7. INSURANCE: Customer assumes full liability. Gorilla Rental is not responsible for accidents or injuries during customer use.',
+      '8. GOVERNING LAW: This agreement is governed by the laws of the State of Florida. Disputes resolved in Broward County.',
+    ];
+    doc.font('Helvetica').fontSize(8).fillColor('#333333');
+    for (const term of terms) {
+      if (y > 670) { doc.addPage(); y = 40; }
+      const height = doc.heightOfString(term, { width: doc.page.width - 80 });
+      doc.text(term, 40, y, { width: doc.page.width - 80 });
+      y += height + 6;
+    }
+
+    // Signatures
+    y += 14;
+    if (y > 680) { doc.addPage(); y = 40; }
+    doc.fillColor('#09090b').moveTo(40, y).lineTo(250, y).stroke('#333333');
+    doc.moveTo(310, y).lineTo(530, y).stroke('#333333');
+    doc.fontSize(9).fillColor('#555555').font('Helvetica').text('Customer Signature / Date', 40, y + 4);
+    doc.text('Gorilla Rental Representative / Date', 310, y + 4);
+
+    doc.fontSize(8).fillColor('#999999').text(`Gorilla Rental · ${CONFIG.BRAND.PHONE} · ${CONFIG.BRAND.EMAIL} · ${CONFIG.BRAND.WEBSITE}`, 40, doc.page.height - 30, { align: 'center' });
+
+    doc.end();
+  });
+}
+
+async function generateInvoicePDFKit(reservation, balanceLink) {
+  const PDFDocument = (await import('pdfkit')).default;
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 40, size: 'LETTER' });
+    const chunks = [];
+    doc.on('data', c => chunks.push(c));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    const q = reservation.quoteNumber || reservation.jobId || '';
+    const yellow = '#f6ec0e';
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Header
+    doc.rect(0, 0, doc.page.width, 70).fill('#09090b');
+    doc.fillColor(yellow).fontSize(20).font('Helvetica-Bold').text('GORILLA RENTAL', 40, 18);
+    doc.fillColor('#ffffff').fontSize(11).font('Helvetica').text('INVOICE', 40, 44);
+    doc.fillColor('#09090b').rect(0, 70, doc.page.width, 3).fill(yellow);
+
+    let y = 90;
+    doc.fillColor('#09090b').fontSize(9).font('Helvetica-Bold').text(`Invoice #: INV-${q}`, 40, y);
+    doc.font('Helvetica').text(`Date: ${today}`, 310, y);
+    y += 24;
+
+    // Bill to
+    doc.font('Helvetica-Bold').fontSize(10).text('BILL TO', 40, y);
+    y += 14;
+    doc.font('Helvetica').fontSize(9);
+    doc.text(reservation.customerName || '', 40, y); y += 13;
+    doc.text(reservation.customerEmail || '', 40, y); y += 13;
+    doc.text(reservation.customerPhone || '', 40, y); y += 20;
+
+    // Line items
+    doc.rect(40, y, doc.page.width - 80, 16).fill('#09090b');
+    doc.fillColor(yellow).fontSize(8).font('Helvetica-Bold');
+    doc.text('Description', 46, y + 3);
+    doc.text('Amount', 460, y + 3);
+    y += 16;
+    doc.fillColor('#09090b').font('Helvetica').fontSize(9);
+
+    for (const e of (reservation.equipment || [])) {
+      doc.text(`${e.name || ''} x${e.quantity || 1} (${reservation.startDate} – ${reservation.endDate})`, 46, y);
+      doc.text(`$${(e.total || 0).toFixed(2)}`, 460, y);
+      y += 14;
+    }
+    doc.text('Delivery Fee', 46, y);
+    doc.text('$200.00', 460, y); y += 14;
+    y += 6;
+
+    const subtotal = reservation.subtotal || 0;
+    const tax = reservation.tax || 0;
+    const total = reservation.total || reservation.grandTotal || 0;
+    const deposit = reservation.depositPaid || 250;
+    const balance = total - deposit;
+
+    doc.font('Helvetica-Bold').fontSize(9);
+    const rows = [
+      ['Subtotal', `$${subtotal.toFixed(2)}`],
+      ['Tax (7%)', `$${tax.toFixed(2)}`],
+      ['TOTAL', `$${total.toFixed(2)}`],
+      ['Deposit Received', `-$${deposit.toFixed(2)}`],
+      ['BALANCE DUE', `$${balance.toFixed(2)}`],
+    ];
+    for (const [label, val] of rows) {
+      doc.text(label, 380, y);
+      doc.text(val, 460, y);
+      y += 14;
+    }
+    y += 16;
+
+    if (balanceLink) {
+      doc.fillColor('#1d4ed8').fontSize(9).font('Helvetica-Bold').text('PAY ONLINE:', 40, y);
+      doc.font('Helvetica').text(balanceLink, 120, y, { link: balanceLink, underline: true });
+      y += 20;
+    }
+
+    doc.fontSize(8).fillColor('#999999').font('Helvetica').text(`Gorilla Rental · ${CONFIG.BRAND.PHONE} · ${CONFIG.BRAND.EMAIL}`, 40, doc.page.height - 30, { align: 'center' });
+
+    doc.end();
+  });
+}
+
+// ─── Post-deposit flow ──────────────────────────────────────
+
+export async function triggerPostDepositFlow(reservation) {
+  const q = reservation.quoteNumber || reservation.jobId || '';
+  console.log(`[Admin] triggerPostDepositFlow: ${q}`);
+
+  // Mark deposit paid
+  const resFile = readJSON(DATA.reservations);
+  const idx = resFile.findIndex(r => (r.quoteNumber || r.jobId) === q);
+  if (idx >= 0) {
+    resFile[idx].depositPaid = true;
+    resFile[idx].depositPaidAt = new Date().toISOString();
+    resFile[idx].status = 'processing_admin';
+    writeJSON(DATA.reservations, resFile);
+  }
+  reservation = { ...reservation, depositPaid: reservation.depositPaid || 250, status: 'processing_admin' };
+
+  // ── 2A: Inspection Checklist ─────────────────────────────
+  try {
+    const checklistPDF = await generateInspectionChecklistPDF(reservation);
+    await sendEmailWithPDF({
+      to: reservation.customerEmail,
+      subject: `Equipment Inspection Checklist — ${q}`,
+      body: `Dear ${reservation.customerName},\n\nPlease review and sign the attached checklist upon delivery. Keep a copy for your records.\n\n— Gorilla Rental\n${CONFIG.BRAND.PHONE}`,
+      pdfBuffer: checklistPDF,
+      pdfName: `inspection-checklist-${q}.pdf`,
+    });
+    console.log(`[Admin] 2A checklist sent: ${q}`);
+  } catch (e) { console.error(`[Admin] 2A checklist error: ${e.message}`); }
+
+  // ── 2B: Rental Contract ──────────────────────────────────
+  try {
+    const contractPDF = await generateContractPDFKit(reservation);
+    await sendEmailWithPDF({
+      to: reservation.customerEmail,
+      subject: `Rental Agreement — ${q} — Please Sign`,
+      body: `Dear ${reservation.customerName},\n\nPlease review, sign, and return the attached rental agreement before or at the time of delivery.\n\n— Gorilla Rental\n${CONFIG.BRAND.PHONE}`,
+      pdfBuffer: contractPDF,
+      pdfName: `rental-agreement-${q}.pdf`,
+    });
+    console.log(`[Admin] 2B contract sent: ${q}`);
+  } catch (e) { console.error(`[Admin] 2B contract error: ${e.message}`); }
+
+  // ── 2C: Invoice with balance link ────────────────────────
+  let balanceLink = reservation.balanceLink || null;
+  try {
+    const total = reservation.total || reservation.grandTotal || 0;
+    const depositAmt = reservation.depositPaid || 250;
+    const balanceAmt = total - depositAmt;
+    if (balanceAmt > 0 && !balanceLink) {
+      balanceLink = await createStripePaymentLink(balanceAmt, {
+        jobId: q, type: 'balance',
+        description: `Balance — ${q} — Gorilla Rental`,
+      });
+    }
+    const invoicePDF = await generateInvoicePDFKit(reservation, balanceLink);
+    const balanceFmt = balanceAmt.toFixed(2);
+    await sendEmailWithPDF({
+      to: reservation.customerEmail,
+      subject: `Invoice INV-${q} — Gorilla Rental`,
+      body: `Dear ${reservation.customerName},\n\nYour invoice is attached. Balance of $${balanceFmt} is due by ${reservation.endDate || 'end of rental'}.\n\nPay online: ${balanceLink || 'Contact us for payment options'}\n\n— Gorilla Rental\n${CONFIG.BRAND.PHONE}`,
+      pdfBuffer: invoicePDF,
+      pdfName: `invoice-INV-${q}.pdf`,
+    });
+    console.log(`[Admin] 2C invoice sent: ${q}`);
+  } catch (e) { console.error(`[Admin] 2C invoice error: ${e.message}`); }
+
+  // ── 2D: Write ops handoff ────────────────────────────────
+  try {
+    const handoffId = `HANDOFF-${Date.now()}`;
+    const handoff = {
+      id: handoffId,
+      type: 'ops_delivery_required',
+      status: 'pending_ops',
+      quoteNumber: q,
+      booqableOrderId: reservation.booqableOrderId || '',
+      customerName: reservation.customerName || '',
+      customerEmail: reservation.customerEmail || '',
+      customerPhone: reservation.customerPhone || '',
+      equipment: (reservation.equipment || []).map(e => `${e.name} x${e.quantity || 1}`).join(', '),
+      deliveryAddress: reservation.deliveryAddress || '',
+      deliveryDate: reservation.startDate || '',
+      deliveryTimeWindow: '7:00 AM — 9:00 AM',
+      pickupDate: reservation.endDate || '',
+      notes: reservation.notes || '',
+      adminCompletedAt: new Date().toISOString(),
+    };
+    const list = readHandoffs();
+    list.push(handoff);
+    writeHandoffs(list);
+
+    // Update GHL stage
+    const { updateGHLStage } = await import('./ghl.js');
+    await updateGHLStage(q, 'booked', reservation.ghlContactId || null).catch(e => console.warn('[Admin] GHL stage error:', e.message));
+
+    // Update reservation file
+    const rFile = readJSON(DATA.reservations);
+    const ri = rFile.findIndex(r => (r.quoteNumber || r.jobId) === q);
+    if (ri >= 0) {
+      Object.assign(rFile[ri], {
+        status: 'admin_complete',
+        checklist_sent: true,
+        contract_sent: true,
+        invoice_sent: true,
+        ops_handoff_sent: true,
+        balanceLink,
+        adminCompletedAt: new Date().toISOString(),
+      });
+      writeJSON(DATA.reservations, rFile);
+    }
+
+    await logActivity({ agent: 'admin', action: 'admin_complete', description: `Admin complete — ${reservation.customerName} — checklist, contract, invoice sent — ops notified`, jobId: q, status: 'success', notify: true }).catch(() => {});
+    console.log(`[Admin] 2D ops handoff written: ${handoffId}`);
+  } catch (e) { console.error(`[Admin] 2D handoff error: ${e.message}`); }
+}
+
+// ── Deposit monitoring ───────────────────────────────────────
+function startDepositMonitor() {
+  setInterval(async () => {
+    try {
+      const reservations = readJSON(DATA.reservations);
+      const awaiting = reservations.filter(r => r.status === 'awaiting_deposit' && r.depositLinkId);
+      for (const res of awaiting) {
+        try {
+          const Stripe = (await import('stripe')).default;
+          const stripe = new Stripe(process.env.STRIPE_KEY);
+          const sessions = await stripe.checkout.sessions.list({ payment_link: res.depositLinkId, limit: 1 });
+          if (sessions.data[0]?.payment_status === 'paid') {
+            await triggerPostDepositFlow(res);
+          }
+        } catch (e) { console.error(`[Admin] Stripe deposit check error (${res.quoteNumber || res.jobId}): ${e.message}`); }
+      }
+    } catch (e) { console.error('[Admin] Deposit monitor error:', e.message); }
+  }, 30 * 60 * 1000);
+}
+
+// Start monitor on module load
+startDepositMonitor();
+
 // ─── Routes ────────────────────────────────────────────────
 
 export function adminRoutes(app) {
@@ -1194,6 +1716,51 @@ export function adminRoutes(app) {
     try {
       const approvalId = await postRentalCheck(req.params.jobId);
       res.json({ ok: true, approvalId });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  // Post-deposit flow routes
+  app.post('/admin/deposit-paid', async (req, res) => {
+    try {
+      const { quoteNumber } = req.body;
+      if (!quoteNumber) return res.status(400).json({ ok: false, error: 'quoteNumber required' });
+      const resList = readJSON(DATA.reservations);
+      const reservation = resList.find(r => (r.quoteNumber || r.jobId) === quoteNumber);
+      if (!reservation) return res.status(404).json({ ok: false, error: `Reservation ${quoteNumber} not found` });
+      await triggerPostDepositFlow(reservation);
+      res.json({ ok: true, message: `Post-deposit flow triggered for ${quoteNumber}` });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/admin/pending', async (req, res) => {
+    try {
+      const resList = readJSON(DATA.reservations);
+      const pending = resList.filter(r => r.status === 'awaiting_deposit' || r.status === 'admin_complete');
+      res.json({ ok: true, reservations: pending });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/admin/resend-contract', async (req, res) => {
+    try {
+      const { quoteNumber } = req.body;
+      const resList = readJSON(DATA.reservations);
+      const reservation = resList.find(r => (r.quoteNumber || r.jobId) === quoteNumber);
+      if (!reservation) return res.status(404).json({ ok: false, error: 'Reservation not found' });
+      const pdf = await generateContractPDFKit(reservation);
+      await sendEmailWithPDF({ to: reservation.customerEmail, subject: `Rental Agreement — ${quoteNumber} — Please Sign`, body: `Dear ${reservation.customerName},\n\nResent: please review, sign, and return the attached rental agreement.\n\n— Gorilla Rental\n${CONFIG.BRAND.PHONE}`, pdfBuffer: pdf, pdfName: `rental-agreement-${quoteNumber}.pdf` });
+      res.json({ ok: true, message: `Contract resent to ${reservation.customerEmail}` });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/admin/resend-invoice', async (req, res) => {
+    try {
+      const { quoteNumber } = req.body;
+      const resList = readJSON(DATA.reservations);
+      const reservation = resList.find(r => (r.quoteNumber || r.jobId) === quoteNumber);
+      if (!reservation) return res.status(404).json({ ok: false, error: 'Reservation not found' });
+      const pdf = await generateInvoicePDFKit(reservation, reservation.balanceLink);
+      await sendEmailWithPDF({ to: reservation.customerEmail, subject: `Invoice INV-${quoteNumber} — Gorilla Rental`, body: `Dear ${reservation.customerName},\n\nResent: please find your invoice attached.\n\n— Gorilla Rental\n${CONFIG.BRAND.PHONE}`, pdfBuffer: pdf, pdfName: `invoice-INV-${quoteNumber}.pdf` });
+      res.json({ ok: true, message: `Invoice resent to ${reservation.customerEmail}` });
     } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
   });
 

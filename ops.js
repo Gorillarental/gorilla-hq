@@ -12,7 +12,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { CONFIG, DRIVERS } from './config.js';
 import { sendEmailWithPDF } from './chip.js';
-import { sendSMS, getOrCreateContact, addNote } from './ghl.js';
+import { sendSMS, getOrCreateContact, addNote, updateGHLStage, enrollInWorkflow, createContact } from './ghl.js';
 import { getPipeline, updateJob, getJob, dbUpsertDelivery, dbGetDeliveries, dbUpdateDelivery } from './db.js';
 import { BOOQABLE_TOOLS, dispatchBooqableTool } from './booqable.js';
 import { MEMORY_TOOLS, dispatchMemoryTool } from './memory.js';
@@ -40,7 +40,47 @@ const DATA = {
   deliveries:   path.join(__dirname, 'data/deliveries.json'),
   handoffs:     path.join(__dirname, 'data/handoffs.json'),
   reservations: path.join(__dirname, 'data/reservations.json'),
+  drivers:      path.join(__dirname, 'data/drivers.json'),
 };
+
+// ── Deliveries file uses { jobs: [] } format ──────────────────
+function readDeliveriesFile() {
+  try {
+    if (!fs.existsSync(DATA.deliveries)) { fs.writeFileSync(DATA.deliveries, JSON.stringify({ jobs: [] }, null, 2)); return []; }
+    const raw = JSON.parse(fs.readFileSync(DATA.deliveries, 'utf8'));
+    return Array.isArray(raw) ? raw : (raw.jobs || []);
+  } catch { return []; }
+}
+function writeDeliveriesFile(jobs) { fs.writeFileSync(DATA.deliveries, JSON.stringify({ jobs }, null, 2)); }
+
+// ── Handoffs file uses { handoffs: [] } format ────────────────
+function readHandoffsFile() {
+  try {
+    if (!fs.existsSync(DATA.handoffs)) return [];
+    const raw = JSON.parse(fs.readFileSync(DATA.handoffs, 'utf8'));
+    return Array.isArray(raw) ? raw : (raw.handoffs || []);
+  } catch { return []; }
+}
+function writeHandoffsFile(list) { fs.writeFileSync(DATA.handoffs, JSON.stringify({ handoffs: list }, null, 2)); }
+
+// ── Drivers file ──────────────────────────────────────────────
+function readDriversFile() {
+  try {
+    if (!fs.existsSync(DATA.drivers)) return DRIVERS;
+    return JSON.parse(fs.readFileSync(DATA.drivers, 'utf8'));
+  } catch { return DRIVERS; }
+}
+function writeDriversFile(list) { fs.writeFileSync(DATA.drivers, JSON.stringify(list, null, 2)); }
+
+function findDriverByIdOrName(query) {
+  const drivers = readDriversFile();
+  if (!query) return drivers[1] || drivers[0]; // default Nazar
+  const q = String(query).toLowerCase();
+  return drivers.find(d => d.id?.toLowerCase() === q || d.name?.toLowerCase().includes(q)) || null;
+}
+
+// ── Generate unique job ID ─────────────────────────────────────
+function newJobId() { return `JOB-${Date.now()}`; }
 
 function readJSON(fp, fallback = []) {
   try {
@@ -56,7 +96,7 @@ async function loadDeliveries(filter = {}) {
     const dbRows = await dbGetDeliveries(filter);
     if (dbRows.length) return dbRows;
   } catch {}
-  let rows = readJSON(DATA.deliveries);
+  let rows = readDeliveriesFile();
   if (filter.date)   rows = rows.filter(d => d.scheduledDate === filter.date);
   if (filter.status) rows = rows.filter(d => d.status === filter.status);
   return rows;
@@ -98,9 +138,9 @@ export async function scheduleDelivery(jobId, options = {}) {
     equipment: res.equipment, notes: options.notes || '',
     status: 'scheduled', createdAt: new Date().toISOString(),
   };
-  const deliveries = readJSON(DATA.deliveries);
+  const deliveries = readDeliveriesFile();
   deliveries.push(delivery);
-  writeJSON(DATA.deliveries, deliveries);
+  writeDeliveriesFile(deliveries);
   await dbUpsertDelivery(delivery).catch(() => {});
   await updateJob(jobId, { stage: 'delivery_scheduled', deliveryScheduledAt: new Date().toISOString() });
   await logActivity({ agent: 'ops', action: 'delivery_scheduled', description: `Delivery scheduled for ${jobId}`, jobId, status: 'success', notify: false }).catch(()=>{});
@@ -126,9 +166,9 @@ export async function schedulePickup(jobId, options = {}) {
     equipment: res.equipment, notes: options.notes || '',
     status: 'scheduled', createdAt: new Date().toISOString(),
   };
-  const deliveries = readJSON(DATA.deliveries);
+  const deliveries = readDeliveriesFile();
   deliveries.push(pickup);
-  writeJSON(DATA.deliveries, deliveries);
+  writeDeliveriesFile(deliveries);
   await dbUpsertDelivery(pickup).catch(() => {});
   await updateJob(jobId, { stage: 'pickup_scheduled', pickupScheduledAt: new Date().toISOString() });
   console.log(`[Ops] ✅ Pickup scheduled: ${jobId} → ${driver.name} on ${pickup.scheduledDate}`);
@@ -144,9 +184,9 @@ export async function notifyDriver(jobId, type = 'delivery') {
   const sms      = await sendSMS(driver.phone, jobSheet, { name: driver.name, tags: ['gorilla-driver'] });
   await sendEmailWithPDF({ to: driver.email || CONFIG.BRAND.EMAIL, subject: `🦍 Job Sheet — ${jobId} — ${type.toUpperCase()} — ${delivery.scheduledDate}`, body: jobSheet, attachments: [] });
   const updates = { driverNotifiedAt: new Date().toISOString(), status: 'driver_notified' };
-  const fileDeliveries = readJSON(DATA.deliveries);
+  const fileDeliveries = readDeliveriesFile();
   const idx = fileDeliveries.findIndex(d => d.jobId === jobId && d.type === type);
-  if (idx >= 0) { Object.assign(fileDeliveries[idx], updates); writeJSON(DATA.deliveries, fileDeliveries); }
+  if (idx >= 0) { Object.assign(fileDeliveries[idx], updates); writeDeliveriesFile(fileDeliveries); }
   await dbUpdateDelivery(delivery.id, updates).catch(() => {});
   console.log(`[Ops] ✅ Driver ${driver.name} notified — ${jobId}`);
   return { sms };
@@ -175,9 +215,9 @@ export async function markDeliveryComplete(jobId, notes = '') {
   const delivery = allDels.find(d => d.jobId === jobId && d.type === 'delivery');
   if (!delivery) throw new Error(`No delivery found for ${jobId}`);
   const updates = { status: 'completed', completedAt: new Date().toISOString(), completionNotes: notes };
-  const fileDeliveries = readJSON(DATA.deliveries);
+  const fileDeliveries = readDeliveriesFile();
   const idx = fileDeliveries.findIndex(d => d.jobId === jobId && d.type === 'delivery');
-  if (idx >= 0) { Object.assign(fileDeliveries[idx], updates); writeJSON(DATA.deliveries, fileDeliveries); }
+  if (idx >= 0) { Object.assign(fileDeliveries[idx], updates); writeDeliveriesFile(fileDeliveries); }
   await dbUpdateDelivery(delivery.id, updates).catch(() => {});
   await updateJob(jobId, { stage: 'in_progress', deliveredAt: new Date().toISOString() });
   try { const { contact } = await getOrCreateContact(delivery.customerPhone, { name: delivery.customerName }); if (contact?.id) await addNote(contact.id, `✅ Equipment delivered for ${jobId} on ${new Date().toLocaleDateString()}. ${notes}`); } catch {}
@@ -185,22 +225,215 @@ export async function markDeliveryComplete(jobId, notes = '') {
   return { ...delivery, ...updates };
 }
 
-export async function markPickupComplete(jobId, inspectionNotes = '') {
-  const allDels  = await loadDeliveries();
-  const pickup   = allDels.find(d => d.jobId === jobId && d.type === 'pickup');
-  if (!pickup) throw new Error(`No pickup found for ${jobId}`);
-  const updates = { status: 'completed', completedAt: new Date().toISOString(), inspectionNotes };
-  const fileDeliveries = readJSON(DATA.deliveries);
-  const idx = fileDeliveries.findIndex(d => d.jobId === jobId && d.type === 'pickup');
-  if (idx >= 0) { Object.assign(fileDeliveries[idx], updates); writeJSON(DATA.deliveries, fileDeliveries); }
-  await dbUpdateDelivery(pickup.id, updates).catch(() => {});
-  await updateJob(jobId, { stage: 'returned', returnedAt: new Date().toISOString() });
-  const handoffs = readJSON(DATA.handoffs);
-  handoffs.push({ jobId, type: 'return_inspection', notes: inspectionNotes, driverId: pickup.driverId, timestamp: new Date().toISOString() });
-  writeJSON(DATA.handoffs, handoffs);
-  try { const { contact } = await getOrCreateContact(pickup.customerPhone, { name: pickup.customerName }); if (contact?.id) await addNote(contact.id, `📦 Equipment picked up for ${jobId} on ${new Date().toLocaleDateString()}. Inspection: ${inspectionNotes || 'OK'}`); } catch {}
-  console.log(`[Ops] ✅ Pickup complete: ${jobId}`);
-  return { ...pickup, ...updates };
+// ── Auto-assign: driver with fewest jobs that day, tiebreak = Nazar ─────
+function autoAssignDriver(scheduledDate) {
+  const drivers = readDriversFile();
+  const jobs = readDeliveriesFile();
+  const counts = {};
+  for (const d of drivers) counts[d.id] = 0;
+  for (const j of jobs) {
+    if (j.scheduledDate === scheduledDate && j.assignedDriverId) {
+      counts[j.assignedDriverId] = (counts[j.assignedDriverId] || 0) + 1;
+    }
+  }
+  // Prefer Nazar (index 1) on tie
+  let best = null, bestCount = Infinity;
+  for (const d of [...drivers].reverse()) { // reverse so Nazar wins ties
+    if ((counts[d.id] || 0) < bestCount) { best = d; bestCount = counts[d.id] || 0; }
+  }
+  return best || drivers[0];
+}
+
+export async function assignDriver(jobId, driverIdOrName) {
+  const jobs = readDeliveriesFile();
+  const idx = jobs.findIndex(j => j.jobId === jobId || j.id === jobId);
+  if (idx < 0) throw new Error(`Job ${jobId} not found`);
+  const driver = findDriverByIdOrName(driverIdOrName) || autoAssignDriver(jobs[idx].scheduledDate);
+  jobs[idx].assignedDriverId = driver.id;
+  jobs[idx].assignedDriverName = driver.name;
+  jobs[idx].status = 'assigned';
+  jobs[idx].assignedAt = new Date().toISOString();
+  writeDeliveriesFile(jobs);
+  await notifyDriverForJob(jobs[idx], driver);
+  await logActivity({ agent: 'ops', action: 'driver_assigned', description: `${driver.name} assigned to ${jobId}`, jobId, status: 'success', notify: false }).catch(() => {});
+  console.log(`[Ops] Driver ${driver.name} assigned to ${jobId}`);
+  return jobs[idx];
+}
+
+async function notifyDriverForJob(job, driver) {
+  try {
+    const GHL_API = process.env.GHL_API_URL || 'https://services.leadconnectorhq.com';
+    const GHL_KEY = process.env.GHL_API_KEY;
+    const LOCATION_ID = process.env.GHL_LOCATION_ID;
+    const headers = { 'Authorization': `Bearer ${GHL_KEY}`, 'Content-Type': 'application/json', 'Version': process.env.GHL_API_VERSION || '2021-07-28' };
+
+    // Find or create GHL contact for driver
+    let contactId = driver.ghlContactId;
+    if (!contactId && driver.phone) {
+      try {
+        const searchRes = await fetch(`${GHL_API}/contacts/search/duplicate?locationId=${LOCATION_ID}&phone=${encodeURIComponent(driver.phone)}`, { headers });
+        const searchData = await searchRes.json();
+        contactId = searchData?.contact?.id;
+      } catch {}
+    }
+    if (!contactId && driver.phone) {
+      try {
+        const createRes = await fetch(`${GHL_API}/contacts/`, {
+          method: 'POST', headers,
+          body: JSON.stringify({ locationId: LOCATION_ID, firstName: driver.name, phone: driver.phone, tags: ['gorilla-driver'] }),
+        });
+        const created = await createRes.json();
+        contactId = created?.contact?.id;
+        if (contactId) {
+          const drivers = readDriversFile();
+          const di = drivers.findIndex(d => d.id === driver.id);
+          if (di >= 0) { drivers[di].ghlContactId = contactId; writeDriversFile(drivers); }
+        }
+      } catch {}
+    }
+
+    const smsBody = `GORILLA RENTAL — New job assigned:\n${(job.type || 'JOB').toUpperCase()}\nCustomer: ${job.customerName || ''}\nAddress: ${job.deliveryAddress || ''}\nDate: ${job.scheduledDate || ''}\nTime: ${job.scheduledTime || 'TBD'}\nEquipment: ${(job.equipment || []).map(e => `${e.name} x${e.quantity || 1}`).join(', ')}\nPhone: ${job.customerPhone || ''}\nJob ID: ${job.jobId || job.id || ''}`;
+
+    if (contactId) {
+      await fetch(`${GHL_API}/conversations/messages`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ type: 'SMS', contactId, message: smsBody }),
+      });
+    } else if (driver.phone) {
+      await sendSMS(driver.phone, smsBody, { name: driver.name, tags: ['gorilla-driver'] }).catch(() => {});
+    }
+
+    // Update job status
+    const jobs = readDeliveriesFile();
+    const idx = jobs.findIndex(j => (j.jobId || j.id) === (job.jobId || job.id));
+    if (idx >= 0) { jobs[idx].status = 'notified'; jobs[idx].notifiedAt = new Date().toISOString(); writeDeliveriesFile(jobs); }
+
+    console.log(`[Ops] Driver ${driver.name} notified for job ${job.jobId || job.id}`);
+  } catch (e) { console.error(`[Ops] notifyDriverForJob error: ${e.message}`); }
+}
+
+export async function markDelivered(query) {
+  const jobs = readDeliveriesFile();
+  const job = jobs.find(j => j.type === 'delivery' && (
+    (j.jobId || j.id) === query ||
+    (j.quoteNumber || '').toLowerCase().includes(String(query).toLowerCase()) ||
+    (j.customerName || '').toLowerCase().includes(String(query).toLowerCase())
+  ));
+  if (!job) throw new Error(`No delivery job found for: ${query}`);
+  const idx = jobs.indexOf(job);
+  jobs[idx].status = 'completed';
+  jobs[idx].completedAt = new Date().toISOString();
+  writeDeliveriesFile(jobs);
+
+  // Update Booqable with note
+  if (job.booqableOrderId) {
+    try {
+      const res = await fetch(`${CONFIG.BOOQABLE.BASE_URL}/orders/${job.booqableOrderId}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CONFIG.BOOQABLE.API_KEY}` },
+        body: JSON.stringify({ data: { type: 'notes', attributes: { body: `Equipment delivered ${new Date().toLocaleDateString()} by ${job.assignedDriverName || 'driver'}` } } }),
+      });
+      if (!res.ok) console.warn('[Ops] Booqable note error:', await res.text());
+    } catch (e) { console.warn('[Ops] Booqable note error:', e.message); }
+  }
+
+  await logActivity({ agent: 'ops', action: 'delivery_complete', description: `Delivery complete — ${job.customerName}`, jobId: job.jobId || job.id, status: 'success', notify: false }).catch(() => {});
+  console.log(`[Ops] Delivery marked complete: ${job.jobId || job.id}`);
+  return jobs[idx];
+}
+
+export async function markPickupComplete(query) {
+  const jobs = readDeliveriesFile();
+  const job = jobs.find(j => j.type === 'pickup' && (
+    (j.jobId || j.id) === query ||
+    (j.quoteNumber || '').toLowerCase().includes(String(query).toLowerCase()) ||
+    (j.customerName || '').toLowerCase().includes(String(query).toLowerCase())
+  ));
+  if (!job) throw new Error(`No pickup job found for: ${query}`);
+  const q = job.quoteNumber || job.jobId || job.id || '';
+
+  // 5A: Update Booqable
+  try {
+    if (job.booqableOrderId) {
+      await fetch(`${CONFIG.BOOQABLE.BASE_URL}/orders/${job.booqableOrderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/vnd.api+json', 'Authorization': `Bearer ${CONFIG.BOOQABLE.API_KEY}` },
+        body: JSON.stringify({ data: { type: 'orders', id: job.booqableOrderId, attributes: { status: 'stopped' } } }),
+      });
+      await fetch(`${CONFIG.BOOQABLE.BASE_URL}/orders/${job.booqableOrderId}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CONFIG.BOOQABLE.API_KEY}` },
+        body: JSON.stringify({ data: { type: 'notes', attributes: { body: `Equipment returned ${new Date().toLocaleDateString()} by ${job.assignedDriverName || 'driver'}` } } }),
+      });
+    }
+    console.log(`[Ops] 5A Booqable updated: ${q}`);
+  } catch (e) { console.error(`[Ops] 5A Booqable error: ${e.message}`); }
+
+  // 5B: Return confirmation email
+  try {
+    const equipList = (job.equipment || []).map(e => `  - ${e.name} x${e.quantity || 1}`).join('\n') || '  (see order)';
+    await sendEmailWithPDF({
+      to: job.customerEmail,
+      subject: `Equipment Returned — Thank You — ${q}`,
+      body: `Dear ${job.customerName},\n\nThank you for choosing Gorilla Rental!\n\nYour equipment has been successfully returned and picked up by our team.\n\nOrder: ${q}\nEquipment:\n${equipList}\nRental Period: ${job.deliveryDate || ''} to ${new Date().toLocaleDateString()}\n\nWe hope everything went smoothly. Please don't hesitate to reach out for future rental needs.\n\n— Gorilla Rental Team\n${CONFIG.BRAND.PHONE} | ${CONFIG.BRAND.EMAIL}`,
+    });
+    console.log(`[Ops] 5B return email sent: ${q}`);
+  } catch (e) { console.error(`[Ops] 5B email error: ${e.message}`); }
+
+  // 5C: Final invoice if balance unpaid
+  try {
+    const reservations = readJSON(DATA.reservations);
+    const res = reservations.find(r => (r.quoteNumber || r.jobId) === q);
+    if (res && !res.balancePaid) {
+      // Generate and send final invoice
+      const total = res.total || res.grandTotal || 0;
+      const depositAmt = res.depositPaid || 250;
+      const balance = total - depositAmt;
+      if (balance > 0 && res.balanceLink) {
+        await sendEmailWithPDF({
+          to: job.customerEmail,
+          subject: `Final Invoice — ${q} — Gorilla Rental`,
+          body: `Dear ${job.customerName},\n\nThank you for returning the equipment. Your final balance of $${balance.toFixed(2)} is due.\n\nPay online: ${res.balanceLink}\n\n— Gorilla Rental\n${CONFIG.BRAND.PHONE}`,
+        });
+        console.log(`[Ops] 5C final invoice sent: ${q}`);
+      } else if (res.balancePaid) {
+        await sendEmailWithPDF({
+          to: job.customerEmail,
+          subject: `Payment Received — Thank You — ${q}`,
+          body: `Dear ${job.customerName},\n\nYour rental is complete and fully paid. Thank you!\n\nOrder: ${q}\nTotal paid: $${total.toFixed(2)}\n\n— Gorilla Rental\n${CONFIG.BRAND.PHONE}`,
+        });
+      }
+    }
+  } catch (e) { console.error(`[Ops] 5C invoice error: ${e.message}`); }
+
+  // 5D: Update GHL
+  try {
+    await updateGHLStage(q, 'booked', job.ghlContactId || null).catch(() => {});
+    const reservations = readJSON(DATA.reservations);
+    const res = reservations.find(r => (r.quoteNumber || r.jobId) === q);
+    if (res?.ghlContactId) {
+      await enrollInWorkflow(res.ghlContactId, 'booked').catch(() => {});
+    }
+    console.log(`[Ops] 5D GHL updated: ${q}`);
+  } catch (e) { console.error(`[Ops] 5D GHL error: ${e.message}`); }
+
+  // 5E: Update local data
+  const idx = jobs.indexOf(job);
+  jobs[idx].status = 'completed';
+  jobs[idx].completedAt = new Date().toISOString();
+  writeDeliveriesFile(jobs);
+
+  const reservations = readJSON(DATA.reservations);
+  const ri = reservations.findIndex(r => (r.quoteNumber || r.jobId) === q);
+  if (ri >= 0) {
+    reservations[ri].status = 'completed';
+    reservations[ri].completedAt = new Date().toISOString();
+    writeJSON(DATA.reservations, reservations);
+  }
+
+  await logActivity({ agent: 'ops', action: 'rental_complete', description: `Rental complete — ${job.customerName} — equipment returned — ${new Date().toLocaleDateString()}`, jobId: q, status: 'success', notify: true }).catch(() => {});
+  console.log(`[Ops] Pickup/rental complete: ${q}`);
+  return jobs[idx];
 }
 
 export async function getTodaysJobs(dateOverride) {
@@ -216,7 +449,195 @@ export async function getUpcomingJobs(days = 7) {
   return rows.filter(d => { const dt = new Date(d.scheduledDate); return dt >= today && dt <= future && d.status !== 'completed'; }).sort((a, b) => new Date(a.scheduledDate) - new Date(b.scheduledDate));
 }
 
+// ── Handoff polling ───────────────────────────────────────────
+async function pollHandoffs() {
+  try {
+    const { readPendingHandoffs, markHandoffReceived } = await import('./admin.js');
+    const pending = readPendingHandoffs('ops_delivery_required');
+    for (const handoff of pending) {
+      try {
+        const jobs = readDeliveriesFile();
+
+        // Create delivery job
+        const deliveryJob = {
+          id: newJobId(),
+          jobId: handoff.quoteNumber,
+          quoteNumber: handoff.quoteNumber,
+          booqableOrderId: handoff.booqableOrderId || '',
+          type: 'delivery',
+          customerName: handoff.customerName,
+          customerEmail: handoff.customerEmail,
+          customerPhone: handoff.customerPhone,
+          deliveryAddress: handoff.deliveryAddress,
+          equipment: handoff.equipment ? [{ name: handoff.equipment, quantity: 1 }] : [],
+          scheduledDate: handoff.deliveryDate,
+          scheduledTime: handoff.deliveryTimeWindow || '7:00 AM',
+          notes: handoff.notes || '',
+          status: 'unassigned',
+          createdAt: new Date().toISOString(),
+        };
+
+        // Create pickup job
+        const pickupJob = {
+          id: newJobId() + '-pck',
+          jobId: handoff.quoteNumber,
+          quoteNumber: handoff.quoteNumber,
+          booqableOrderId: handoff.booqableOrderId || '',
+          type: 'pickup',
+          customerName: handoff.customerName,
+          customerEmail: handoff.customerEmail,
+          customerPhone: handoff.customerPhone,
+          deliveryAddress: handoff.deliveryAddress,
+          equipment: handoff.equipment ? [{ name: handoff.equipment, quantity: 1 }] : [],
+          scheduledDate: handoff.pickupDate,
+          scheduledTime: '8:00 AM',
+          notes: handoff.notes || '',
+          status: 'unassigned',
+          createdAt: new Date().toISOString(),
+        };
+
+        // Auto-assign drivers
+        const deliveryDriver = autoAssignDriver(deliveryJob.scheduledDate);
+        deliveryJob.assignedDriverId = deliveryDriver.id;
+        deliveryJob.assignedDriverName = deliveryDriver.name;
+        deliveryJob.status = 'assigned';
+
+        const pickupDriver = autoAssignDriver(pickupJob.scheduledDate);
+        pickupJob.assignedDriverId = pickupDriver.id;
+        pickupJob.assignedDriverName = pickupDriver.name;
+        pickupJob.status = 'assigned';
+
+        jobs.push(deliveryJob, pickupJob);
+        writeDeliveriesFile(jobs);
+
+        // Notify drivers
+        await notifyDriverForJob(deliveryJob, deliveryDriver);
+        await notifyDriverForJob(pickupJob, pickupDriver);
+
+        markHandoffReceived(handoff.id);
+
+        console.log(`[Ops] Received handoff ${handoff.id} — delivery ${handoff.deliveryDate} — pickup ${handoff.pickupDate}`);
+        await logActivity({ agent: 'ops', action: 'handoff_received', description: `Ops received — ${handoff.customerName} — delivery ${handoff.deliveryDate} — pickup ${handoff.pickupDate}`, jobId: handoff.quoteNumber, status: 'success', notify: false }).catch(() => {});
+      } catch (e) { console.error(`[Ops] Handoff processing error (${handoff.id}): ${e.message}`); }
+    }
+  } catch (e) { console.error('[Ops] pollHandoffs error:', e.message); }
+}
+
+// Start polling on load (2s delay), then every 15 minutes
+setTimeout(() => pollHandoffs(), 2000);
+setInterval(() => pollHandoffs(), 15 * 60 * 1000);
+
+// ── Daily reminder at 6:00 AM ─────────────────────────────────
+function msUntilHour(hour) {
+  const now = new Date();
+  const t = new Date(now);
+  t.setHours(hour, 0, 0, 0);
+  if (t <= now) t.setDate(t.getDate() + 1);
+  return t - now;
+}
+
+setTimeout(async function dailyReminder() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const jobs = readDeliveriesFile().filter(j => j.scheduledDate === today && j.status !== 'completed');
+    for (const job of jobs) {
+      const driver = findDriverByIdOrName(job.assignedDriverName || job.assignedDriverId);
+      if (!driver) continue;
+      const msg = `REMINDER — Gorilla Rental ${(job.type || 'JOB').toUpperCase()} TODAY:\n${job.customerName} — ${job.deliveryAddress} — ${job.scheduledTime || 'TBD'}\nEquipment: ${(job.equipment || []).map(e => `${e.name} x${e.quantity || 1}`).join(', ')}\nJob ID: ${job.jobId || job.id}`;
+      await sendSMS(driver.phone, msg, { name: driver.name, tags: ['gorilla-driver'] }).catch(() => {});
+      console.log(`[Ops] Daily reminder sent to ${driver.name} for job ${job.jobId || job.id}`);
+    }
+  } catch (e) { console.error('[Ops] Daily reminder error:', e.message); }
+  setTimeout(dailyReminder, 24 * 60 * 60 * 1000);
+}, msUntilHour(6));
+
 export async function opsChat(message, history = []) {
+  const msg = message.toLowerCase().trim();
+
+  // ── Direct command matching ─────────────────────────────────
+  try {
+    if (/today.{0,10}jobs|jobs today/.test(msg)) {
+      const jobs = await getTodaysJobs();
+      if (!jobs.length) return { text: 'No jobs scheduled for today.' };
+      const lines = jobs.map(j => `[${j.type.toUpperCase()}] ${j.customerName} | ${j.deliveryAddress} | ${j.scheduledTime || 'TBD'} | Driver: ${j.assignedDriverName || 'Unassigned'} | Status: ${j.status}`).join('\n');
+      return { text: `Today's Jobs (${jobs.length}):\n${lines}`, jobs };
+    }
+
+    if (/upcoming jobs|jobs this week|next \d+ days/.test(msg)) {
+      const days = parseInt(msg.match(/next (\d+) days/)?.[1] || '7');
+      const jobs = await getUpcomingJobs(days);
+      if (!jobs.length) return { text: `No upcoming jobs in the next ${days} days.` };
+      const byDate = {};
+      for (const j of jobs) { (byDate[j.scheduledDate] = byDate[j.scheduledDate] || []).push(j); }
+      const lines = Object.entries(byDate).map(([date, jbs]) => `${date}:\n` + jbs.map(j => `  [${j.type.toUpperCase()}] ${j.customerName} | Driver: ${j.assignedDriverName || 'Unassigned'}`).join('\n')).join('\n');
+      return { text: `Upcoming Jobs:\n${lines}`, jobs };
+    }
+
+    const assignMatch = msg.match(/assign\s+(\w+)\s+to\s+(.+)/);
+    if (assignMatch) {
+      const driverQuery = assignMatch[1];
+      const jobQuery = assignMatch[2].trim();
+      const jobs = readDeliveriesFile();
+      const job = jobs.find(j => (j.jobId || j.id || '').toLowerCase().includes(jobQuery.toLowerCase()) || (j.customerName || '').toLowerCase().includes(jobQuery.toLowerCase()) || (j.quoteNumber || '').toLowerCase().includes(jobQuery.toLowerCase()));
+      if (!job) return { text: `No job found for: ${jobQuery}` };
+      const updated = await assignDriver(job.jobId || job.id, driverQuery);
+      return { text: `${updated.assignedDriverName} assigned to ${job.jobId || job.id} and notified via SMS.`, job: updated };
+    }
+
+    const markDeliveredMatch = msg.match(/mark\s+(.+?)\s+delivered|delivered.*for\s+(.+)/);
+    if (markDeliveredMatch) {
+      const query = (markDeliveredMatch[1] || markDeliveredMatch[2]).trim();
+      const result = await markDelivered(query);
+      return { text: `Delivery marked complete for ${result.customerName}.`, job: result };
+    }
+
+    const markReturnedMatch = msg.match(/mark\s+(.+?)\s+returned|pickup complete for\s+(.+)|returned.*for\s+(.+)/);
+    if (markReturnedMatch) {
+      const query = (markReturnedMatch[1] || markReturnedMatch[2] || markReturnedMatch[3]).trim();
+      const result = await markPickupComplete(query);
+      return { text: `Pickup complete for ${result.customerName}. Return email sent, GHL updated.`, job: result };
+    }
+
+    const whereIsMatch = msg.match(/where is\s+(\w+)\s+today/);
+    if (whereIsMatch) {
+      const driverName = whereIsMatch[1];
+      const today = new Date().toISOString().split('T')[0];
+      const jobs = readDeliveriesFile().filter(j => j.scheduledDate === today && (j.assignedDriverName || '').toLowerCase().includes(driverName.toLowerCase()));
+      if (!jobs.length) return { text: `No jobs for ${driverName} today.` };
+      const lines = jobs.map(j => `[${j.type.toUpperCase()}] ${j.customerName} | ${j.deliveryAddress} | ${j.scheduledTime || 'TBD'}`).join('\n');
+      return { text: `${driverName}'s jobs today:\n${lines}`, jobs };
+    }
+
+    const rescheduleMatch = msg.match(/reschedule\s+(.+?)\s+to\s+(\d{4}-\d{2}-\d{2})/);
+    if (rescheduleMatch) {
+      const jobQuery = rescheduleMatch[1].trim();
+      const newDate = rescheduleMatch[2];
+      const jobs = readDeliveriesFile();
+      const idx = jobs.findIndex(j => (j.jobId || j.id || '').toLowerCase().includes(jobQuery.toLowerCase()) || (j.customerName || '').toLowerCase().includes(jobQuery.toLowerCase()));
+      if (idx < 0) return { text: `No job found for: ${jobQuery}` };
+      jobs[idx].scheduledDate = newDate;
+      writeDeliveriesFile(jobs);
+      const driver = findDriverByIdOrName(jobs[idx].assignedDriverName || jobs[idx].assignedDriverId);
+      if (driver) await notifyDriverForJob(jobs[idx], driver);
+      return { text: `Job ${jobs[idx].jobId || jobs[idx].id} rescheduled to ${newDate}. Driver notified.`, job: jobs[idx] };
+    }
+
+    const addNoteMatch = msg.match(/add note to\s+(.+?):\s*(.+)/);
+    if (addNoteMatch) {
+      const jobQuery = addNoteMatch[1].trim();
+      const noteText = addNoteMatch[2].trim();
+      const jobs = readDeliveriesFile();
+      const idx = jobs.findIndex(j => (j.jobId || j.id || '').toLowerCase().includes(jobQuery.toLowerCase()) || (j.customerName || '').toLowerCase().includes(jobQuery.toLowerCase()));
+      if (idx < 0) return { text: `No job found for: ${jobQuery}` };
+      jobs[idx].notes = (jobs[idx].notes ? jobs[idx].notes + '\n' : '') + `[${new Date().toLocaleDateString()}] ${noteText}`;
+      writeDeliveriesFile(jobs);
+      return { text: `Note added to ${jobs[idx].jobId || jobs[idx].id}.`, job: jobs[idx] };
+    }
+  } catch (cmdErr) {
+    console.error('[Ops] Command error:', cmdErr.message);
+    return { text: `Error: ${cmdErr.message}`, error: cmdErr.message };
+  }
+
   const pipeline  = await getPipeline();
   const today     = new Date().toISOString().split('T')[0];
   const allDeliveries = await loadDeliveries();
@@ -445,5 +866,75 @@ export function opsRoutes(app) {
   app.post('/ops/picked-up',       async (req, res) => { try { res.json({ ok: true, pickup: await markPickupComplete(req.body.jobId, req.body.notes) }); } catch (e) { res.status(500).json({ ok: false, error: e.message }); } });
   app.get('/ops/today',            async (req, res) => { try { res.json({ ok: true, jobs: await getTodaysJobs() }); } catch (e) { res.status(500).json({ ok: false, error: e.message }); } });
   app.get('/ops/upcoming',         async (req, res) => { try { res.json({ ok: true, jobs: await getUpcomingJobs(parseInt(req.query.days) || 7) }); } catch (e) { res.status(500).json({ ok: false, error: e.message }); } });
+
+  // New routes
+  app.post('/ops/assign-driver', async (req, res) => {
+    try {
+      const { jobId, driverId } = req.body;
+      if (!jobId) return res.status(400).json({ ok: false, error: 'jobId required' });
+      const job = await assignDriver(jobId, driverId || null);
+      res.json({ ok: true, job });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/ops/mark-delivered', async (req, res) => {
+    try {
+      const { jobId } = req.body;
+      if (!jobId) return res.status(400).json({ ok: false, error: 'jobId required' });
+      const job = await markDelivered(jobId);
+      res.json({ ok: true, job });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/ops/mark-returned', async (req, res) => {
+    try {
+      const { jobId } = req.body;
+      if (!jobId) return res.status(400).json({ ok: false, error: 'jobId required' });
+      const job = await markPickupComplete(jobId);
+      res.json({ ok: true, job });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/ops/jobs/today', async (req, res) => {
+    try { res.json({ ok: true, jobs: await getTodaysJobs() }); } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/ops/jobs/upcoming', async (req, res) => {
+    try {
+      const jobs = await getUpcomingJobs(parseInt(req.query.days) || 7);
+      const byDate = {};
+      for (const j of jobs) { (byDate[j.scheduledDate] = byDate[j.scheduledDate] || []).push(j); }
+      res.json({ ok: true, jobs, byDate });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/ops/drivers', async (req, res) => {
+    try {
+      const drivers = readDriversFile();
+      const today = new Date().toISOString().split('T')[0];
+      const allJobs = readDeliveriesFile();
+      const now = new Date();
+      const weekEnd = new Date(now.getTime() + 7 * 86400000);
+      const result = drivers.map(d => ({
+        ...d,
+        jobsToday: allJobs.filter(j => j.scheduledDate === today && j.assignedDriverId === d.id).length,
+        jobsThisWeek: allJobs.filter(j => { const dt = new Date(j.scheduledDate); return dt >= now && dt <= weekEnd && j.assignedDriverId === d.id; }).length,
+      }));
+      res.json({ ok: true, drivers: result });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.put('/ops/drivers/:id', async (req, res) => {
+    try {
+      const drivers = readDriversFile();
+      const idx = drivers.findIndex(d => d.id === req.params.id);
+      if (idx < 0) return res.status(404).json({ ok: false, error: 'Driver not found' });
+      if (req.body.phone) drivers[idx].phone = req.body.phone;
+      if (req.body.ghlContactId) drivers[idx].ghlContactId = req.body.ghlContactId;
+      writeDriversFile(drivers);
+      res.json({ ok: true, driver: drivers[idx] });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
   console.log('[Ops] ✅ Routes registered');
 }

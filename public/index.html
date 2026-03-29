@@ -297,6 +297,34 @@ tr:hover td{background:var(--bg);}
           </div>
         </div>
       </div>
+      <!-- ADMIN PANEL -->
+      <div class="card" style="margin-bottom:18px" id="admin-panel">
+        <div class="card-header">
+          <span class="card-title" style="color:#8b5cf6">ADMIN — Pending Actions</span>
+          <span class="card-sub" id="admin-pending-badge"></span>
+          <button class="btn sm" onclick="loadAdminPanel()" style="margin-left:auto">Refresh</button>
+        </div>
+        <div id="admin-panel-body"><div class="empty-state">Loading…</div></div>
+      </div>
+
+      <!-- OPS PANEL -->
+      <div class="card" style="margin-bottom:18px" id="ops-panel">
+        <div class="card-header">
+          <span class="card-title" style="color:#f97316">OPS — Today's Jobs</span>
+          <span class="card-sub" id="ops-today-count"></span>
+          <button class="btn sm" onclick="loadOpsPanel()" style="margin-left:auto">Refresh</button>
+        </div>
+        <div id="ops-today-body"><div class="empty-state">Loading…</div></div>
+        <div class="card-header" style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
+          <span class="card-title" style="color:#f97316">Upcoming 7 Days</span>
+        </div>
+        <div id="ops-upcoming-body"><div class="empty-state">Loading…</div></div>
+        <div class="card-header" style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
+          <span class="card-title" style="color:#f97316">Drivers</span>
+        </div>
+        <div id="ops-drivers-body"><div class="empty-state">Loading…</div></div>
+      </div>
+
       <!-- GHL Pipeline Panel -->
       <div class="card" id="pipeline-panel" style="margin-bottom:18px">
         <div class="card-header">
@@ -856,6 +884,146 @@ function fmtAgo(d){
   if(m<1)return'just now';if(m<60)return m+'m ago';
   const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';
 }
+
+// ─────────────────────────────────────────────────────────────
+// ADMIN PANEL
+// ─────────────────────────────────────────────────────────────
+async function loadAdminPanel(){
+  const el=document.getElementById('admin-panel-body');
+  const badge=document.getElementById('admin-pending-badge');
+  if(!el)return;
+  try{
+    const data=await api('GET','/admin/pending');
+    const reservations=data.reservations??[];
+    badge.textContent=reservations.length?`${reservations.length} pending`:'';
+    if(badge)badge.style.color=reservations.length?'#dc2626':'';
+
+    if(!reservations.length){el.innerHTML='<div class="empty-state">No pending admin actions</div>';return;}
+
+    const STATUS_COLOR={'awaiting_deposit':'#ef4444','processing_admin':'#f59e0b','admin_complete':'#22c55e'};
+    el.innerHTML=reservations.map(r=>{
+      const q=r.quoteNumber||r.jobId||'';
+      const isOverdue=r.depositDueDate&&new Date(r.depositDueDate)<new Date()&&!r.depositPaid;
+      const color=isOverdue?'#fef2f2':r.status==='admin_complete'?'#f0fdf4':'#fffbeb';
+      const borderColor=isOverdue?'#fecaca':r.status==='admin_complete'?'#86efac':'#fde68a';
+      return`<div style="border:1px solid ${borderColor};background:${color};border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-weight:700;font-size:13px">${r.customerName||'—'}</span>
+          <span class="pill" style="background:${STATUS_COLOR[r.status]||'#94a3b8'}22;color:${STATUS_COLOR[r.status]||'#94a3b8'}">${r.status||'—'}</span>
+          ${isOverdue?'<span class="pill" style="background:#fef2f2;color:#dc2626">OVERDUE</span>':''}
+        </div>
+        <div style="font-size:12px;color:var(--text-2)">Quote: ${q} &nbsp;·&nbsp; Equipment: ${(r.equipment||[]).map?r.equipment.map(e=>e.name||e).join(', '):r.equipment||'—'}</div>
+        <div style="font-size:12px;color:var(--text-3)">Start: ${r.startDate||'—'} &nbsp;·&nbsp; End: ${r.endDate||'—'}</div>
+        ${r.status==='awaiting_deposit'?`<div style="margin-top:8px"><button class="btn sm primary" onclick="markDepositPaid('${q}')">Mark Deposit Paid</button></div>`:''}
+        ${r.status==='admin_complete'&&!r.ops_handoff_sent?'<div style="font-size:11px;color:#92400e;margin-top:4px">Ops notified — awaiting confirmation</div>':''}
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML=`<div class="empty-state" style="color:#dc2626">Error: ${e.message}</div>`;}
+}
+
+async function markDepositPaid(quoteNumber){
+  toast('Triggering post-deposit flow…','info');
+  const d=await api('POST','/admin/deposit-paid',{quoteNumber});
+  toast(d.ok?'Post-deposit flow triggered — checklist, contract, invoice sent!':'Error: '+(d.error||'failed'),d.ok?'success':'error');
+  if(d.ok)loadAdminPanel();
+}
+
+// ─────────────────────────────────────────────────────────────
+// OPS PANEL
+// ─────────────────────────────────────────────────────────────
+async function loadOpsPanel(){
+  await Promise.all([loadOpsTodayJobs(),loadOpsUpcoming(),loadOpsDrivers()]);
+}
+
+function jobStatusColor(s){return{unassigned:'#94a3b8',assigned:'#3b82f6',notified:'#8b5cf6',completed:'#22c55e'}[s]||'#94a3b8';}
+
+function buildJobCard(j,includeButtons=true){
+  const typeColor=j.type==='delivery'?'#22c55e':'#f97316';
+  const q=j.jobId||j.quoteNumber||j.id||'';
+  return`<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span class="pill" style="background:${typeColor}22;color:${typeColor};font-weight:700">${j.type==='delivery'?'DELIVERY':'PICKUP'}</span>
+      <span style="font-weight:700;font-size:13px">${j.customerName||'—'}</span>
+      <span class="pill" style="background:${jobStatusColor(j.status)}22;color:${jobStatusColor(j.status)}">${j.status||'unassigned'}</span>
+    </div>
+    <div style="font-size:12px;color:var(--text-2)">${j.deliveryAddress||j.address||'—'}</div>
+    <div style="font-size:12px;color:var(--text-3)">Time: ${j.scheduledTime||'TBD'} &nbsp;·&nbsp; Driver: ${j.assignedDriverName||'Unassigned'}</div>
+    <div style="font-size:11px;color:var(--text-3)">Equipment: ${(j.equipment||[]).map?j.equipment.map(e=>typeof e==='string'?e:`${e.name||''} x${e.quantity||1}`).join(', '):j.equipment||'—'}</div>
+    ${includeButtons?`<div style="display:flex;gap:6px;margin-top:8px">
+      <select class="btn sm" id="drv-sel-${q}" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px">
+        <option value="">Assign driver…</option>
+        <option value="D001">Andrei</option>
+        <option value="D002">Nazar</option>
+      </select>
+      <button class="btn sm" onclick="opsAssignDriver('${q}',document.getElementById('drv-sel-${q}').value)">Assign</button>
+      <button class="btn sm primary" onclick="opsMarkComplete('${q}','${j.type}')">${j.type==='delivery'?'Mark Delivered':'Mark Returned'}</button>
+    </div>`:''}
+  </div>`;
+}
+
+async function loadOpsTodayJobs(){
+  const el=document.getElementById('ops-today-body');
+  const badge=document.getElementById('ops-today-count');
+  if(!el)return;
+  try{
+    const data=await api('GET','/ops/jobs/today');
+    const jobs=data.jobs??[];
+    if(badge)badge.textContent=`${jobs.length} job${jobs.length!==1?'s':''}`;
+    el.innerHTML=jobs.length?jobs.map(j=>buildJobCard(j,true)).join(''):'<div class="empty-state">No jobs today</div>';
+  }catch(e){el.innerHTML=`<div class="empty-state" style="color:#dc2626">Error loading jobs</div>`;}
+}
+
+async function loadOpsUpcoming(){
+  const el=document.getElementById('ops-upcoming-body');
+  if(!el)return;
+  try{
+    const data=await api('GET','/ops/jobs/upcoming');
+    const byDate=data.byDate??{};
+    const entries=Object.entries(byDate);
+    if(!entries.length){el.innerHTML='<div class="empty-state">No upcoming jobs</div>';return;}
+    el.innerHTML=entries.map(([date,jobs])=>`
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;margin-bottom:6px">${date}</div>
+        ${jobs.map(j=>buildJobCard(j,false)).join('')}
+      </div>`).join('');
+  }catch(e){el.innerHTML=`<div class="empty-state" style="color:#dc2626">Error loading upcoming</div>`;}
+}
+
+async function loadOpsDrivers(){
+  const el=document.getElementById('ops-drivers-body');
+  if(!el)return;
+  try{
+    const data=await api('GET','/ops/drivers');
+    const drivers=data.drivers??[];
+    el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${drivers.map(d=>`
+      <div style="border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-weight:700;font-size:13px;margin-bottom:4px">${d.name} <span style="font-size:10px;color:var(--text-3);font-weight:400">${d.role||''}</span></div>
+        ${d.phone?`<div style="font-size:12px;color:#1d4ed8"><a href="tel:${d.phone}" style="color:inherit">${d.phone}</a></div>`:'<div style="font-size:12px;color:var(--text-3)">No phone</div>'}
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px">Today: ${d.jobsToday||0} job${d.jobsToday!==1?'s':''} &nbsp;·&nbsp; This week: ${d.jobsThisWeek||0}</div>
+        <div style="margin-top:4px"><span class="pill" style="background:${d.available?'#f0fdf4':'#fef2f2'};color:${d.available?'#166534':'#dc2626'}">${d.available?'Available':'On Job'}</span></div>
+      </div>`).join('')}</div>`;
+  }catch(e){el.innerHTML=`<div class="empty-state" style="color:#dc2626">Error loading drivers</div>`;}
+}
+
+async function opsAssignDriver(jobId,driverId){
+  if(!driverId){toast('Select a driver first','error');return;}
+  const d=await api('POST','/ops/assign-driver',{jobId,driverId});
+  toast(d.ok?`Driver assigned and notified`:'Error: '+(d.error||'failed'),d.ok?'success':'error');
+  if(d.ok)loadOpsTodayJobs();
+}
+
+async function opsMarkComplete(jobId,type){
+  const endpoint=type==='delivery'?'/ops/mark-delivered':'/ops/mark-returned';
+  const d=await api('POST',endpoint,{jobId});
+  toast(d.ok?`Job marked complete`:'Error: '+(d.error||'failed'),d.ok?'success':'error');
+  if(d.ok)loadOpsPanel();
+}
+
+// Load panels on init and auto-refresh every 5 minutes
+const _origInit=typeof init==='function'?init:null;
+function initPanels(){loadAdminPanel();loadOpsPanel();}
+setTimeout(initPanels,500);
+setInterval(()=>{if(S.page==='dashboard'){loadAdminPanel();loadOpsPanel();}},5*60*1000);
 </script>
 </body>
 </html>
