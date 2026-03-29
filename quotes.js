@@ -346,6 +346,7 @@ Case B — No match found → create a new contact using BOOQABLE_CREATE_CUSTOME
 
 RULE: NEVER call BOOQABLE_CREATE_CUSTOMER without first calling BOOQABLE_FIND_OR_CONFIRM_CUSTOMER. No exceptions.
 RULE: Never let a quote proceed without a confirmed contact record. No contact = no quote.
+RULE: QUIET HOURS (6pm–8am ET) — Do NOT send quotes, emails, SMS, or payment links during this window. If a quote is ready but it's quiet hours, tell Andrei and ask if he wants to send it now or hold until 8am.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STEP 3 — CHECK FOR COMPLETE QUOTE INFORMATION

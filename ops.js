@@ -357,6 +357,7 @@ BOOQABLE — ALWAYS PULL FROM THE SOURCE
 
 All delivery dates, customer names, phones, addresses, and equipment details come from Booqable.
 Always pull the live order before scheduling or notifying — never use old cached info.
+QUIET HOURS (6pm–8am ET) — Do NOT send driver SMS, customer delivery notifications, or any outbound messages. If something is scheduled or urgent, notify Andrei and ask if he wants to send it now or hold until 8am.
 Use BOOQABLE_GET_ORDER to get the full order details.
 Use BOOQABLE_SEARCH_CUSTOMERS if you need customer contact info separately.
 

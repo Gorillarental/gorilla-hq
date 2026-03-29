@@ -8,6 +8,7 @@ dotenv.config();
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { isQuietHours, quietHoursBlock } from './quietHours.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GHL_API     = 'https://services.leadconnectorhq.com';
@@ -316,6 +317,8 @@ export async function getOrCreateConversation(contactId) {
 }
 
 export async function sendSMS(to, body, contactData = {}, fromNumber = null) {
+  if (isQuietHours()) return quietHoursBlock('SMS');
+
   const phone = normalizePhone(to);
   const from  = fromNumber || PHONES.main;
 

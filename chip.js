@@ -4,6 +4,7 @@
 
 import dotenv from 'dotenv';
 dotenv.config();
+import { isQuietHours, quietHoursBlock } from './quietHours.js';
 
 const TENANT_ID     = process.env.TENANT_ID;
 const CLIENT_ID     = process.env.CLIENT_ID;
@@ -30,6 +31,8 @@ async function getGraphToken() {
 }
 
 export async function sendEmailWithPDF({ to, subject, body, htmlBody = null, pdfBuffer = null, pdfName = null, attachments = [] }) {
+  if (isQuietHours()) return quietHoursBlock('email');
+
   const token = await getGraphToken();
 
   const emailAttachments = [];
