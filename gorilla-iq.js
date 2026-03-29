@@ -17,21 +17,41 @@ const PERSISTENT_AGENTS = new Set(['marketing', 'knowledge', 'chip']);
 const MAX_HISTORY = 40; // 20 turns for non-persistent agents
 
 // ─── In-memory context (fallback / non-persistent agents) ────
-const contexts = new Map(); // chatId → { history, agent, lastAt }
+const contexts = new Map(); // chatId → { history, agent, lastAt, lastAgentReplyEndsWithQuestion }
+
+const STICKY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 function getContext(chatId) {
   if (!contexts.has(chatId)) {
-    contexts.set(chatId, { history: [], lastAt: Date.now() });
+    contexts.set(chatId, { history: [], agent: null, lastAt: Date.now(), awaitingReply: false });
   }
   const ctx = contexts.get(chatId);
   ctx.lastAt = Date.now();
   return ctx.history;
 }
 
+// Returns the sticky agent if the conversation is mid-flow, otherwise null
+function getStickyAgent(chatId) {
+  const ctx = contexts.get(chatId);
+  if (!ctx || !ctx.agent) return null;
+  const age = Date.now() - ctx.lastAt;
+  if (age > STICKY_TIMEOUT_MS) return null;   // conversation timed out
+  if (!ctx.awaitingReply) return null;         // agent didn't ask a question
+  return ctx.agent;
+}
+
+function setContextAgent(chatId, agent, awaitingReply) {
+  const ctx = contexts.get(chatId);
+  if (!ctx) return;
+  ctx.agent        = agent;
+  ctx.awaitingReply = awaitingReply;
+}
+
 export async function clearContext(chatId) {
   contexts.delete(chatId);
   await dbClearConversation(chatId).catch(() => {});
 }
+
 
 async function loadHistory(chatId, agent) {
   if (PERSISTENT_AGENTS.has(agent)) {
@@ -73,13 +93,20 @@ IMPORTANT: When in doubt between quote and admin — if it involves pricing or e
 
 Respond ONLY with valid JSON: {"agent":"<name>","intent":"<one sentence description>"}`;
 
-async function classifyMessage(text) {
+async function classifyMessage(text, recentHistory = []) {
   try {
+    // Include last 4 messages as context so the classifier understands follow-up replies
+    const contextMessages = recentHistory.slice(-4).map(m => ({
+      role:    m.role,
+      content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+    }));
+    contextMessages.push({ role: 'user', content: text });
+
     const res = await client.messages.create({
       model:      'claude-haiku-4-5-20251001',
       max_tokens: 80,
       system:     ROUTING_SYSTEM,
-      messages:   [{ role: 'user', content: text }],
+      messages:   contextMessages,
     });
     const raw = res.content[0]?.text?.trim() ?? '';
     // Extract JSON even if there's surrounding text
@@ -254,9 +281,21 @@ async function autoCreateTask(agent, action, result) {
 
 // ─── Main entry point ─────────────────────────────────────────
 export async function gorillaIQ(message, chatId) {
-  // Classify
-  const { agent, intent } = await classifyMessage(message);
-  console.log(`[Gorilla IQ] Chat ${chatId} → Agent: ${agent} | Intent: ${intent}`);
+  // Ensure context exists so getStickyAgent can read it
+  getContext(chatId);
+
+  // Use sticky agent if mid-conversation, otherwise classify fresh
+  const stickyAgent = getStickyAgent(chatId);
+  let agent, intent;
+  if (stickyAgent) {
+    agent  = stickyAgent;
+    intent = `(follow-up) ${message}`;
+    console.log(`[Gorilla IQ] Chat ${chatId} → Sticky: ${agent} | "${message}"`);
+  } else {
+    const recentHistory = getContext(chatId);
+    ({ agent, intent } = await classifyMessage(message, recentHistory));
+    console.log(`[Gorilla IQ] Chat ${chatId} → Agent: ${agent} | Intent: ${intent}`);
+  }
 
   // Get conversation history (DB-backed for persistent agents)
   const history = await loadHistory(chatId, agent);
@@ -269,7 +308,12 @@ export async function gorillaIQ(message, chatId) {
 
   // Update context (only store if we have real content)
   await pushContext(chatId, agent, 'user', message);
-  if (reply && reply !== '⚠️ No response from agent') await pushContext(chatId, agent, 'assistant', reply);
+  if (reply && reply !== '⚠️ No response from agent') {
+    await pushContext(chatId, agent, 'assistant', reply);
+    // Mark whether agent asked a follow-up question so next reply stays sticky
+    const awaitingReply = reply.trimEnd().endsWith('?');
+    setContextAgent(chatId, agent, awaitingReply);
+  }
 
   // Auto-create a task whenever an agent takes an action
   if (result?.action) {
