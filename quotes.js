@@ -16,6 +16,8 @@ import { generateQuotePDF, buildQuoteHTML, buildQuoteEmailHTML } from './quote-p
 import { getPipeline, upsertJob, getJob, updateJob } from './db.js';
 import { BOOQABLE_TOOLS, dispatchBooqableTool } from './booqable.js';
 import { MEMORY_TOOLS, dispatchMemoryTool } from './memory.js';
+import { syncQuoteToGHL, updateGHLStage, enrollInWorkflow } from './ghl.js';
+import { writeHandoff } from './outcomes.js';
 
 function extractActionJSON(text) {
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -92,74 +94,79 @@ async function lookupBooqableCustomer(query) {
   }
 }
 
-// ─── Booqable ─────────────────────────────────────────────────
+// ─── Booqable (boomerang API) ─────────────────────────────────
 async function createBooqableOrder(quote) {
-  const { BASE_URL, API_KEY } = CONFIG.BOOQABLE;
-  const headers = {
-    'Content-Type':  'application/json',
-    'Authorization': `Bearer ${API_KEY}`,
-  };
+  const {
+    BOOQABLE_SEARCH_CUSTOMERS_BY_EMAIL,
+    BOOQABLE_SEARCH_CUSTOMERS,
+    BOOQABLE_CREATE_CUSTOMER,
+    BOOQABLE_CREATE_ORDER,
+    BOOQABLE_CREATE_LINE,
+  } = await import('./booqable.js');
 
-  // 1. Find or create customer
-  const searchRes = await fetch(
-    `${BASE_URL}/customers?q[email_eq]=${encodeURIComponent(quote.customerEmail)}`,
-    { headers }
-  );
-  const searchData = await searchRes.json();
-  let customerId = searchData?.customers?.[0]?.id || null;
-
-  if (!customerId) {
-    const custRes = await fetch(`${BASE_URL}/customers`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        customer: {
-          name:  quote.customerName,
-          email: quote.customerEmail,
-          phone: quote.customerPhone,
-        },
-      }),
-    });
-    const custData = await custRes.json();
-    customerId = custData?.customer?.id;
-    if (!customerId) throw new Error(`Booqable customer error: ${JSON.stringify(custData)}`);
+  // 1. Find customer by email (boomerang API) — NEVER create without searching first
+  let customerId = null;
+  if (quote.customerEmail) {
+    try {
+      const byEmail = await BOOQABLE_SEARCH_CUSTOMERS_BY_EMAIL({ email: quote.customerEmail });
+      const customers = byEmail?.customers || [];
+      const hit = customers.find(c => c.email?.toLowerCase() === quote.customerEmail.toLowerCase());
+      if (hit) customerId = hit.id;
+    } catch {}
+  }
+  if (!customerId && quote.customerName) {
+    try {
+      const byName = await BOOQABLE_SEARCH_CUSTOMERS({ q: quote.customerName, per_page: 5 });
+      const customers = byName?.customers || [];
+      if (customers.length > 0) customerId = customers[0].id;
+    } catch {}
   }
 
-  // 2. Create order
-  const orderRes = await fetch(`${BASE_URL}/orders`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      order: {
-        starts_at:   quote.startDate ? `${quote.startDate}T08:00:00.000Z` : null,
-        stops_at:    quote.endDate   ? `${quote.endDate}T08:00:00.000Z`   : null,
-        customer_id: customerId,
-        tag_list:    [`job-${quote.jobId}`, 'gorilla-rental'],
-        note:        `Job ID: ${quote.jobId} | ${quote.deliveryAddress || ''}`,
-      },
-    }),
+  // Only create if no match found
+  if (!customerId) {
+    const custData = await BOOQABLE_CREATE_CUSTOMER({
+      name:  quote.customerName,
+      email: quote.customerEmail,
+      phone: quote.customerPhone,
+    });
+    customerId = custData?.customer?.id;
+    if (!customerId) throw new Error(`Booqable customer create failed: ${JSON.stringify(custData)}`);
+  }
+
+  // 2. Create order via boomerang API
+  const orderData = await BOOQABLE_CREATE_ORDER({
+    customer_id: customerId,
+    starts_at:   quote.startDate ? `${quote.startDate}T08:00:00.000Z` : undefined,
+    stops_at:    quote.endDate   ? `${quote.endDate}T08:00:00.000Z`   : undefined,
+    tag_list:    [`job-${quote.jobId}`, 'gorilla-rental'],
+    note:        `Job ID: ${quote.jobId} | ${quote.deliveryAddress || ''}`,
+    status:      'concept',
   });
-  if (!orderRes.ok) throw new Error(`Booqable order error: ${await orderRes.text()}`);
-  const orderData = await orderRes.json();
   const orderId = orderData?.order?.id;
   if (!orderId) throw new Error(`Booqable order missing ID: ${JSON.stringify(orderData)}`);
 
-  // 3. Add line items
+  // 3. Add line items via boomerang API
   const items = quote.equipment || [];
   for (const item of items) {
-    const productId = BOOQABLE_PRODUCT_IDS[item.sku];
-    if (!productId) continue;
-    await fetch(`${BASE_URL}/orders/${orderId}/lines`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ line: { product_id: productId, quantity: item.quantity || 1 } }),
-    });
+    const productId = item.productId || BOOQABLE_PRODUCT_IDS[item.sku];
+    if (!productId) {
+      console.warn(`[Quotes] No Booqable product ID for sku: ${item.sku}`);
+      continue;
+    }
+    try {
+      await BOOQABLE_CREATE_LINE({
+        order_id:  orderId,
+        item_id:   productId,
+        quantity:  item.quantity || 1,
+        starts_at: quote.startDate ? `${quote.startDate}T08:00:00.000Z` : undefined,
+        stops_at:  quote.endDate   ? `${quote.endDate}T08:00:00.000Z`   : undefined,
+      });
+    } catch (e) {
+      console.warn(`[Quotes] Line item error for ${item.sku}: ${e.message}`);
+    }
   }
 
-  // 4. Reserve order so it gets a number and appears in dashboard
-  await fetch(`${BASE_URL}/orders/${orderId}/reserve`, { method: 'POST', headers, body: JSON.stringify({}) });
-
-  return orderId;
+  return { orderId, customerId };
 }
 
 // ─── Stripe deposit link ──────────────────────────────────────
@@ -241,8 +248,11 @@ export async function buildQuote(params) {
 
   // Create Booqable order
   let booqableOrderId = null;
+  let booqableCustomerId = null;
   try {
-    booqableOrderId = await createBooqableOrder({ ...params, ...calc, jobId });
+    const bqResult = await createBooqableOrder({ ...params, ...calc, jobId });
+    booqableOrderId    = bqResult.orderId;
+    booqableCustomerId = bqResult.customerId;
   } catch (e) {
     console.warn(`[Quotes] Booqable warning: ${e.message}`);
   }
@@ -255,21 +265,27 @@ export async function buildQuote(params) {
     console.warn(`[Quotes] Stripe warning: ${e.message}`);
   }
 
+  const now = new Date();
   const quote = {
     jobId,
+    quoteNumber:   jobId,
     customerName:  params.customerName,
     customerEmail: params.customerEmail,
     customerPhone: params.customerPhone,
+    customerId:    params.customerId || booqableCustomerId || '',
     deliveryAddress: params.deliveryAddress || '',
+    deliveryFee:   params.deliveryAddress ? (PRICING.DELIVERY_FEE || 150) : 0,
     startDate:     params.startDate || '',
     endDate:       params.endDate   || '',
     duration:      params.duration  || '',
     ...calc,
     depositLink,
     booqableOrderId,
+    booqableCustomerId,
     notes:         params.notes || '',
+    status:        'draft',
     stage:         'quote_built',
-    createdAt:     new Date().toISOString(),
+    createdAt:     now.toISOString(),
   };
 
   // Save to pipeline
@@ -297,13 +313,91 @@ export async function sendQuote(jobId) {
     pdfName:   `Gorilla-Rental-Quote-${jobId}.pdf`,
   });
 
+  const sentAt    = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
   // Update pipeline stage
-  await updateJob(jobId, { stage: 'quote_sent', sentAt: new Date().toISOString() });
+  await updateJob(jobId, { stage: 'quote_sent', status: 'sent', sentAt, expiresAt });
 
-  await logActivity({ agent: 'quote', action: 'quote_sent', description: `Quote sent for ${jobId}`, jobId, status: 'success', notify: true }).catch(()=>{});
+  // Sync to GHL (pipeline tracking + workflow enrollment)
+  try {
+    await syncQuoteToGHL({ ...quote, sentAt, expiresAt });
+  } catch (e) {
+    console.warn(`[Quotes] GHL sync warning: ${e.message}`);
+  }
 
-  console.log(`[Quotes] ✅ Quote sent: ${jobId} → ${quote.customerEmail}`);
-  return { ok: true, jobId, to: quote.customerEmail };
+  await logActivity({ agent: 'quote', action: 'quote_sent', description: `Quote sent for ${jobId} to ${quote.customerEmail}`, jobId, status: 'success', notify: true }).catch(()=>{});
+
+  console.log(`[Quotes] Quote sent: ${jobId} → ${quote.customerEmail}`);
+  return { ok: true, jobId, to: quote.customerEmail, sentAt, expiresAt };
+}
+
+// ─── Mark quote as lost ───────────────────────────────────────
+export async function markQuoteLost(jobId, reason, customerName) {
+  try {
+    const quote = await getJob(jobId).catch(() => null);
+    const closedAt = new Date().toISOString();
+
+    // Update pipeline
+    await updateJob(jobId, { stage: 'lost', status: 'lost', lostReason: reason, closedAt });
+
+    // Record outcome
+    const { recordLoss } = await import('./outcomes.js');
+    await recordLoss(quote || { jobId, quoteNumber: jobId, customerName }, reason);
+
+    // Update GHL stage
+    await updateGHLStage(jobId, 'lost').catch(e => console.warn('[Quotes] GHL lost stage error:', e.message));
+
+    await logActivity({ agent: 'quote', action: 'quote_lost', description: `Quote lost: ${jobId} — ${reason}`, jobId, status: 'info', notify: false }).catch(()=>{});
+    return { ok: true, jobId, status: 'lost', reason };
+  } catch (e) {
+    console.error('[Quotes] markQuoteLost error:', e.message);
+    return { ok: false, error: e.message };
+  }
+}
+
+// ─── Convert quote to reservation ────────────────────────────
+export async function convertToReservation(jobId) {
+  try {
+    const quote = await getJob(jobId);
+    if (!quote) throw new Error(`Quote ${jobId} not found`);
+
+    const now = new Date();
+    await updateJob(jobId, { stage: 'booked', status: 'booked', bookedAt: now.toISOString() });
+
+    // Record win
+    const { recordWin } = await import('./outcomes.js');
+    await recordWin(quote);
+
+    // Write handoff
+    const depositDue = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+    await writeHandoff({
+      type:              'reservation_created',
+      timestamp:         now.toISOString(),
+      customerName:      quote.customerName,
+      customerEmail:     quote.customerEmail,
+      customerPhone:     quote.customerPhone,
+      quoteNumber:       jobId,
+      booqableOrderId:   quote.booqableOrderId,
+      equipment:         (quote.equipment || []).map(e => e.name || e.sku).join(', '),
+      startDate:         quote.startDate,
+      endDate:           quote.endDate,
+      depositAmount:     250,
+      depositLink:       quote.depositLink || '',
+      depositRequestDate: now.toISOString(),
+      depositDueDate:    depositDue,
+      status:            'Awaiting Deposit',
+    });
+
+    // Update GHL
+    await updateGHLStage(jobId, 'booked').catch(e => console.warn('[Quotes] GHL booked stage error:', e.message));
+
+    await logActivity({ agent: 'quote', action: 'quote_converted', description: `Quote converted to reservation: ${jobId}`, jobId, status: 'success', notify: true }).catch(()=>{});
+    return { ok: true, jobId, status: 'booked' };
+  } catch (e) {
+    console.error('[Quotes] convertToReservation error:', e.message);
+    return { ok: false, error: e.message };
+  }
 }
 
 // ─── AI Quote Chat ────────────────────────────────────────────
@@ -335,14 +429,17 @@ Quote statuses to track mentally: New Inquiry → Identifying Contact → Awaiti
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STEP 2 — IDENTIFY THE CONTACT (always first)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Before pricing anything, find who this is. Follow this EXACT sequence — no skipping:
+CRITICAL RULE: Booqable is the ONLY source of truth for customer data. NEVER look up customers in GHL. NEVER expose the full customer list.
+
+Before pricing anything, find who this is in BOOQABLE. Follow this EXACT sequence — no skipping:
 1. Call BOOQABLE_FIND_OR_CONFIRM_CUSTOMER with name and/or email.
-   - If it returns { found: true, requiresConfirmation: true } → return that result immediately. HQ will pause and ask the user to confirm. Do NOT proceed.
-   - If it returns { found: false } → safe to continue.
+   - If it returns { found: true, requiresConfirmation: true } → show the match (name, email, phone only). Ask: "Use this record or create new?" Do NOT proceed until confirmed.
+   - If it returns { found: true, customers: [...] } (multiple matches) → list all matches. Ask which to use. Never pick automatically.
+   - If it returns { found: false } → say ONLY: "No record found for [Name]. Would you like me to add them?" Never reveal the full customer list.
 2. Search memory using MEMORY_SEARCH to recall previous interactions.
 
-Case A — BOOQABLE_FIND_OR_CONFIRM_CUSTOMER returns a match → surface it and wait for confirmation.
-Case B — No match found → create a new contact using BOOQABLE_CREATE_CUSTOMER. Minimum data: name, phone, email (if available), company (if available).
+Case A — Match found → confirm with Andrei before proceeding.
+Case B — No match → offer to create. Wait for Andrei's confirmation. Then use BOOQABLE_CREATE_CUSTOMER.
 
 RULE: NEVER call BOOQABLE_CREATE_CUSTOMER without first calling BOOQABLE_FIND_OR_CONFIRM_CUSTOMER. No exceptions.
 RULE: Never let a quote proceed without a confirmed contact record. No contact = no quote.
@@ -502,7 +599,13 @@ FOLLOW-UP: After quote is sent, note that follow-up tasks should be created:
 
 REVISIONS: If customer wants changes (different duration, qty, model, dates), do not start over. Pull existing quote, identify what changed, update only those variables, recheck availability, reprice, issue revised version.
 
-CONVERSION: When customer approves, trigger build_quote (if not yet built) or notify that ops and finance need to be alerted. The quote becomes a confirmed reservation.
+CONVERSION: When customer approves, trigger build_quote (if not yet built) or notify that ops and finance need to be alerted. The quote becomes a confirmed reservation. Trigger: {"action":"convert_to_reservation","jobId":"GR-2026-XXXX"}
+
+MARK AS LOST: Trigger phrases: "mark [name] as lost", "lost — [reason]", "[name] went with someone else", "they passed".
+When you detect one of these:
+1. Ask: "What was the reason? (price / timing / went with competitor / no response / other)"
+2. Once reason is given, trigger: {"action":"mark_lost","jobId":"GR-2026-XXXX","reason":"[reason]","customerName":"[name]"}
+3. This updates GHL stage to "Follow-up / Repeat" and logs the outcome.
 
 ═══════════════════════════════════════════════════
 NON-NEGOTIABLE RULES
@@ -582,6 +685,10 @@ ${knowledgeContext ? '\n\nKNOWLEDGE BASE:\n' + knowledgeContext : ''}`;
         result = await buildQuote(action);
       } else if (action.action === 'send_quote') {
         result = await sendQuote(action.jobId);
+      } else if (action.action === 'mark_lost') {
+        result = await markQuoteLost(action.jobId, action.reason || 'unspecified', action.customerName);
+      } else if (action.action === 'convert_to_reservation') {
+        result = await convertToReservation(action.jobId);
       } else if (action.action === 'lookup_customer') {
         result = await lookupBooqableCustomer(action.query || action.name || action.email || '');
         if (result) {

@@ -1,6 +1,8 @@
 // ============================================================
-// BOOQABLE.JS — Booqable API v1 Tool Layer
-// All 49 actions available to quote, ops, admin, finance agents
+// BOOQABLE.JS — Booqable Boomerang API Tool Layer
+// All actions available to quote, ops, admin, finance agents
+// Base URL: https://gorilla-rentals.booqable.com/api/boomerang
+// Auth: Bearer token (BOOQABLE_API_KEY)
 // ============================================================
 
 import { CONFIG } from './config.js';
@@ -12,6 +14,7 @@ function booqableHeaders() {
   };
 }
 
+// Core request helper — uses boomerang API base URL
 async function bq(method, path, body) {
   const url = `${CONFIG.BOOQABLE.BASE_URL}${path}`;
   const opts = { method, headers: booqableHeaders() };
@@ -20,28 +23,99 @@ async function bq(method, path, body) {
   const text = await res.text();
   let data;
   try { data = JSON.parse(text); } catch { data = { raw: text }; }
-  if (!res.ok) throw new Error(`Booqable ${method} ${path} → ${res.status}: ${text}`);
+  if (!res.ok) throw new Error(`Booqable ${method} ${path} → ${res.status}: ${text.slice(0, 400)}`);
   return data;
 }
 
-// ─── Customers ─────────────────────────────────────────────────
+// Normalize boomerang JSON:API response to flat object(s)
+// Boomerang wraps everything in { data: { id, type, attributes } }
+// or { data: [ ... ] }. This helper returns plain objects the agents
+// can work with, keyed the same as the old v1 API where practical.
+function flattenResource(r) {
+  if (!r) return null;
+  return { id: r.id, type: r.type, ...r.attributes };
+}
 
-export async function BOOQABLE_CREATE_CUSTOMER({ name, email, phone, address1, city, zipcode, country_code, tax_region_id, deposit_type, deposit_value, properties_attributes }) {
-  return bq('POST', '/customers', {
-    customer: { name, email, phone, address1, city, zipcode, country_code, tax_region_id, deposit_type, deposit_value, properties_attributes },
+function flattenList(data) {
+  if (!data) return [];
+  const arr = Array.isArray(data) ? data : [data];
+  return arr.map(flattenResource);
+}
+
+// Helper: wrap boomerang single-record response as { [resourceName]: flat }
+function wrapOne(data, key) {
+  const item = flattenResource(data?.data);
+  if (!item) return {};
+  return key ? { [key]: item } : item;
+}
+
+// Helper: wrap boomerang list response as { [pluralKey]: flat[] }
+function wrapMany(data, key) {
+  const items = flattenList(data?.data);
+  return key ? { [key]: items } : items;
+}
+
+// ─── Customers ─────────────────────────────────────────────────
+// Boomerang: POST/GET/PATCH /customers  (JSON:API format)
+// Filter by email: GET /customers?filter[conditions][0][attribute]=email&filter[conditions][0][value]=...
+// Filter by name:  GET /customers?filter[conditions][0][attribute]=name&filter[conditions][0][value]=...
+
+export async function BOOQABLE_CREATE_CUSTOMER({ name, email, phone, address1, city, zipcode, country_code, deposit_type, deposit_value }) {
+  const attrs = {};
+  if (name)         attrs.name         = name;
+  if (email)        attrs.email        = email;
+  if (phone)        attrs.phone        = phone;
+  if (address1)     attrs.address1     = address1;
+  if (city)         attrs.city         = city;
+  if (zipcode)      attrs.zipcode      = zipcode;
+  if (country_code) attrs.country_code = country_code;
+  if (deposit_type) attrs.deposit_type = deposit_type;
+  if (deposit_value !== undefined) attrs.deposit_value = deposit_value;
+  const data = await bq('POST', '/customers', {
+    data: { type: 'customers', attributes: attrs },
   });
+  return wrapOne(data, 'customer');
 }
 
 export async function BOOQABLE_GET_CUSTOMER({ id }) {
-  return bq('GET', `/customers/${id}`);
+  const data = await bq('GET', `/customers/${id}`);
+  return wrapOne(data, 'customer');
 }
 
 export async function BOOQABLE_GET_CUSTOMERS({ per_page = 100, page = 1 } = {}) {
-  return bq('GET', `/customers?per_page=${per_page}&page=${page}`);
+  const data = await bq('GET', `/customers?page[number]=${page}&page[size]=${per_page}`);
+  return wrapMany(data, 'customers');
 }
 
 export async function BOOQABLE_SEARCH_CUSTOMERS({ q, per_page = 25, page = 1 } = {}) {
-  return bq('GET', `/customers?q=${encodeURIComponent(q || '')}&per_page=${per_page}&page=${page}`);
+  // Boomerang supports filter[q] for text search across name/email
+  const params = new URLSearchParams({
+    'filter[q]': q || '',
+    'page[number]': page,
+    'page[size]': per_page,
+  });
+  const data = await bq('GET', `/customers?${params}`);
+  return wrapMany(data, 'customers');
+}
+
+export async function BOOQABLE_SEARCH_CUSTOMERS_BY_EMAIL({ email }) {
+  const params = new URLSearchParams({
+    'filter[conditions][0][attribute]': 'email',
+    'filter[conditions][0][value]': email,
+    'page[size]': 5,
+  });
+  const data = await bq('GET', `/customers?${params}`);
+  return wrapMany(data, 'customers');
+}
+
+export async function BOOQABLE_SEARCH_CUSTOMERS_BY_NAME({ name }) {
+  const params = new URLSearchParams({
+    'filter[conditions][0][attribute]': 'name',
+    'filter[conditions][0][value]': name,
+    'page[size]': 10,
+  });
+  const data = await bq('GET', `/customers?${params}`);
+  return wrapMany(data, 'customers');
 }
 
 export async function BOOQABLE_DELETE_CUSTOMER({ id }) {
@@ -53,34 +127,88 @@ export async function BOOQABLE_DELETE_CUSTOMER({ id }) {
 // Returns one of:
 //   { found: false }                                    → safe to create
 //   { found: true, customer, requiresConfirmation: true } → ask user first
+//   { found: true, customers: [...], requiresConfirmation: true } → multiple matches
 //
 export async function findOrConfirmCustomer({ name, email }) {
-  // 1. Search by email
+  // Step 1: Search by email using boomerang filter endpoint
   if (email) {
-    const byEmail = await BOOQABLE_SEARCH_CUSTOMERS({ q: email, per_page: 5 });
-    const hit = byEmail?.customers?.find(c =>
-      c.email?.toLowerCase() === email.toLowerCase()
-    );
-    if (hit) return { found: true, customer: hit, requiresConfirmation: true };
+    try {
+      const byEmail = await BOOQABLE_SEARCH_CUSTOMERS_BY_EMAIL({ email });
+      const customers = byEmail?.customers || [];
+      const hit = customers.find(c =>
+        c.email?.toLowerCase() === email.toLowerCase()
+      );
+      if (hit) return { found: true, customer: hit, requiresConfirmation: true };
+      // Also try general search with email as query
+      const byQ = await BOOQABLE_SEARCH_CUSTOMERS({ q: email, per_page: 5 });
+      const qHit = (byQ?.customers || []).find(c =>
+        c.email?.toLowerCase() === email.toLowerCase()
+      );
+      if (qHit) return { found: true, customer: qHit, requiresConfirmation: true };
+    } catch (e) {
+      console.warn('[Booqable] Email search error:', e.message);
+    }
   }
 
   if (name) {
-    // 2. Search by full name
-    const byFullName = await BOOQABLE_SEARCH_CUSTOMERS({ q: name, per_page: 10 });
-    if (byFullName?.customers?.length) {
-      const exact = byFullName.customers.find(
-        c => c.name?.toLowerCase() === name.toLowerCase()
-      );
-      const hit = exact || byFullName.customers[0];
-      return { found: true, customer: hit, requiresConfirmation: true };
+    // Step 2: Search by full name
+    try {
+      const byFullName = await BOOQABLE_SEARCH_CUSTOMERS_BY_NAME({ name });
+      const customers = byFullName?.customers || [];
+      if (customers.length) {
+        const exact = customers.find(c => c.name?.toLowerCase() === name.toLowerCase());
+        const hit = exact || customers[0];
+        if (customers.length > 1) {
+          return { found: true, customers, requiresConfirmation: true };
+        }
+        return { found: true, customer: hit, requiresConfirmation: true };
+      }
+    } catch (e) {
+      console.warn('[Booqable] Name search error:', e.message);
     }
 
-    // 3. Search by partial name (first name only)
+    // Step 3: General text search by full name
+    try {
+      const byQ = await BOOQABLE_SEARCH_CUSTOMERS({ q: name, per_page: 10 });
+      const customers = byQ?.customers || [];
+      if (customers.length) {
+        if (customers.length > 1) {
+          return { found: true, customers, requiresConfirmation: true };
+        }
+        return { found: true, customer: customers[0], requiresConfirmation: true };
+      }
+    } catch {}
+
+    // Step 4: Search by first name only
     const firstName = name.trim().split(' ')[0];
     if (firstName && firstName.length >= 3) {
-      const byFirst = await BOOQABLE_SEARCH_CUSTOMERS({ q: firstName, per_page: 10 });
-      if (byFirst?.customers?.length) {
-        return { found: true, customer: byFirst.customers[0], requiresConfirmation: true };
+      try {
+        const byFirst = await BOOQABLE_SEARCH_CUSTOMERS({ q: firstName, per_page: 10 });
+        const customers = byFirst?.customers || [];
+        if (customers.length) {
+          if (customers.length > 1) {
+            return { found: true, customers, requiresConfirmation: true };
+          }
+          return { found: true, customer: customers[0], requiresConfirmation: true };
+        }
+      } catch {}
+    }
+
+    // Step 5: Search by last name only
+    const parts = name.trim().split(' ');
+    if (parts.length > 1) {
+      const lastName = parts[parts.length - 1];
+      if (lastName.length >= 3) {
+        try {
+          const byLast = await BOOQABLE_SEARCH_CUSTOMERS({ q: lastName, per_page: 10 });
+          const customers = byLast?.customers || [];
+          if (customers.length) {
+            if (customers.length > 1) {
+              return { found: true, customers, requiresConfirmation: true };
+            }
+            return { found: true, customer: customers[0], requiresConfirmation: true };
+          }
+        } catch {}
       }
     }
   }
@@ -94,36 +222,65 @@ export async function BOOQABLE_FIND_OR_CONFIRM_CUSTOMER({ name, email }) {
 }
 
 // ─── Orders ────────────────────────────────────────────────────
+// Boomerang: POST /orders  body: { data: { type: "orders", attributes: { customer_id, starts_at, stops_at, status: "concept" } } }
+// Boomerang: PATCH /orders/:id  body: { data: { id, type: "orders", attributes: { ... } } }
 
-export async function BOOQABLE_CREATE_ORDER({ customer_id, starts_at, stops_at, tag_list, note, location_id, deposit_type, deposit_value }) {
-  return bq('POST', '/orders', {
-    order: { customer_id, starts_at, stops_at, tag_list, note, location_id, deposit_type, deposit_value },
+export async function BOOQABLE_CREATE_ORDER({ customer_id, starts_at, stops_at, tag_list, note, location_id, deposit_type, deposit_value, status = 'concept' }) {
+  const attrs = { status };
+  if (customer_id)   attrs.customer_id   = customer_id;
+  if (starts_at)     attrs.starts_at     = starts_at;
+  if (stops_at)      attrs.stops_at      = stops_at;
+  if (tag_list)      attrs.tag_list      = Array.isArray(tag_list) ? tag_list.join(',') : tag_list;
+  if (note)          attrs.note          = note;
+  if (location_id)   attrs.location_id   = location_id;
+  if (deposit_type)  attrs.deposit_type  = deposit_type;
+  if (deposit_value !== undefined) attrs.deposit_value = deposit_value;
+  const data = await bq('POST', '/orders', {
+    data: { type: 'orders', attributes: attrs },
   });
+  return wrapOne(data, 'order');
+}
+
+export async function BOOQABLE_UPDATE_ORDER({ id, status, starts_at, stops_at, note, tag_list }) {
+  const attrs = {};
+  if (status)    attrs.status    = status;
+  if (starts_at) attrs.starts_at = starts_at;
+  if (stops_at)  attrs.stops_at  = stops_at;
+  if (note)      attrs.note      = note;
+  if (tag_list)  attrs.tag_list  = Array.isArray(tag_list) ? tag_list.join(',') : tag_list;
+  const data = await bq('PATCH', `/orders/${id}`, {
+    data: { id, type: 'orders', attributes: attrs },
+  });
+  return wrapOne(data, 'order');
 }
 
 export async function BOOQABLE_GET_ORDER({ id, include } = {}) {
   const qs = include ? `?include=${encodeURIComponent(include)}` : '';
-  return bq('GET', `/orders/${id}${qs}`);
+  const data = await bq('GET', `/orders/${id}${qs}`);
+  return wrapOne(data, 'order');
 }
 
 export async function BOOQABLE_GET_NEW_ORDER() {
-  return bq('GET', '/orders/new');
+  const data = await bq('GET', '/orders/new');
+  return wrapOne(data, 'order');
 }
 
 export async function BOOQABLE_LIST_ORDERS({ per_page = 25, page = 1, status, customer_id } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (status)      params.set('q[status_eq]', status);
-  if (customer_id) params.set('q[customer_id_eq]', customer_id);
-  return bq('GET', `/orders?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (status)      params.set('filter[status]', status);
+  if (customer_id) params.set('filter[customer_id]', customer_id);
+  const data = await bq('GET', `/orders?${params}`);
+  return wrapMany(data, 'orders');
 }
 
 export async function BOOQABLE_SEARCH_ORDERS({ q, status, starts_at_gte, stops_at_lte, per_page = 25, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (q)             params.set('q[number_or_customer_name_cont]', q);
-  if (status)        params.set('q[status_eq]', status);
-  if (starts_at_gte) params.set('q[starts_at_gteq]', starts_at_gte);
-  if (stops_at_lte)  params.set('q[stops_at_lteq]', stops_at_lte);
-  return bq('GET', `/orders?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (q)             params.set('filter[q]', q);
+  if (status)        params.set('filter[status]', status);
+  if (starts_at_gte) params.set('filter[starts_at][gte]', starts_at_gte);
+  if (stops_at_lte)  params.set('filter[stops_at][lte]', stops_at_lte);
+  const data = await bq('GET', `/orders?${params}`);
+  return wrapMany(data, 'orders');
 }
 
 export async function BOOQABLE_DELETE_ORDER({ id }) {
@@ -131,29 +288,61 @@ export async function BOOQABLE_DELETE_ORDER({ id }) {
 }
 
 // ─── Lines ─────────────────────────────────────────────────────
+// Boomerang: POST /lines  body: { data: { type: "lines", attributes: { order_id, item_id, quantity, starts_at, stops_at } } }
+
+export async function BOOQABLE_CREATE_LINE({ order_id, item_id, product_id, quantity = 1, starts_at, stops_at }) {
+  const attrs = { order_id, quantity };
+  if (item_id)    attrs.item_id    = item_id;
+  if (product_id) attrs.item_id    = product_id; // boomerang uses item_id for both
+  if (starts_at)  attrs.starts_at  = starts_at;
+  if (stops_at)   attrs.stops_at   = stops_at;
+  const data = await bq('POST', '/lines', {
+    data: { type: 'lines', attributes: attrs },
+  });
+  return wrapOne(data, 'line');
+}
 
 export async function BOOQABLE_LIST_LINES({ order_id, per_page = 100, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (order_id) params.set('q[order_id_eq]', order_id);
-  return bq('GET', `/lines?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (order_id) params.set('filter[order_id]', order_id);
+  const data = await bq('GET', `/lines?${params}`);
+  return wrapMany(data, 'lines');
 }
 
 // ─── Products & Product Groups ─────────────────────────────────
 
 export async function BOOQABLE_CREATE_PRODUCT_GROUP({ name, slug, sku, description, tag_list, tax_category_id, price_type, price_period, base_price_in_cents, flat_fee_price_in_cents, show_in_store, trackable, lag_time, lead_time }) {
-  return bq('POST', '/product_groups', {
-    product_group: { name, slug, sku, description, tag_list, tax_category_id, price_type, price_period, base_price_in_cents, flat_fee_price_in_cents, show_in_store, trackable, lag_time, lead_time },
+  const attrs = {};
+  if (name)                    attrs.name                    = name;
+  if (slug)                    attrs.slug                    = slug;
+  if (sku)                     attrs.sku                     = sku;
+  if (description)             attrs.description             = description;
+  if (tag_list)                attrs.tag_list                = Array.isArray(tag_list) ? tag_list.join(',') : tag_list;
+  if (tax_category_id)         attrs.tax_category_id         = tax_category_id;
+  if (price_type)              attrs.price_type              = price_type;
+  if (price_period)            attrs.price_period            = price_period;
+  if (base_price_in_cents !== undefined)     attrs.base_price_in_cents     = base_price_in_cents;
+  if (flat_fee_price_in_cents !== undefined) attrs.flat_fee_price_in_cents = flat_fee_price_in_cents;
+  if (show_in_store !== undefined) attrs.show_in_store = show_in_store;
+  if (trackable !== undefined)     attrs.trackable     = trackable;
+  if (lag_time !== undefined)      attrs.lag_time      = lag_time;
+  if (lead_time !== undefined)     attrs.lead_time     = lead_time;
+  const data = await bq('POST', '/product_groups', {
+    data: { type: 'product_groups', attributes: attrs },
   });
+  return wrapOne(data, 'product_group');
 }
 
 export async function BOOQABLE_GET_PRODUCT_GROUP({ id }) {
-  return bq('GET', `/product_groups/${id}`);
+  const data = await bq('GET', `/product_groups/${id}`);
+  return wrapOne(data, 'product_group');
 }
 
 export async function BOOQABLE_LIST_PRODUCT_GROUPS({ per_page = 100, page = 1, tag } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (tag) params.set('q[tag_list_cont]', tag);
-  return bq('GET', `/product_groups?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (tag) params.set('filter[tag_list]', tag);
+  const data = await bq('GET', `/product_groups?${params}`);
+  return wrapMany(data, 'product_groups');
 }
 
 export async function BOOQABLE_DELETE_PRODUCT_GROUP({ id }) {
@@ -161,225 +350,309 @@ export async function BOOQABLE_DELETE_PRODUCT_GROUP({ id }) {
 }
 
 export async function BOOQABLE_GET_PRODUCT({ id }) {
-  return bq('GET', `/products/${id}`);
+  const data = await bq('GET', `/products/${id}`);
+  return wrapOne(data, 'product');
 }
 
 export async function BOOQABLE_LIST_PRODUCTS({ product_group_id, per_page = 100, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (product_group_id) params.set('q[product_group_id_eq]', product_group_id);
-  return bq('GET', `/products?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (product_group_id) params.set('filter[product_group_id]', product_group_id);
+  const data = await bq('GET', `/products?${params}`);
+  return wrapMany(data, 'products');
+}
+
+export async function BOOQABLE_SEARCH_PRODUCTS({ q, per_page = 25, page = 1 } = {}) {
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (q) params.set('filter[q]', q);
+  const data = await bq('GET', `/products?${params}`);
+  return wrapMany(data, 'products');
 }
 
 // ─── Items ─────────────────────────────────────────────────────
 
 export async function BOOQABLE_LIST_ITEMS({ q, type, per_page = 25, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (q)    params.set('q[name_cont]', q);
-  if (type) params.set('q[type_eq]', type);
-  return bq('GET', `/items?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (q)    params.set('filter[q]', q);
+  if (type) params.set('filter[type]', type);
+  const data = await bq('GET', `/items?${params}`);
+  return wrapMany(data, 'items');
 }
 
 export async function BOOQABLE_SEARCH_ITEMS({ q, per_page = 25, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (q) params.set('q[name_or_sku_cont]', q);
-  return bq('GET', `/items?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (q) params.set('filter[q]', q);
+  const data = await bq('GET', `/items?${params}`);
+  return wrapMany(data, 'items');
 }
 
 // ─── Inventory ─────────────────────────────────────────────────
+// Boomerang availability check: GET /availability  (date range + product)
 
 export async function BOOQABLE_GET_INVENTORY_LEVELS({ product_id, from, till, location_id } = {}) {
   const params = new URLSearchParams();
-  if (product_id)  params.set('product_id', product_id);
-  if (from)        params.set('from', from);
-  if (till)        params.set('till', till);
-  if (location_id) params.set('location_id', location_id);
-  return bq('GET', `/inventory?${params}`);
+  if (product_id)  params.set('filter[product_id]', product_id);
+  if (from)        params.set('filter[from]', from);
+  if (till)        params.set('filter[till]', till);
+  if (location_id) params.set('filter[location_id]', location_id);
+  try {
+    const data = await bq('GET', `/inventory?${params}`);
+    return wrapMany(data, 'inventory');
+  } catch {
+    // fallback: try availability endpoint
+    const data = await bq('GET', `/availability?${params}`);
+    return wrapMany(data, 'inventory');
+  }
 }
 
 export async function BOOQABLE_LIST_INVENTORY_BREAKDOWNS({ product_id, from, till, location_id } = {}) {
   const params = new URLSearchParams();
-  if (product_id)  params.set('product_id', product_id);
-  if (from)        params.set('from', from);
-  if (till)        params.set('till', till);
-  if (location_id) params.set('location_id', location_id);
-  return bq('GET', `/inventory_breakdowns?${params}`);
+  if (product_id)  params.set('filter[product_id]', product_id);
+  if (from)        params.set('filter[from]', from);
+  if (till)        params.set('filter[till]', till);
+  if (location_id) params.set('filter[location_id]', location_id);
+  const data = await bq('GET', `/inventory_breakdowns?${params}`);
+  return wrapMany(data, 'inventory_breakdowns');
 }
 
 // ─── Stock ─────────────────────────────────────────────────────
 
 export async function BOOQABLE_LIST_STOCK_ITEMS({ product_group_id, product_id, per_page = 100, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (product_group_id) params.set('q[product_group_id_eq]', product_group_id);
-  if (product_id)       params.set('q[product_id_eq]', product_id);
-  return bq('GET', `/stock_items?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (product_group_id) params.set('filter[product_group_id]', product_group_id);
+  if (product_id)       params.set('filter[product_id]', product_id);
+  const data = await bq('GET', `/stock_items?${params}`);
+  return wrapMany(data, 'stock_items');
 }
 
-export async function BOOQABLE_LIST_STOCK_ITEM_PLANNINGS({ order_id, per_page = 100, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (order_id) params.set('q[order_id_eq]', order_id);
-  return bq('GET', `/stock_item_plannings?${params}`);
+export async function BOOQABLE_LIST_STOCK_ITEM_PLANNINGS({ order_id, product_id, starts_at, stops_at, per_page = 100, page = 1 } = {}) {
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (order_id)   params.set('filter[order_id]', order_id);
+  if (product_id) params.set('filter[product_id]', product_id);
+  if (starts_at)  params.set('filter[starts_at]', starts_at);
+  if (stops_at)   params.set('filter[stops_at]', stops_at);
+  const data = await bq('GET', `/stock_item_plannings?${params}`);
+  return wrapMany(data, 'stock_item_plannings');
 }
 
 // ─── Plannings ─────────────────────────────────────────────────
 
 export async function BOOQABLE_LIST_PLANNINGS({ order_id, product_id, per_page = 100, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (order_id)   params.set('q[order_id_eq]', order_id);
-  if (product_id) params.set('q[product_id_eq]', product_id);
-  return bq('GET', `/plannings?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (order_id)   params.set('filter[order_id]', order_id);
+  if (product_id) params.set('filter[product_id]', product_id);
+  const data = await bq('GET', `/plannings?${params}`);
+  return wrapMany(data, 'plannings');
 }
 
 export async function BOOQABLE_SEARCH_PLANNINGS({ starts_at_gte, stops_at_lte, product_id, location_id, per_page = 50, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (starts_at_gte) params.set('q[starts_at_gteq]', starts_at_gte);
-  if (stops_at_lte)  params.set('q[stops_at_lteq]', stops_at_lte);
-  if (product_id)    params.set('q[product_id_eq]', product_id);
-  if (location_id)   params.set('q[location_id_eq]', location_id);
-  return bq('GET', `/plannings?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (starts_at_gte) params.set('filter[starts_at][gte]', starts_at_gte);
+  if (stops_at_lte)  params.set('filter[stops_at][lte]', stops_at_lte);
+  if (product_id)    params.set('filter[product_id]', product_id);
+  if (location_id)   params.set('filter[location_id]', location_id);
+  const data = await bq('GET', `/plannings?${params}`);
+  return wrapMany(data, 'plannings');
+}
+
+// ─── Availability check (high-level helper) ────────────────────
+// Returns { available: bool, stockCount: N } for a product+daterange
+
+export async function BOOQABLE_CHECK_AVAILABILITY({ product_id, starts_at, stops_at, quantity = 1 } = {}) {
+  try {
+    const params = new URLSearchParams({
+      'filter[product_id]': product_id,
+      'filter[starts_at]':  starts_at,
+      'filter[stops_at]':   stops_at,
+    });
+    const data = await bq('GET', `/inventory?${params}`);
+    const items = wrapMany(data, 'inventory').inventory || [];
+    // boomerang inventory shows stock_count, planned_count, available_count
+    const avail = items[0];
+    if (!avail) return { available: false, stockCount: 0, error: 'No inventory data' };
+    const availCount = avail.available_count ?? avail.stock_count ?? 0;
+    return { available: availCount >= quantity, availableCount: availCount, stockCount: avail.stock_count };
+  } catch (e) {
+    return { available: null, error: e.message };
+  }
 }
 
 // ─── Documents ─────────────────────────────────────────────────
 
 export async function BOOQABLE_LIST_DOCUMENTS({ order_id, type, per_page = 25, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (order_id) params.set('q[order_id_eq]', order_id);
-  if (type)     params.set('q[type_eq]', type);
-  return bq('GET', `/documents?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (order_id) params.set('filter[order_id]', order_id);
+  if (type)     params.set('filter[document_type]', type);
+  const data = await bq('GET', `/documents?${params}`);
+  return wrapMany(data, 'documents');
 }
 
 export async function BOOQABLE_SEARCH_DOCUMENTS({ q, type, per_page = 25, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (q)    params.set('q[number_cont]', q);
-  if (type) params.set('q[type_eq]', type);
-  return bq('GET', `/documents?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (q)    params.set('filter[q]', q);
+  if (type) params.set('filter[document_type]', type);
+  const data = await bq('GET', `/documents?${params}`);
+  return wrapMany(data, 'documents');
 }
 
 // ─── Payments ──────────────────────────────────────────────────
 
 export async function BOOQABLE_LIST_PAYMENTS({ order_id, per_page = 25, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (order_id) params.set('q[order_id_eq]', order_id);
-  return bq('GET', `/payments?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (order_id) params.set('filter[order_id]', order_id);
+  const data = await bq('GET', `/payments?${params}`);
+  return wrapMany(data, 'payments');
 }
 
 export async function BOOQABLE_LIST_PAYMENT_METHODS({ per_page = 25, page = 1 } = {}) {
-  return bq('GET', `/payment_methods?per_page=${per_page}&page=${page}`);
+  const data = await bq('GET', `/payment_methods?page[number]=${page}&page[size]=${per_page}`);
+  return wrapMany(data, 'payment_methods');
 }
 
 // ─── Notes ─────────────────────────────────────────────────────
 
 export async function BOOQABLE_LIST_NOTES({ notable_id, notable_type, per_page = 25, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (notable_id)   params.set('q[notable_id_eq]', notable_id);
-  if (notable_type) params.set('q[notable_type_eq]', notable_type);
-  return bq('GET', `/notes?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (notable_id)   params.set('filter[notable_id]', notable_id);
+  if (notable_type) params.set('filter[notable_type]', notable_type);
+  const data = await bq('GET', `/notes?${params}`);
+  return wrapMany(data, 'notes');
 }
 
 // ─── Locations ─────────────────────────────────────────────────
 
 export async function BOOQABLE_LIST_LOCATIONS({ per_page = 25, page = 1 } = {}) {
-  return bq('GET', `/locations?per_page=${per_page}&page=${page}`);
+  const data = await bq('GET', `/locations?page[number]=${page}&page[size]=${per_page}`);
+  return wrapMany(data, 'locations');
 }
 
 // ─── Users & Employees ─────────────────────────────────────────
 
 export async function BOOQABLE_LIST_USERS({ per_page = 25, page = 1 } = {}) {
-  return bq('GET', `/users?per_page=${per_page}&page=${page}`);
+  const data = await bq('GET', `/users?page[number]=${page}&page[size]=${per_page}`);
+  return wrapMany(data, 'users');
 }
 
 export async function BOOQABLE_LIST_EMPLOYEES({ per_page = 25, page = 1 } = {}) {
-  return bq('GET', `/employees?per_page=${per_page}&page=${page}`);
+  const data = await bq('GET', `/employees?page[number]=${page}&page[size]=${per_page}`);
+  return wrapMany(data, 'employees');
 }
 
 // ─── Pricing ───────────────────────────────────────────────────
 
 export async function BOOQABLE_LIST_PRICE_RULESETS({ per_page = 25, page = 1 } = {}) {
-  return bq('GET', `/price_rulesets?per_page=${per_page}&page=${page}`);
+  const data = await bq('GET', `/price_rulesets?page[number]=${page}&page[size]=${per_page}`);
+  return wrapMany(data, 'price_rulesets');
 }
 
 export async function BOOQABLE_LIST_PRICE_STRUCTURES({ per_page = 25, page = 1 } = {}) {
-  return bq('GET', `/price_structures?per_page=${per_page}&page=${page}`);
+  const data = await bq('GET', `/price_structures?page[number]=${page}&page[size]=${per_page}`);
+  return wrapMany(data, 'price_structures');
 }
 
 export async function BOOQABLE_LIST_TAX_RATES({ per_page = 25, page = 1 } = {}) {
-  return bq('GET', `/tax_rates?per_page=${per_page}&page=${page}`);
+  const data = await bq('GET', `/tax_rates?page[number]=${page}&page[size]=${per_page}`);
+  return wrapMany(data, 'tax_rates');
 }
 
 export async function BOOQABLE_LIST_TAX_VALUES({ order_id, per_page = 25, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (order_id) params.set('q[order_id_eq]', order_id);
-  return bq('GET', `/tax_values?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (order_id) params.set('filter[order_id]', order_id);
+  const data = await bq('GET', `/tax_values?${params}`);
+  return wrapMany(data, 'tax_values');
 }
 
 export async function BOOQABLE_LIST_COUPONS({ per_page = 25, page = 1 } = {}) {
-  return bq('GET', `/coupons?per_page=${per_page}&page=${page}`);
+  const data = await bq('GET', `/coupons?page[number]=${page}&page[size]=${per_page}`);
+  return wrapMany(data, 'coupons');
 }
 
 // ─── Bundles ───────────────────────────────────────────────────
 
 export async function BOOQABLE_SEARCH_BUNDLES({ q, per_page = 25, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (q) params.set('q[name_cont]', q);
-  return bq('GET', `/bundles?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (q) params.set('filter[q]', q);
+  const data = await bq('GET', `/bundles?${params}`);
+  return wrapMany(data, 'bundles');
 }
 
 export async function BOOQABLE_LIST_BUNDLE_ITEMS({ bundle_id, per_page = 100, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (bundle_id) params.set('q[bundle_id_eq]', bundle_id);
-  return bq('GET', `/bundle_items?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (bundle_id) params.set('filter[bundle_id]', bundle_id);
+  const data = await bq('GET', `/bundle_items?${params}`);
+  return wrapMany(data, 'bundle_items');
 }
 
 // ─── Properties ────────────────────────────────────────────────
 
 export async function BOOQABLE_LIST_PROPERTIES({ owner_id, owner_type, per_page = 100, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (owner_id)   params.set('q[owner_id_eq]', owner_id);
-  if (owner_type) params.set('q[owner_type_eq]', owner_type);
-  return bq('GET', `/properties?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (owner_id)   params.set('filter[owner_id]', owner_id);
+  if (owner_type) params.set('filter[owner_type]', owner_type);
+  const data = await bq('GET', `/properties?${params}`);
+  return wrapMany(data, 'properties');
 }
 
 export async function BOOQABLE_LIST_DEFAULT_PROPERTIES({ owner_type, per_page = 100, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (owner_type) params.set('q[owner_type_eq]', owner_type);
-  return bq('GET', `/default_properties?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (owner_type) params.set('filter[owner_type]', owner_type);
+  const data = await bq('GET', `/default_properties?${params}`);
+  return wrapMany(data, 'default_properties');
 }
 
 // ─── Misc ──────────────────────────────────────────────────────
 
 export async function BOOQABLE_LIST_BARCODES({ owner_id, owner_type, per_page = 100, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (owner_id)   params.set('q[owner_id_eq]', owner_id);
-  if (owner_type) params.set('q[owner_type_eq]', owner_type);
-  return bq('GET', `/barcodes?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (owner_id)   params.set('filter[owner_id]', owner_id);
+  if (owner_type) params.set('filter[owner_type]', owner_type);
+  const data = await bq('GET', `/barcodes?${params}`);
+  return wrapMany(data, 'barcodes');
 }
 
 export async function BOOQABLE_LIST_CLUSTERS({ per_page = 25, page = 1 } = {}) {
-  return bq('GET', `/clusters?per_page=${per_page}&page=${page}`);
+  const data = await bq('GET', `/clusters?page[number]=${page}&page[size]=${per_page}`);
+  return wrapMany(data, 'clusters');
 }
 
 export async function BOOQABLE_LIST_EMAIL_TEMPLATES({ per_page = 25, page = 1 } = {}) {
-  return bq('GET', `/email_templates?per_page=${per_page}&page=${page}`);
+  const data = await bq('GET', `/email_templates?page[number]=${page}&page[size]=${per_page}`);
+  return wrapMany(data, 'email_templates');
 }
 
 export async function BOOQABLE_LIST_PHOTOS({ owner_id, owner_type, per_page = 50, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (owner_id)   params.set('q[owner_id_eq]', owner_id);
-  if (owner_type) params.set('q[owner_type_eq]', owner_type);
-  return bq('GET', `/photos?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (owner_id)   params.set('filter[owner_id]', owner_id);
+  if (owner_type) params.set('filter[owner_type]', owner_type);
+  const data = await bq('GET', `/photos?${params}`);
+  return wrapMany(data, 'photos');
 }
 
 export async function BOOQABLE_LIST_PROVINCES({ country_code, per_page = 100, page = 1 } = {}) {
-  const params = new URLSearchParams({ per_page, page });
-  if (country_code) params.set('q[country_code_eq]', country_code);
-  return bq('GET', `/provinces?${params}`);
+  const params = new URLSearchParams({ 'page[number]': page, 'page[size]': per_page });
+  if (country_code) params.set('filter[country_code]', country_code);
+  const data = await bq('GET', `/provinces?${params}`);
+  return wrapMany(data, 'provinces');
 }
 
 // ─── Company ───────────────────────────────────────────────────
 
-export async function BOOQABLE_UPDATE_COMPANIES({ name, email, phone, website, timezone, currency, address1, city, zipcode, country_code, tax_percentage, billing_settings }) {
-  return bq('PUT', '/companies/current', {
-    company: { name, email, phone, website, timezone, currency, address1, city, zipcode, country_code, tax_percentage, billing_settings },
+export async function BOOQABLE_UPDATE_COMPANIES({ name, email, phone, website, timezone, currency, address1, city, zipcode, country_code, tax_percentage }) {
+  const attrs = {};
+  if (name)          attrs.name          = name;
+  if (email)         attrs.email         = email;
+  if (phone)         attrs.phone         = phone;
+  if (website)       attrs.website       = website;
+  if (timezone)      attrs.timezone      = timezone;
+  if (currency)      attrs.currency      = currency;
+  if (address1)      attrs.address1      = address1;
+  if (city)          attrs.city          = city;
+  if (zipcode)       attrs.zipcode       = zipcode;
+  if (country_code)  attrs.country_code  = country_code;
+  if (tax_percentage !== undefined) attrs.tax_percentage = tax_percentage;
+  const data = await bq('PATCH', '/companies/current', {
+    data: { type: 'companies', attributes: attrs },
   });
+  return wrapOne(data, 'company');
 }
 
 // ─── Claude Tool Definitions ────────────────────────────────────
@@ -450,6 +723,52 @@ export const BOOQABLE_TOOLS = [
     name: 'BOOQABLE_DELETE_CUSTOMER',
     description: 'Delete a Booqable customer by ID.',
     input_schema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
+  },
+  {
+    name: 'BOOQABLE_CHECK_AVAILABILITY',
+    description: 'Check whether a product is available for a given date range and quantity.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        product_id: { type: 'string', description: 'Booqable product ID' },
+        starts_at:  { type: 'string', description: 'ISO 8601 datetime' },
+        stops_at:   { type: 'string', description: 'ISO 8601 datetime' },
+        quantity:   { type: 'number', description: 'Units needed', default: 1 },
+      },
+      required: ['product_id', 'starts_at', 'stops_at'],
+    },
+  },
+  {
+    name: 'BOOQABLE_CREATE_LINE',
+    description: 'Add a line item (equipment) to an existing Booqable order.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        order_id:   { type: 'string', description: 'Booqable order ID' },
+        item_id:    { type: 'string', description: 'Product or bundle ID' },
+        product_id: { type: 'string', description: 'Alias for item_id' },
+        quantity:   { type: 'number', default: 1 },
+        starts_at:  { type: 'string', description: 'ISO 8601 datetime' },
+        stops_at:   { type: 'string', description: 'ISO 8601 datetime' },
+      },
+      required: ['order_id'],
+    },
+  },
+  {
+    name: 'BOOQABLE_UPDATE_ORDER',
+    description: 'Update an existing Booqable order (status, dates, note).',
+    input_schema: {
+      type: 'object',
+      properties: {
+        id:        { type: 'string', description: 'Order ID' },
+        status:    { type: 'string', enum: ['concept', 'reserved', 'started', 'stopped', 'archived', 'canceled'] },
+        starts_at: { type: 'string' },
+        stops_at:  { type: 'string' },
+        note:      { type: 'string' },
+        tag_list:  { type: 'array', items: { type: 'string' } },
+      },
+      required: ['id'],
+    },
   },
   {
     name: 'BOOQABLE_CREATE_ORDER',
@@ -578,6 +897,19 @@ export const BOOQABLE_TOOLS = [
         per_page:         { type: 'number', default: 100 },
         page:             { type: 'number', default: 1 },
       },
+    },
+  },
+  {
+    name: 'BOOQABLE_SEARCH_PRODUCTS',
+    description: 'Search Booqable products by keyword (name or SKU).',
+    input_schema: {
+      type: 'object',
+      properties: {
+        q:        { type: 'string', description: 'Search keyword' },
+        per_page: { type: 'number', default: 25 },
+        page:     { type: 'number', default: 1 },
+      },
+      required: ['q'],
     },
   },
   {
@@ -985,30 +1317,33 @@ export const BOOQABLE_TOOLS = [
 
 const BOOQABLE_FN_MAP = {
   BOOQABLE_FIND_OR_CONFIRM_CUSTOMER,
-  BOOQABLE_CREATE_CUSTOMER,       BOOQABLE_GET_CUSTOMER,
-  BOOQABLE_GET_CUSTOMERS,         BOOQABLE_SEARCH_CUSTOMERS,
-  BOOQABLE_DELETE_CUSTOMER,       BOOQABLE_CREATE_ORDER,
-  BOOQABLE_GET_ORDER,             BOOQABLE_GET_NEW_ORDER,
-  BOOQABLE_LIST_ORDERS,           BOOQABLE_SEARCH_ORDERS,
-  BOOQABLE_DELETE_ORDER,          BOOQABLE_CREATE_PRODUCT_GROUP,
-  BOOQABLE_GET_PRODUCT_GROUP,     BOOQABLE_LIST_PRODUCT_GROUPS,
-  BOOQABLE_DELETE_PRODUCT_GROUP,  BOOQABLE_GET_PRODUCT,
-  BOOQABLE_LIST_PRODUCTS,         BOOQABLE_GET_INVENTORY_LEVELS,
+  BOOQABLE_CREATE_CUSTOMER,           BOOQABLE_GET_CUSTOMER,
+  BOOQABLE_GET_CUSTOMERS,             BOOQABLE_SEARCH_CUSTOMERS,
+  BOOQABLE_SEARCH_CUSTOMERS_BY_EMAIL, BOOQABLE_SEARCH_CUSTOMERS_BY_NAME,
+  BOOQABLE_DELETE_CUSTOMER,           BOOQABLE_CREATE_ORDER,
+  BOOQABLE_UPDATE_ORDER,              BOOQABLE_GET_ORDER,
+  BOOQABLE_GET_NEW_ORDER,             BOOQABLE_LIST_ORDERS,
+  BOOQABLE_SEARCH_ORDERS,             BOOQABLE_DELETE_ORDER,
+  BOOQABLE_CREATE_LINE,               BOOQABLE_CREATE_PRODUCT_GROUP,
+  BOOQABLE_GET_PRODUCT_GROUP,         BOOQABLE_LIST_PRODUCT_GROUPS,
+  BOOQABLE_DELETE_PRODUCT_GROUP,      BOOQABLE_GET_PRODUCT,
+  BOOQABLE_LIST_PRODUCTS,             BOOQABLE_SEARCH_PRODUCTS,
+  BOOQABLE_GET_INVENTORY_LEVELS,      BOOQABLE_CHECK_AVAILABILITY,
   BOOQABLE_LIST_INVENTORY_BREAKDOWNS, BOOQABLE_LIST_STOCK_ITEMS,
   BOOQABLE_LIST_STOCK_ITEM_PLANNINGS, BOOQABLE_LIST_PLANNINGS,
-  BOOQABLE_SEARCH_PLANNINGS,      BOOQABLE_LIST_LINES,
-  BOOQABLE_LIST_DOCUMENTS,        BOOQABLE_SEARCH_DOCUMENTS,
-  BOOQABLE_LIST_PAYMENTS,         BOOQABLE_LIST_PAYMENT_METHODS,
-  BOOQABLE_LIST_NOTES,            BOOQABLE_LIST_LOCATIONS,
-  BOOQABLE_LIST_USERS,            BOOQABLE_LIST_EMPLOYEES,
-  BOOQABLE_LIST_PRICE_RULESETS,   BOOQABLE_LIST_PRICE_STRUCTURES,
-  BOOQABLE_LIST_TAX_RATES,        BOOQABLE_LIST_TAX_VALUES,
-  BOOQABLE_LIST_COUPONS,          BOOQABLE_SEARCH_BUNDLES,
-  BOOQABLE_LIST_BUNDLE_ITEMS,     BOOQABLE_LIST_ITEMS,
-  BOOQABLE_SEARCH_ITEMS,          BOOQABLE_LIST_BARCODES,
-  BOOQABLE_LIST_CLUSTERS,         BOOQABLE_LIST_EMAIL_TEMPLATES,
-  BOOQABLE_LIST_PHOTOS,           BOOQABLE_LIST_PROPERTIES,
-  BOOQABLE_LIST_DEFAULT_PROPERTIES, BOOQABLE_LIST_PROVINCES,
+  BOOQABLE_SEARCH_PLANNINGS,          BOOQABLE_LIST_LINES,
+  BOOQABLE_LIST_DOCUMENTS,            BOOQABLE_SEARCH_DOCUMENTS,
+  BOOQABLE_LIST_PAYMENTS,             BOOQABLE_LIST_PAYMENT_METHODS,
+  BOOQABLE_LIST_NOTES,                BOOQABLE_LIST_LOCATIONS,
+  BOOQABLE_LIST_USERS,                BOOQABLE_LIST_EMPLOYEES,
+  BOOQABLE_LIST_PRICE_RULESETS,       BOOQABLE_LIST_PRICE_STRUCTURES,
+  BOOQABLE_LIST_TAX_RATES,            BOOQABLE_LIST_TAX_VALUES,
+  BOOQABLE_LIST_COUPONS,              BOOQABLE_SEARCH_BUNDLES,
+  BOOQABLE_LIST_BUNDLE_ITEMS,         BOOQABLE_LIST_ITEMS,
+  BOOQABLE_SEARCH_ITEMS,              BOOQABLE_LIST_BARCODES,
+  BOOQABLE_LIST_CLUSTERS,             BOOQABLE_LIST_EMAIL_TEMPLATES,
+  BOOQABLE_LIST_PHOTOS,               BOOQABLE_LIST_PROPERTIES,
+  BOOQABLE_LIST_DEFAULT_PROPERTIES,   BOOQABLE_LIST_PROVINCES,
   BOOQABLE_UPDATE_COMPANIES,
 };
 

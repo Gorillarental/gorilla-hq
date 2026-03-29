@@ -14,7 +14,8 @@ export const CONFIG = {
   BOOQABLE: {
     API_KEY:  process.env.BOOQABLE_API_KEY,
     SUBDOMAIN: 'gorilla-rentals',
-    BASE_URL:  'https://gorilla-rentals.booqable.com/api/1',
+    BASE_URL:  process.env.BOOQABLE_URL || 'https://gorilla-rentals.booqable.com/api/boomerang',
+    LEGACY_URL: 'https://gorilla-rentals.booqable.com/api/1',
   },
 
   AZURE: {
@@ -31,6 +32,8 @@ export const CONFIG = {
   GHL: {
     API_KEY:     process.env.GHL_API_KEY,
     LOCATION_ID: process.env.GHL_LOCATION_ID,
+    API_URL:     process.env.GHL_API_URL     || 'https://services.leadconnectorhq.com',
+    API_VERSION: process.env.GHL_API_VERSION || '2021-07-28',
   },
 
   TELEGRAM: {

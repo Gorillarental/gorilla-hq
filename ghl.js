@@ -1,6 +1,7 @@
 // ============================================================
-// GHL.JS — Complete GoHighLevel Integration
-// SMS, Contacts, Pipeline, Conversations, Briefings
+// GHL.JS — GoHighLevel Integration
+// GHL is for pipeline tracking, opportunity management, and workflow/SMS triggers ONLY.
+// Customer data lives in Booqable. Never use GHL for client lookups.
 // ============================================================
 
 import dotenv from 'dotenv';
@@ -11,7 +12,8 @@ import { fileURLToPath } from 'url';
 import { isQuietHours, quietHoursBlock } from './quietHours.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const GHL_API     = 'https://services.leadconnectorhq.com';
+const GHL_API     = process.env.GHL_API_URL     || 'https://services.leadconnectorhq.com';
+const GHL_VERSION = process.env.GHL_API_VERSION || '2021-07-28';
 const API_KEY     = process.env.GHL_API_KEY;
 const LOCATION_ID = process.env.GHL_LOCATION_ID;
 
@@ -25,7 +27,65 @@ const PHONES = {
 const GHL_HEADERS = {
   'Authorization': `Bearer ${API_KEY}`,
   'Content-Type':  'application/json',
-  'Version':       '2021-04-15',
+  'Version':       GHL_VERSION,
+};
+
+// ─── Pipeline cache (populated on startup) ─────────────────────
+let _cachedPipelineId  = null;
+let _cachedStageMap    = {}; // stageName → stageId
+let _cachedWorkflows   = null;
+
+async function ensurePipelineCache() {
+  if (_cachedPipelineId) return;
+  try {
+    const data = await ghl('GET', `/opportunities/pipelines?locationId=${LOCATION_ID}`);
+    const pipelines = data?.pipelines || [];
+    const pipeline = pipelines.find(p => p.name?.toLowerCase().includes('gorilla rental'))
+      || pipelines[0];
+    if (pipeline) {
+      _cachedPipelineId = pipeline.id;
+      for (const stage of pipeline.stages || []) {
+        _cachedStageMap[stage.name?.toLowerCase()] = stage.id;
+      }
+    }
+  } catch (e) {
+    console.warn('[GHL] Pipeline cache error:', e.message);
+  }
+}
+
+async function ensureWorkflowCache() {
+  if (_cachedWorkflows) return;
+  try {
+    const data = await ghl('GET', `/workflows?locationId=${LOCATION_ID}`);
+    _cachedWorkflows = data?.workflows || [];
+  } catch (e) {
+    console.warn('[GHL] Workflow cache error:', e.message);
+    _cachedWorkflows = [];
+  }
+}
+
+function getStageId(stageName) {
+  const key = stageName.toLowerCase();
+  return _cachedStageMap[key]
+    || Object.entries(_cachedStageMap).find(([k]) => k.includes(key))?.[1]
+    || null;
+}
+
+// Stage → tag map
+const STAGE_TAG_MAP = {
+  sent:        { stage: 'Quote Sent',          tag: 'status - quote sent',     oppStatus: 'open' },
+  negotiation: { stage: 'Negotiation',         tag: 'status - negotiation',    oppStatus: 'open' },
+  booked:      { stage: 'Booked',              tag: 'status - booked',         oppStatus: 'won'  },
+  lost:        { stage: 'Follow-up / Repeat',  tag: 'status - quote lost',     oppStatus: 'lost' },
+  expired:     { stage: 'Follow-up / Repeat',  tag: 'status - quote expired',  oppStatus: 'lost' },
+};
+
+// Workflow name map
+const WORKFLOW_MAP = {
+  sent:        'Quote Sent Follow-up Sequence',
+  booked:      'Booking Confirmation',
+  lost:        'Follow-up / Repeat',
+  expired:     'Re-engagement',
 };
 
 // ─── Core request helper ───────────────────────────────────────
@@ -559,6 +619,204 @@ export async function scheduleGHLSocialPost({ summary, scheduleDate = null, acco
   }
 }
 
+// ─── QUOTE → GHL SYNC ─────────────────────────────────────────
+// Called after Andrei approves and quote is sent.
+// Handles: contact lookup/create, contact type, opportunity creation, workflow enrollment.
+// RULE: GHL contact lookup here is ONLY used in syncQuoteToGHL — NOT for answering agent questions.
+
+export async function syncQuoteToGHL(quoteData) {
+  try {
+    await ensurePipelineCache();
+    await ensureWorkflowCache();
+
+    const { customerName, customerEmail, customerPhone, equipment, total, startDate, quoteNumber, booqableOrderId, customerId: booqableCustomerId } = quoteData;
+
+    // STEP 1 — Check if GHL contact exists (by email only, Booqable is source of truth for data)
+    let contactId = null;
+    if (customerEmail) {
+      try {
+        const found = await findContactByEmail(customerEmail);
+        if (found?.id) contactId = found.id;
+      } catch {}
+    }
+    if (!contactId && customerPhone) {
+      try {
+        const found = await findContactByPhone(customerPhone);
+        if (found?.id) contactId = found.id;
+      } catch {}
+    }
+
+    // STEP 2 — Determine contact type from Booqable history
+    let contactType = 'lead';
+    if (booqableCustomerId) {
+      try {
+        const { BOOQABLE_LIST_ORDERS } = await import('./booqable.js');
+        const orders = await BOOQABLE_LIST_ORDERS({ customer_id: booqableCustomerId, per_page: 5 });
+        const completedOrders = (orders?.orders || []).filter(o => o.status === 'stopped' || o.status === 'archived');
+        if (completedOrders.length > 0) contactType = 'customer';
+      } catch {}
+    }
+
+    const nameParts = (customerName || '').trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName  = nameParts.slice(1).join(' ') || '';
+
+    // STEP 3 — Create or update GHL contact
+    const newTag = STAGE_TAG_MAP.sent.tag;
+    if (!contactId) {
+      const contactBody = {
+        locationId: LOCATION_ID,
+        firstName,
+        lastName,
+        email:      customerEmail || undefined,
+        phone:      customerPhone ? normalizePhone(customerPhone) : undefined,
+        type:       contactType,
+        tags:       [newTag],
+      };
+      Object.keys(contactBody).forEach(k => contactBody[k] === undefined && delete contactBody[k]);
+      const created = await ghl('POST', '/contacts/', contactBody);
+      contactId = created?.contact?.id || created?.id;
+      console.log(`[GHL] Contact created: ${customerName} (${contactId})`);
+    } else {
+      // Update type; add tag without overwriting existing tags
+      await ghl('PUT', `/contacts/${contactId}`, { type: contactType });
+      await addTags(contactId, [newTag]);
+      console.log(`[GHL] Contact updated: ${contactId}`);
+    }
+
+    if (!contactId) {
+      console.warn('[GHL] syncQuoteToGHL: could not obtain contactId');
+      return { ok: false, error: 'Could not create/find GHL contact' };
+    }
+
+    // STEP 4 — Create opportunity
+    const equipmentSummary = Array.isArray(equipment)
+      ? equipment.map(e => e.name || e.sku).join(', ')
+      : (equipment || 'Equipment');
+    const oppName = `${customerName} — ${equipmentSummary} — ${startDate || ''}`;
+
+    let opportunityId = null;
+    if (_cachedPipelineId) {
+      const stageId = getStageId('quote sent') || getStageId('quote') || Object.values(_cachedStageMap)[0];
+      const opp = await ghl('POST', '/opportunities/', {
+        locationId:      LOCATION_ID,
+        name:            oppName,
+        contactId,
+        pipelineId:      _cachedPipelineId,
+        pipelineStageId: stageId || undefined,
+        status:          'open',
+        monetaryValue:   total || 0,
+      });
+      opportunityId = opp?.opportunity?.id || opp?.id;
+      console.log(`[GHL] Opportunity created: ${oppName} (${opportunityId})`);
+    } else {
+      console.warn('[GHL] No pipeline ID cached — skipping opportunity creation');
+    }
+
+    // STEP 5 — Enroll in workflow
+    await enrollInWorkflow(contactId, 'sent');
+
+    console.log(`[GHL] syncQuoteToGHL complete for ${quoteNumber || customerName}`);
+    return { ok: true, contactId, opportunityId };
+  } catch (e) {
+    console.error('[GHL] syncQuoteToGHL error:', e.message);
+    return { ok: false, error: e.message };
+  }
+}
+
+// ─── GHL STAGE ADVANCEMENT ────────────────────────────────────
+// Call this when a quote's status changes: sent → negotiation → booked → lost → expired
+export async function updateGHLStage(quoteNumber, newStage, contactId = null) {
+  try {
+    await ensurePipelineCache();
+
+    const stageConfig = STAGE_TAG_MAP[newStage.toLowerCase()];
+    if (!stageConfig) {
+      console.warn(`[GHL] updateGHLStage: unknown stage "${newStage}"`);
+      return { ok: false, error: `Unknown stage: ${newStage}` };
+    }
+
+    // Find the opportunity by quoteNumber if contactId not provided
+    let oppId = null;
+    if (_cachedPipelineId) {
+      try {
+        const opps = await ghl('GET', `/opportunities/search?location_id=${LOCATION_ID}&pipeline_id=${_cachedPipelineId}&limit=50`);
+        const all = opps?.opportunities || [];
+        const match = all.find(o => o.name?.includes(quoteNumber));
+        if (match) {
+          oppId = match.id;
+          if (!contactId) contactId = match.contact?.id;
+        }
+      } catch {}
+    }
+
+    const stageId = getStageId(stageConfig.stage.toLowerCase());
+
+    if (oppId) {
+      const updateBody = {};
+      if (stageId) updateBody.pipelineStageId = stageId;
+      if (stageConfig.oppStatus) updateBody.status = stageConfig.oppStatus;
+      await ghl('PUT', `/opportunities/${oppId}`, updateBody);
+      console.log(`[GHL] Opportunity ${oppId} moved to "${stageConfig.stage}"`);
+    }
+
+    // Update contact tags: remove old status tags, add new
+    if (contactId) {
+      try {
+        const contact = await ghl('GET', `/contacts/${contactId}`);
+        const existingTags = contact?.contact?.tags || [];
+        const oldStatusTags = existingTags.filter(t => t.startsWith('status - '));
+        if (oldStatusTags.length > 0) {
+          await removeTags(contactId, oldStatusTags);
+        }
+        await addTags(contactId, [stageConfig.tag]);
+      } catch (e) {
+        console.warn('[GHL] Tag update error:', e.message);
+      }
+    }
+
+    // Enroll in workflow
+    if (contactId) {
+      await enrollInWorkflow(contactId, newStage.toLowerCase());
+    }
+
+    return { ok: true, stage: stageConfig.stage, oppId };
+  } catch (e) {
+    console.error('[GHL] updateGHLStage error:', e.message);
+    return { ok: false, error: e.message };
+  }
+}
+
+// ─── WORKFLOW ENROLLMENT ──────────────────────────────────────
+// workflowKey: 'sent' | 'booked' | 'lost' | 'expired'
+export async function enrollInWorkflow(contactId, workflowKey) {
+  try {
+    await ensureWorkflowCache();
+    const workflowName = WORKFLOW_MAP[workflowKey?.toLowerCase()];
+    if (!workflowName) {
+      console.warn(`[GHL] enrollInWorkflow: no workflow mapped for "${workflowKey}"`);
+      return { ok: false, error: `No workflow for: ${workflowKey}` };
+    }
+
+    const workflow = (_cachedWorkflows || []).find(w =>
+      w.name?.toLowerCase().includes(workflowName.toLowerCase())
+    );
+    if (!workflow) {
+      console.warn(`[GHL] Workflow not found: "${workflowName}" — skipping enrollment`);
+      return { ok: false, error: `Workflow not found: ${workflowName}` };
+    }
+
+    await ghl('POST', `/contacts/${contactId}/workflow/${workflow.id}`, {
+      eventStartTime: new Date().toISOString(),
+    });
+    console.log(`[GHL] Enrolled ${contactId} in workflow "${workflowName}"`);
+    return { ok: true, workflowId: workflow.id, workflowName };
+  } catch (e) {
+    console.warn(`[GHL] enrollInWorkflow error: ${e.message}`);
+    return { ok: false, error: e.message };
+  }
+}
+
 // ─── LEGACY ALIASES ───────────────────────────────────────────
 export async function addTag(contactId, tags = []) {
   return addTags(contactId, tags);
@@ -656,3 +914,7 @@ export function ghlRoutes(app) {
 }
 
 export { PHONES, LOCATION_ID, GHL_API };
+
+// Cache pipeline and workflows on module load (non-blocking)
+ensurePipelineCache().catch(() => {});
+ensureWorkflowCache().catch(() => {});

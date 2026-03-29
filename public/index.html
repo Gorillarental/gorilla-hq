@@ -297,6 +297,17 @@ tr:hover td{background:var(--bg);}
           </div>
         </div>
       </div>
+      <!-- GHL Pipeline Panel -->
+      <div class="card" id="pipeline-panel" style="margin-bottom:18px">
+        <div class="card-header">
+          <span class="card-title">Sales Pipeline</span>
+          <span class="card-sub" id="pipeline-last-updated">loading...</span>
+          <button class="btn sm" onclick="loadPipelineStats(true)" style="margin-left:auto">Refresh</button>
+        </div>
+        <div id="pipeline-stats-body">
+          <div class="empty-state">Loading pipeline data...</div>
+        </div>
+      </div>
       <div class="section-label">AI Agents</div>
       <div class="agents-grid" id="agents-grid"></div>
       <div class="dash-grid">
@@ -622,12 +633,79 @@ async function loadDash(){
   // Activity preview
   const act=await api('GET','/api/activity?limit=5');
   renderActivity('dash-activity',act.logs??[]);
+
+  // Pipeline stats (GHL)
+  loadPipelineStats().catch(()=>{});
 }
 
 function setStat(cardId,valId,val,cls){
   document.getElementById(valId).textContent=val;
   document.getElementById(cardId).className='stat'+(cls?' '+cls:'');
 }
+
+// ─────────────────────────────────────────────────────────────
+// PIPELINE STATS (GHL + outcomes)
+// ─────────────────────────────────────────────────────────────
+async function loadPipelineStats(force=false){
+  try{
+    const data=await api('GET','/pipeline-stats'+(force?'?refresh=1':''));
+    if(!data.ok)return;
+
+    const fv=v=>fmtMoney(v||0);
+    const n=v=>(v||0);
+
+    const lastUpdated=data.cached
+      ?`last updated ${new Date(data.lastUpdated).toLocaleTimeString()}`
+      :`updated just now`;
+    const el=document.getElementById('pipeline-last-updated');
+    if(el)el.textContent=lastUpdated+(data.cacheError?' (GHL error)':'');
+
+    const qsCount=n(data.quoteSent?.count), qsVal=fv(data.quoteSent?.totalValue);
+    const neCount=n(data.negotiation?.count), neVal=fv(data.negotiation?.totalValue);
+    const bkCount=n(data.booked?.count), bkVal=fv(data.booked?.totalValue);
+    const total=fv(data.totalPipeline);
+    const won=fv(data.wonThisMonth);
+    const winRate=data.winRate||'0%';
+    const outcomes=data.outcomes||{};
+
+    const body=document.getElementById('pipeline-stats-body');
+    if(body){
+      body.innerHTML=`
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;padding:12px 0">
+          <div class="stat" style="background:var(--bg-2)">
+            <div class="stat-label">PIPELINE VALUE</div>
+            <div class="stat-value">${total}</div>
+            <div class="stat-hint">total open</div>
+          </div>
+          <div class="stat" style="background:var(--bg-2)">
+            <div class="stat-label">Won This Month</div>
+            <div class="stat-value" style="color:#22c55e">${won}</div>
+            <div class="stat-hint">win rate: ${winRate}</div>
+          </div>
+        </div>
+        <table style="width:100%;font-size:12px;margin-top:4px">
+          <thead><tr><th style="text-align:left">Stage</th><th>Quotes</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Quote Sent</td><td style="text-align:center">${qsCount}</td><td style="text-align:right">${qsVal}</td></tr>
+            <tr><td>Negotiation</td><td style="text-align:center">${neCount}</td><td style="text-align:right">${neVal}</td></tr>
+            <tr><td>Booked</td><td style="text-align:center">${bkCount}</td><td style="text-align:right">${bkVal}</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:18px;font-size:12px;color:var(--text-3)">
+          <span>Won: <strong style="color:#22c55e">${outcomes.won||0}</strong></span>
+          <span>Lost: <strong style="color:#ef4444">${outcomes.lost||0}</strong></span>
+          <span>Expired: <strong style="color:#f59e0b">${outcomes.expired||0}</strong></span>
+          <span>Win rate: <strong>${outcomes.winRate||'0%'}</strong></span>
+        </div>`;
+    }
+  }catch(e){
+    const body=document.getElementById('pipeline-stats-body');
+    if(body)body.innerHTML=`<div class="empty-state" style="color:var(--text-3)">Pipeline data unavailable</div>`;
+  }
+}
+
+// Auto-refresh pipeline stats every 5 minutes
+setInterval(()=>loadPipelineStats(),5*60*1000);
 
 // ─────────────────────────────────────────────────────────────
 // TASKS

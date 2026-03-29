@@ -22,8 +22,9 @@ import { knowledgeRoutes } from './knowledge.js';
 import { loggerRoutes } from './logger.js';
 import { CONFIG } from './config.js';
 import { getPipeline, initDB } from './db.js';
-import { ghlRoutes } from './ghl.js';
+import { ghlRoutes, getOpportunities, getPipelineId } from './ghl.js';
 import { scraperRoutes } from './google-scraper.js';
+import { getOutcomeSummary } from './outcomes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app       = express();
@@ -340,6 +341,60 @@ function startCronJobs() {
     sendReminderIfStale().catch(e => console.error('[Cron] Approval reminder error:', e.message));
   }, 60 * 60 * 1000);
 
+  // Every hour — quote expiry check
+  setInterval(async () => {
+    try {
+      const now = new Date();
+      const { getPipeline, updateJob } = await import('./db.js');
+      const { recordExpiry } = await import('./outcomes.js');
+      const { updateGHLStage, enrollInWorkflow } = await import('./ghl.js');
+      const { logActivity } = await import('./logger.js');
+
+      const pipeline = await getPipeline().catch(() => []);
+      const expiredQuotes = pipeline.filter(j =>
+        j.status === 'sent' && j.expiresAt && new Date(j.expiresAt) < now
+      );
+
+      for (const quote of expiredQuotes) {
+        try {
+          // 1. Update pipeline.json status
+          await updateJob(quote.jobId, { status: 'expired', stage: 'expired', expiredAt: now.toISOString() });
+
+          // 2. Write to quote-outcomes.json
+          await recordExpiry(quote);
+
+          // 3. Update GHL stage
+          await updateGHLStage(quote.jobId || quote.quoteNumber, 'expired');
+
+          // 4. Enroll in Re-engagement workflow
+          if (quote.ghlContactId) {
+            await enrollInWorkflow(quote.ghlContactId, 'expired');
+          }
+
+          // 5. Log
+          await logActivity({
+            agent: 'quote',
+            action: 'quote_expired',
+            description: `Quote expired — ${quote.customerName} — ${quote.jobId}`,
+            jobId: quote.jobId,
+            status: 'info',
+            notify: false,
+          });
+
+          console.log(`[Cron] Quote expired: ${quote.jobId} (${quote.customerName})`);
+        } catch (e) {
+          console.error(`[Cron] Expiry error for ${quote.jobId}: ${e.message}`);
+        }
+      }
+
+      if (expiredQuotes.length > 0) {
+        console.log(`[Cron] Quote expiry sweep: ${expiredQuotes.length} expired`);
+      }
+    } catch (e) {
+      console.error('[Cron] Expiry sweep error:', e.message);
+    }
+  }, 60 * 60 * 1000);
+
   // Daily learning sweep — 2:00 AM
   dailyAt(2, 0, async () => {
     const { dailyLearningSweep } = await import('./knowledge.js');
@@ -401,6 +456,75 @@ app.get('/api/stats', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// ─── Pipeline Stats API (GHL + outcomes) ──────────────────────
+let _pipelineStatsCache = null;
+let _pipelineStatsCacheTime = 0;
+
+app.get('/pipeline-stats', async (req, res) => {
+  try {
+    const now = Date.now();
+    // Cache for 5 minutes unless forced refresh
+    if (_pipelineStatsCache && (now - _pipelineStatsCacheTime) < 5 * 60 * 1000 && !req.query.refresh) {
+      return res.json({ ok: true, ..._pipelineStatsCache, cached: true });
+    }
+
+    // Get GHL opportunities
+    let ghlOpps = [];
+    let pipelineIdUsed = null;
+    try {
+      pipelineIdUsed = await getPipelineId('Gorilla Rental');
+      if (pipelineIdUsed) {
+        ghlOpps = await getOpportunities({ pipelineId: pipelineIdUsed, limit: 100 });
+      }
+    } catch (e) {
+      console.warn('[Pipeline Stats] GHL fetch error:', e.message);
+    }
+
+    // Aggregate by stage
+    const stageStats = {};
+    let totalPipeline = 0;
+    for (const opp of ghlOpps) {
+      if (opp.status !== 'open') continue;
+      const stage = opp.pipelineStage?.name || opp.stage || 'Unknown';
+      if (!stageStats[stage]) stageStats[stage] = { count: 0, totalValue: 0 };
+      stageStats[stage].count++;
+      stageStats[stage].totalValue += opp.monetaryValue || 0;
+      totalPipeline += opp.monetaryValue || 0;
+    }
+
+    // Win/loss from outcomes file
+    const outcomes = getOutcomeSummary();
+
+    const stats = {
+      quoteSent:     stageStats['Quote Sent']   || { count: 0, totalValue: 0 },
+      negotiation:   stageStats['Negotiation']  || { count: 0, totalValue: 0 },
+      booked:        stageStats['Booked']        || { count: 0, totalValue: 0 },
+      totalPipeline,
+      wonThisMonth:  outcomes.wonThisMonth,
+      lostThisMonth: 0, // tracked in outcomes
+      winRate:       outcomes.winRate,
+      outcomes: {
+        won:     outcomes.won,
+        lost:    outcomes.lost,
+        expired: outcomes.expired,
+        winRate: outcomes.winRate,
+      },
+      lastUpdated: new Date().toISOString(),
+    };
+
+    _pipelineStatsCache    = stats;
+    _pipelineStatsCacheTime = now;
+
+    res.json({ ok: true, ...stats });
+  } catch (e) {
+    // Return cached data on error
+    if (_pipelineStatsCache) {
+      return res.json({ ok: true, ..._pipelineStatsCache, cached: true, cacheError: e.message });
+    }
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 // ─── Company onboarding ────────────────────────────────────────
