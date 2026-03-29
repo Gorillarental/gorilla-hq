@@ -524,8 +524,8 @@ ${knowledgeContext ? '\n\nKNOWLEDGE BASE:\n' + knowledgeContext : ''}`;
 
   const messages  = [...history, { role: 'user', content: message }];
   const response  = await client.messages.create({
-    model:      'claude-opus-4-6',
-    max_tokens: 2048,
+    model:      'claude-sonnet-4-6',
+    max_tokens: 1024,
     system:     systemPrompt,
     messages,
     tools:      [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
@@ -544,8 +544,8 @@ ${knowledgeContext ? '\n\nKNOWLEDGE BASE:\n' + knowledgeContext : ''}`;
       ).catch(e => ({ error: e.message }))),
     })));
     const followUp = await client.messages.create({
-      model:      'claude-opus-4-6',
-      max_tokens: 2048,
+      model:      'claude-sonnet-4-6',
+      max_tokens: 1024,
       system:     systemPrompt,
       messages:   [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
       tools:      [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
@@ -574,7 +574,7 @@ ${knowledgeContext ? '\n\nKNOWLEDGE BASE:\n' + knowledgeContext : ''}`;
             { role: 'assistant', content: text },
             { role: 'user', content: `Customer found in Booqable: Name: ${result.name}, Email: ${result.email}, Phone: ${result.phone || 'not on file'}, Address: ${result.address || 'ask for delivery address'}. Now build the quote with the equipment and dates they mentioned.` },
           ];
-          const followUpRes = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages: followUp, tools: BOOQABLE_TOOLS });
+          const followUpRes = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, messages: followUp, tools: BOOQABLE_TOOLS });
           const followUpText = followUpRes.content.filter(b => b.type === 'text').map(b => b.text).join('');
           const followUpAction = extractActionJSON(followUpText);
           if (followUpAction) {

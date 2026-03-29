@@ -69,8 +69,8 @@ export async function scrapeURL(url) {
 // ── extractKnowledgeWithClaude ────────────────────────────────
 async function extractKnowledgeWithClaude(textContent, sourceInfo = '') {
   const response = await client.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 2048,
+    model: 'claude-sonnet-4-6',
+    max_tokens: 1024,
     messages: [{
       role: 'user',
       content: `You are a knowledge extraction expert for Gorilla Rental — an aerial work platform (boom lift & scissor lift) rental company in South Florida.
@@ -275,7 +275,7 @@ export async function learnFromPDF(pdfBuffer, fileName, addedBy = 'system') {
 export async function teach(title, content, category = 'general', addedBy = 'system') {
   try {
     const response = await client.messages.create({
-      model: 'claude-opus-4-6',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       messages: [{
         role: 'user',
@@ -369,7 +369,7 @@ ${relevantKnowledge || 'No directly relevant entries found.'}
 ${context ? `ADDITIONAL CONTEXT:\n${context}` : ''}`;
 
   const response = await client.messages.create({
-    model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt,
+    model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt,
     messages: [{ role: 'user', content: question }],
     tools: MEMORY_TOOLS,
   });
@@ -383,7 +383,7 @@ ${context ? `ADDITIONAL CONTEXT:\n${context}` : ''}`;
       content: JSON.stringify(await dispatchMemoryTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
     })));
     const followUp = await client.messages.create({
-      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: MEMORY_TOOLS,
+      model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, tools: MEMORY_TOOLS,
       messages: [{ role: 'user', content: question }, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
     });
     finalText = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
@@ -428,7 +428,7 @@ ${relevantKnowledge || 'No directly relevant entries found.'}
 ${jobContext ? `JOB CONTEXT:\n${jobContext}` : ''}`;
 
   const response = await client.messages.create({
-    model: 'claude-opus-4-6', max_tokens: 2048, system: engSystemPrompt,
+    model: 'claude-sonnet-4-6', max_tokens: 1024, system: engSystemPrompt,
     messages: [{ role: 'user', content: question }],
     tools: MEMORY_TOOLS,
   });
@@ -442,7 +442,7 @@ ${jobContext ? `JOB CONTEXT:\n${jobContext}` : ''}`;
       content: JSON.stringify(await dispatchMemoryTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
     })));
     const followUp = await client.messages.create({
-      model: 'claude-opus-4-6', max_tokens: 2048, system: engSystemPrompt, tools: MEMORY_TOOLS,
+      model: 'claude-sonnet-4-6', max_tokens: 1024, system: engSystemPrompt, tools: MEMORY_TOOLS,
       messages: [{ role: 'user', content: question }, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
     });
     finalText = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
@@ -647,7 +647,7 @@ export async function weeklyKnowledgeReport() {
   const newEntries = entries.filter(e => new Date(e.learnedAt) >= weekAgo);
 
   const response = await client.messages.create({
-    model: 'claude-opus-4-6',
+    model: 'claude-sonnet-4-6',
     max_tokens: 1536,
     messages: [{
       role: 'user',

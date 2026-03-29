@@ -147,7 +147,7 @@ export async function generateSocialPost(type = 'equipment', options = {}) {
   };
 
   const response = await client.messages.create({
-    model: 'claude-opus-4-6', max_tokens: 512,
+    model: 'claude-sonnet-4-6', max_tokens: 512,
     messages: [{ role: 'user', content: prompts[type] || prompts.equipment }],
   });
 
@@ -175,7 +175,7 @@ export async function generateSocialPost(type = 'equipment', options = {}) {
 
 export async function sendOutreachEmail(contractor) {
   const response = await client.messages.create({
-    model: 'claude-opus-4-6', max_tokens: 512,
+    model: 'claude-sonnet-4-6', max_tokens: 512,
     messages: [{ role: 'user', content: `Write a cold outreach email from Gorilla Rental to a contractor in South Florida.\nContractor: ${contractor.name||'the team'} at ${contractor.company||'their company'}\nIndustry: ${contractor.industry||'general construction'}\nGorilla Rental: Boom lifts up to 125ft, scissor lifts, scaffolding. Fast delivery. Local South Florida team.\nTone: Professional, contractor-to-contractor. Not salesy. 3-4 short paragraphs.\nInclude phone ${CONFIG.BRAND.PHONE} and website ${CONFIG.BRAND.WEBSITE}.\nStart with "Subject: ..." on first line.` }],
   });
 
@@ -206,7 +206,7 @@ export async function generateEquipmentListing(equipmentSku) {
   const eq = EQUIPMENT_CATALOG.find(e => e.sku === equipmentSku);
   if (!eq) throw new Error(`Equipment ${equipmentSku} not found`);
   const response = await client.messages.create({
-    model: 'claude-opus-4-6', max_tokens: 512,
+    model: 'claude-sonnet-4-6', max_tokens: 512,
     messages: [{ role: 'user', content: `Write a Facebook Marketplace rental listing for:\nEquipment: ${eq.name}\nDaily: $${eq.daily||'call'} | Weekly: $${eq.weekly||'call'} | Monthly: $${eq.monthly||'call'}\nCompany: Gorilla Rental — South Florida\nFormat: Title, Description, Key Features (bullets), Pricing, Contact info.\nProfessional and informative. Real contractor language.` }],
   });
   return { equipment: eq, listing: response.content[0].text };
@@ -362,7 +362,7 @@ AVAILABLE ACTIONS:
 {"action":"send_outreach","contactId":"...","message":"..."}
 {"action":"daily_report"}
 {"action":"pipeline_health"}${knowledgeContext ? '\n\nKNOWLEDGE BASE:\n' + knowledgeContext : ''}`;  const messages = [...history, { role: 'user', content: message }];
-  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages, tools: MEMORY_TOOLS });
+  const response = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, messages, tools: MEMORY_TOOLS });
 
   // ── Memory tool calls ────────────────────────────────────────
   if (response.stop_reason === 'tool_use') {
@@ -373,7 +373,7 @@ AVAILABLE ACTIONS:
       content:     JSON.stringify(await dispatchMemoryTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
     })));
     const followUp = await client.messages.create({
-      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: MEMORY_TOOLS,
+      model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, tools: MEMORY_TOOLS,
       messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
     });
     const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');

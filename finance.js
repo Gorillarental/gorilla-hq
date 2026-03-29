@@ -394,7 +394,7 @@ BOOQABLE TOOLS: Use BOOQABLE_GET_ORDER, BOOQABLE_LIST_ORDERS, BOOQABLE_UPDATE_OR
 
 MEMORY TOOLS: Use MEMORY_SEARCH to recall payment history, customer flags, or past overdue incidents. Use MEMORY_ADD after every escalation, extension, or payment received — build the customer financial history.${knowledgeContext ? '\n\nKNOWLEDGE BASE:\n' + knowledgeContext : ''}`
   const messages = [...history, { role: 'user', content: message }];
-  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS] });
+  const response = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, messages, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS] });
 
   // ── Tool calls (Booqable + Memory) ───────────────────────────
   if (response.stop_reason === 'tool_use') {
@@ -409,7 +409,7 @@ MEMORY TOOLS: Use MEMORY_SEARCH to recall payment history, customer flags, or pa
       ).catch(e => ({ error: e.message }))),
     })));
     const followUp = await client.messages.create({
-      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
+      model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
       messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
     });
     const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');

@@ -427,7 +427,7 @@ export async function processReceipt(fileBuffer, fileName, mimeType, metadata = 
       try {
         const base64 = fileBuffer.toString('base64');
         const response = await client.messages.create({
-          model:      'claude-opus-4-6',
+          model:      'claude-sonnet-4-6',
           max_tokens: 512,
           messages: [{
             role: 'user',
@@ -726,7 +726,7 @@ THIS MONTH SO FAR:
 
 async function callClaude(prompt) {
   const response = await client.messages.create({
-    model:      'claude-opus-4-6',
+    model:      'claude-sonnet-4-6',
     max_tokens: 1024,
     messages:   [{ role: 'user', content: prompt }],
   });
@@ -1033,7 +1033,7 @@ BOOQABLE TOOLS: Use BOOQABLE_SEARCH_CUSTOMERS, BOOQABLE_CREATE_ORDER, BOOQABLE_L
 MEMORY TOOLS: Use MEMORY_SEARCH at the start of any job conversation to recall history. Use MEMORY_ADD after every significant action: project created, contract sent, deposit received, invoice issued, expense logged.${knowledgeContext ? '\n\nKNOWLEDGE BASE:\n' + knowledgeContext : ''}`
 
   const messages = [...history, { role: 'user', content: message }];
-  const response = await client.messages.create({ model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, messages, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS] });
+  const response = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, messages, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS] });
 
   // ── Tool calls (Booqable + Memory) ───────────────────────────
   if (response.stop_reason === 'tool_use') {
@@ -1048,7 +1048,7 @@ MEMORY TOOLS: Use MEMORY_SEARCH at the start of any job conversation to recall h
       ).catch(e => ({ error: e.message }))),
     })));
     const followUp = await client.messages.create({
-      model: 'claude-opus-4-6', max_tokens: 2048, system: systemPrompt, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
+      model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
       messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
     });
     const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
