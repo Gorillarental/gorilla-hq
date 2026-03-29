@@ -335,14 +335,16 @@ Quote statuses to track mentally: New Inquiry → Identifying Contact → Awaiti
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STEP 2 — IDENTIFY THE CONTACT (always first)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Before pricing anything, find who this is.
-1. Search Booqable using BOOQABLE_SEARCH_CUSTOMERS (by phone, email, name, or company).
+Before pricing anything, find who this is. Follow this EXACT sequence — no skipping:
+1. Call BOOQABLE_FIND_OR_CONFIRM_CUSTOMER with name and/or email.
+   - If it returns { found: true, requiresConfirmation: true } → return that result immediately. HQ will pause and ask the user to confirm. Do NOT proceed.
+   - If it returns { found: false } → safe to continue.
 2. Search memory using MEMORY_SEARCH to recall previous interactions.
 
-Case A — Exact match found → use that record, note any history.
-Case B — Multiple similar matches → flag as "possible duplicate contact", show top matches, ask which one to use. Never guess.
-Case C — No match found → create a new contact in Booqable using BOOQABLE_CREATE_CUSTOMER. Minimum data: name, phone, email (if available), company (if available).
+Case A — BOOQABLE_FIND_OR_CONFIRM_CUSTOMER returns a match → surface it and wait for confirmation.
+Case B — No match found → create a new contact using BOOQABLE_CREATE_CUSTOMER. Minimum data: name, phone, email (if available), company (if available).
 
+RULE: NEVER call BOOQABLE_CREATE_CUSTOMER without first calling BOOQABLE_FIND_OR_CONFIRM_CUSTOMER. No exceptions.
 RULE: Never let a quote proceed without a confirmed contact record. No contact = no quote.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

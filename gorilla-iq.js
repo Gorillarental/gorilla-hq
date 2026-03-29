@@ -21,6 +21,10 @@ const contexts = new Map(); // chatId → { history, agent, lastAt, lastAgentRep
 
 const STICKY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
+// ─── Pending customer confirmation store ─────────────────────
+// chatId → { customer, pendingQuoteData, agent }
+const pendingConfirmations = new Map();
+
 function getContext(chatId) {
   if (!contexts.has(chatId)) {
     contexts.set(chatId, { history: [], agent: null, lastAt: Date.now(), awaitingReply: false });
@@ -279,10 +283,65 @@ async function autoCreateTask(agent, action, result) {
   }).catch(() => {});
 }
 
+// ─── Customer confirmation flow ───────────────────────────────
+
+function formatCustomer(c) {
+  const parts = [c.name];
+  if (c.email) parts.push(c.email);
+  if (c.phone) parts.push(c.phone);
+  return parts.join(' — ');
+}
+
+function handleCustomerConfirmationReply(message, pending) {
+  const lower = message.toLowerCase().trim();
+  // "use existing", "yes", "use this", "that one", etc.
+  if (/\b(yes|use|existing|that|him|her|them|ok|okay|correct|right)\b/.test(lower)) {
+    return 'use_existing';
+  }
+  // "create new", "new one", "no", "different", etc.
+  if (/\b(no|new|create|different|fresh|another)\b/.test(lower)) {
+    return 'create_new';
+  }
+  return null; // ambiguous — re-ask
+}
+
 // ─── Main entry point ─────────────────────────────────────────
 export async function gorillaIQ(message, chatId) {
   // Ensure context exists so getStickyAgent can read it
   getContext(chatId);
+
+  // ── Customer confirmation pending? Handle it first ──────────
+  const pending = pendingConfirmations.get(chatId);
+  if (pending) {
+    const decision = handleCustomerConfirmationReply(message, pending);
+    if (decision === 'use_existing') {
+      pendingConfirmations.delete(chatId);
+      // Resume the original agent with the confirmed customer injected into context
+      const resumeMsg = `Use existing customer: ${pending.customer.name} (ID: ${pending.customer.id}). Continue with: ${pending.originalMessage}`;
+      const history   = await loadHistory(chatId, pending.agent);
+      const result    = await callAgent(pending.agent, resumeMsg, history);
+      const reply     = result?.reply || result?.text || '✅ Got it — using existing record.';
+      await pushContext(chatId, pending.agent, 'user', message);
+      await pushContext(chatId, pending.agent, 'assistant', reply);
+      setContextAgent(chatId, pending.agent, reply.trimEnd().endsWith('?'));
+      return { agent: pending.agent, intent: 'customer_confirmed', reply, action: result?.action || null, agentResult: result?.result || null };
+    }
+    if (decision === 'create_new') {
+      pendingConfirmations.delete(chatId);
+      // Resume with explicit create-new instruction
+      const resumeMsg = `Create a NEW customer (do not use the existing record). Then continue with: ${pending.originalMessage}`;
+      const history   = await loadHistory(chatId, pending.agent);
+      const result    = await callAgent(pending.agent, resumeMsg, history);
+      const reply     = result?.reply || result?.text || '✅ Creating a new record.';
+      await pushContext(chatId, pending.agent, 'user', message);
+      await pushContext(chatId, pending.agent, 'assistant', reply);
+      setContextAgent(chatId, pending.agent, reply.trimEnd().endsWith('?'));
+      return { agent: pending.agent, intent: 'customer_create_new', reply, action: result?.action || null, agentResult: result?.result || null };
+    }
+    // Ambiguous — re-ask
+    const reAsk = `I need a clear answer — should I use the existing record for ${formatCustomer(pending.customer)}, or create a new one?`;
+    return { agent: pending.agent, intent: 'customer_confirm_reask', reply: reAsk, action: null, agentResult: null };
+  }
 
   // Use sticky agent if mid-conversation, otherwise classify fresh
   const stickyAgent = getStickyAgent(chatId);
@@ -302,6 +361,20 @@ export async function gorillaIQ(message, chatId) {
 
   // Call agent
   const result = await callAgent(agent, message, history);
+
+  // ── Check if agent found an existing customer and needs confirmation ──
+  if (result?.requiresConfirmation && result?.customer) {
+    pendingConfirmations.set(chatId, {
+      customer:        result.customer,
+      agent,
+      originalMessage: message,
+    });
+    const c     = result.customer;
+    const reply = `I found an existing record: <b>${formatCustomer(c)}</b>\n\nUse this existing record, or create a new one?`;
+    setContextAgent(chatId, agent, true); // treat as awaiting reply
+    return { agent, intent, reply, action: null, agentResult: null };
+  }
+
   const reply  = result?.reply || result?.text || result?.message
     || (typeof result === 'string' ? result : null)
     || '⚠️ No response from agent';

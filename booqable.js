@@ -48,6 +48,51 @@ export async function BOOQABLE_DELETE_CUSTOMER({ id }) {
   return bq('DELETE', `/customers/${id}`);
 }
 
+// ─── Find-or-confirm customer (always search before creating) ──
+//
+// Returns one of:
+//   { found: false }                                    → safe to create
+//   { found: true, customer, requiresConfirmation: true } → ask user first
+//
+export async function findOrConfirmCustomer({ name, email }) {
+  // 1. Search by email
+  if (email) {
+    const byEmail = await BOOQABLE_SEARCH_CUSTOMERS({ q: email, per_page: 5 });
+    const hit = byEmail?.customers?.find(c =>
+      c.email?.toLowerCase() === email.toLowerCase()
+    );
+    if (hit) return { found: true, customer: hit, requiresConfirmation: true };
+  }
+
+  if (name) {
+    // 2. Search by full name
+    const byFullName = await BOOQABLE_SEARCH_CUSTOMERS({ q: name, per_page: 10 });
+    if (byFullName?.customers?.length) {
+      const exact = byFullName.customers.find(
+        c => c.name?.toLowerCase() === name.toLowerCase()
+      );
+      const hit = exact || byFullName.customers[0];
+      return { found: true, customer: hit, requiresConfirmation: true };
+    }
+
+    // 3. Search by partial name (first name only)
+    const firstName = name.trim().split(' ')[0];
+    if (firstName && firstName.length >= 3) {
+      const byFirst = await BOOQABLE_SEARCH_CUSTOMERS({ q: firstName, per_page: 10 });
+      if (byFirst?.customers?.length) {
+        return { found: true, customer: byFirst.customers[0], requiresConfirmation: true };
+      }
+    }
+  }
+
+  return { found: false };
+}
+
+// Exposed as a tool so agents can call it
+export async function BOOQABLE_FIND_OR_CONFIRM_CUSTOMER({ name, email }) {
+  return findOrConfirmCustomer({ name, email });
+}
+
 // ─── Orders ────────────────────────────────────────────────────
 
 export async function BOOQABLE_CREATE_ORDER({ customer_id, starts_at, stops_at, tag_list, note, location_id, deposit_type, deposit_value }) {
@@ -343,8 +388,19 @@ export async function BOOQABLE_UPDATE_COMPANIES({ name, email, phone, website, t
 
 export const BOOQABLE_TOOLS = [
   {
+    name: 'BOOQABLE_FIND_OR_CONFIRM_CUSTOMER',
+    description: 'ALWAYS call this before BOOQABLE_CREATE_CUSTOMER. Searches Booqable by email, then full name, then partial name. Returns { found: false } if safe to create, or { found: true, customer, requiresConfirmation: true } if a match exists — in which case you MUST stop and ask the user whether to use the existing record or create a new one.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name:  { type: 'string', description: 'Full name to search' },
+        email: { type: 'string', description: 'Email to search' },
+      },
+    },
+  },
+  {
     name: 'BOOQABLE_CREATE_CUSTOMER',
-    description: 'Create a new customer in Booqable.',
+    description: 'Create a new customer in Booqable. ONLY call this after BOOQABLE_FIND_OR_CONFIRM_CUSTOMER returns { found: false }, or after the user explicitly confirms they want a new record.',
     input_schema: {
       type: 'object',
       properties: {
@@ -928,6 +984,7 @@ export const BOOQABLE_TOOLS = [
 //   const result = await dispatchBooqableTool(toolUse.name, toolUse.input);
 
 const BOOQABLE_FN_MAP = {
+  BOOQABLE_FIND_OR_CONFIRM_CUSTOMER,
   BOOQABLE_CREATE_CUSTOMER,       BOOQABLE_GET_CUSTOMER,
   BOOQABLE_GET_CUSTOMERS,         BOOQABLE_SEARCH_CUSTOMERS,
   BOOQABLE_DELETE_CUSTOMER,       BOOQABLE_CREATE_ORDER,
