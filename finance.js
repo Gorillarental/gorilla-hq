@@ -398,9 +398,13 @@ MEMORY TOOLS: Use MEMORY_SEARCH to recall payment history, customer flags, or pa
   const response = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, messages, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS] });
 
   // ── Tool calls (Booqable + Memory) ───────────────────────────
-  if (response.stop_reason === 'tool_use') {
-    const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
-    const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
+  const allToolCalls = [];
+  let   current      = response;
+  let   thread       = [...messages];
+  for (let round = 0; round < 6 && current.stop_reason === 'tool_use'; round++) {
+    const toolUseBlocks = current.content.filter(b => b.type === 'tool_use');
+    allToolCalls.push(...toolUseBlocks.map(t => ({ name: t.name, input: t.input })));
+    const toolResults = await Promise.all(toolUseBlocks.map(async tu => ({
       type:        'tool_result',
       tool_use_id: tu.id,
       content:     JSON.stringify(await (
@@ -409,12 +413,12 @@ MEMORY TOOLS: Use MEMORY_SEARCH to recall payment history, customer flags, or pa
         Promise.resolve({ error: `Unknown tool: ${tu.name}` })
       ).catch(e => ({ error: e.message }))),
     })));
-    const followUp = await client.messages.create({
-      model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
-      messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
-    });
-    const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
-    return { text, toolCalls: toolUseBlocks.map(t => ({ name: t.name, input: t.input })) };
+    thread  = [...thread, { role: 'assistant', content: current.content }, { role: 'user', content: toolResults }];
+    current = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, tools: [...BOOQABLE_TOOLS, ...MEMORY_TOOLS], messages: thread });
+  }
+  if (allToolCalls.length > 0) {
+    const text = current.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    return { text, toolCalls: allToolCalls };
   }
 
   // ── Internal action dispatch ─────────────────────────────────

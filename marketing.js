@@ -366,19 +366,23 @@ AVAILABLE ACTIONS:
   const response = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, messages, tools: MEMORY_TOOLS });
 
   // ── Memory tool calls ────────────────────────────────────────
-  if (response.stop_reason === 'tool_use') {
-    const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
-    const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
+  const allToolCalls = [];
+  let   current      = response;
+  let   thread       = [...messages];
+  for (let round = 0; round < 6 && current.stop_reason === 'tool_use'; round++) {
+    const toolUseBlocks = current.content.filter(b => b.type === 'tool_use');
+    allToolCalls.push(...toolUseBlocks.map(t => ({ name: t.name, input: t.input })));
+    const toolResults = await Promise.all(toolUseBlocks.map(async tu => ({
       type:        'tool_result',
       tool_use_id: tu.id,
       content:     JSON.stringify(await dispatchMemoryTool(tu.name, tu.input).catch(e => ({ error: e.message }))),
     })));
-    const followUp = await client.messages.create({
-      model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, tools: MEMORY_TOOLS,
-      messages: [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
-    });
-    const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
-    return { text, toolCalls: toolUseBlocks.map(t => ({ name: t.name, input: t.input })) };
+    thread  = [...thread, { role: 'assistant', content: current.content }, { role: 'user', content: toolResults }];
+    current = await client.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, tools: MEMORY_TOOLS, messages: thread });
+  }
+  if (allToolCalls.length > 0) {
+    const text = current.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    return { text, toolCalls: allToolCalls };
   }
 
   const text     = response.content.filter(b => b.type === 'text').map(b => b.text).join('');

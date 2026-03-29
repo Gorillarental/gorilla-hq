@@ -534,27 +534,39 @@ ${knowledgeContext ? '\n\nKNOWLEDGE BASE:\n' + knowledgeContext : ''}`;
     tools:      [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
   });
 
-  // ── Tool calls (Booqable + Memory) ───────────────────────────
-  if (response.stop_reason === 'tool_use') {
-    const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
-    const toolResults   = await Promise.all(toolUseBlocks.map(async tu => ({
+  // ── Tool call loop (handles multi-round tool use) ────────────
+  const allToolCalls = [];
+  let   current      = response;
+  let   thread       = [...messages];
+  const MAX_ROUNDS   = 6;
+
+  for (let round = 0; round < MAX_ROUNDS && current.stop_reason === 'tool_use'; round++) {
+    const toolUseBlocks = current.content.filter(b => b.type === 'tool_use');
+    allToolCalls.push(...toolUseBlocks.map(t => ({ name: t.name, input: t.input })));
+
+    const toolResults = await Promise.all(toolUseBlocks.map(async tu => ({
       type:        'tool_result',
       tool_use_id: tu.id,
       content:     JSON.stringify(await (
-        tu.name.startsWith('MEMORY_')  ? dispatchMemoryTool(tu.name, tu.input) :
+        tu.name.startsWith('MEMORY_')   ? dispatchMemoryTool(tu.name, tu.input) :
         tu.name.startsWith('BOOQABLE_') ? dispatchBooqableTool(tu.name, tu.input) :
         Promise.resolve({ error: `Unknown tool: ${tu.name}` })
       ).catch(e => ({ error: e.message }))),
     })));
-    const followUp = await client.messages.create({
-      model:      'claude-sonnet-4-6',
+
+    thread = [...thread, { role: 'assistant', content: current.content }, { role: 'user', content: toolResults }];
+    current = await client.messages.create({
+      model:   'claude-sonnet-4-6',
       max_tokens: 1024,
-      system:     systemPrompt,
-      messages:   [...messages, { role: 'assistant', content: response.content }, { role: 'user', content: toolResults }],
-      tools:      [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
+      system:  systemPrompt,
+      messages: thread,
+      tools:   [...BOOQABLE_TOOLS, ...MEMORY_TOOLS],
     });
-    const text = followUp.content.filter(b => b.type === 'text').map(b => b.text).join('');
-    return { text, toolCalls: toolUseBlocks.map(t => ({ name: t.name, input: t.input })) };
+  }
+
+  if (allToolCalls.length > 0) {
+    const text = current.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    return { text, toolCalls: allToolCalls };
   }
 
   // ── Internal action dispatch ─────────────────────────────────
