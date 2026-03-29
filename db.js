@@ -15,6 +15,25 @@ const CASHFLOW_FILE  = path.join(__dirname, 'data/cashflow.json');
 
 let pool = null;
 
+// ─── Fallback tracking ──────────────────────────────────────
+let _fallbackCount = 0;
+
+export function recordFallback() {
+  _fallbackCount++;
+  if (_fallbackCount === 3) {
+    // Lazy import to avoid circular dep
+    import('./telegram.js').then(({ sendTelegram }) => {
+      sendTelegram('⚠️ <b>Database Alert</b>\nPostgreSQL has been unavailable for 3+ consecutive operations. System is running on JSON fallback. Data may be inconsistent.').catch(() => {});
+    }).catch(() => {});
+  }
+}
+
+export function resetFallbackCount() { _fallbackCount = 0; }
+
+export function getDataSource() {
+  return getPool() ? 'postgresql' : 'json';
+}
+
 function getPool() {
   if (!pool && process.env.DATABASE_URL) {
     pool = new Pool({
@@ -23,6 +42,24 @@ function getPool() {
     });
   }
   return pool;
+}
+
+// ─── DB health check ───────────────────────────────────────
+export async function checkDBHealth() {
+  const p = getPool();
+  if (!p) {
+    console.warn('[DB] ⚠️ PostgreSQL pool not initialized — using JSON fallback');
+    return false;
+  }
+  try {
+    await p.query('SELECT 1');
+    console.log('[DB] ✅ PostgreSQL connected');
+    resetFallbackCount();
+    return true;
+  } catch (e) {
+    console.error('[DB] ❌ PostgreSQL health check failed:', e.message);
+    return false;
+  }
 }
 
 // ─── File fallback helpers ─────────────────────────────────
@@ -94,7 +131,7 @@ export async function initDB() {
 // ─── Get all jobs ──────────────────────────────────────────
 export async function getPipeline() {
   const p = getPool();
-  if (!p) return fileRead();
+  if (!p) { console.warn('[DB] PostgreSQL unavailable — falling back to JSON. Data may be stale.'); recordFallback(); return fileRead(); }
   const { rows } = await p.query(
     "SELECT data FROM pipeline ORDER BY (data->>'createdAt') ASC"
   );
@@ -105,6 +142,7 @@ export async function getPipeline() {
 export async function upsertJob(job) {
   const p = getPool();
   if (!p) {
+    console.warn('[DB] PostgreSQL unavailable — falling back to JSON. Data may be stale.'); recordFallback();
     const pipeline = fileRead();
     const idx = pipeline.findIndex(j => j.jobId === job.jobId);
     if (idx >= 0) pipeline[idx] = job; else pipeline.push(job);

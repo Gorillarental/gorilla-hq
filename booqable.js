@@ -6,6 +6,7 @@
 // ============================================================
 
 import { CONFIG } from './config.js';
+import { callWithBreaker } from './circuit-breaker.js';
 
 function booqableHeaders() {
   return {
@@ -16,15 +17,17 @@ function booqableHeaders() {
 
 // Core request helper — uses boomerang API base URL
 async function bq(method, path, body) {
-  const url = `${CONFIG.BOOQABLE.BASE_URL}${path}`;
-  const opts = { method, headers: booqableHeaders() };
-  if (body) opts.body = JSON.stringify(body);
-  const res  = await fetch(url, opts);
-  const text = await res.text();
-  let data;
-  try { data = JSON.parse(text); } catch { data = { raw: text }; }
-  if (!res.ok) throw new Error(`Booqable ${method} ${path} → ${res.status}: ${text.slice(0, 400)}`);
-  return data;
+  return callWithBreaker('booqable', async () => {
+    const url = `${CONFIG.BOOQABLE.BASE_URL}${path}`;
+    const opts = { method, headers: booqableHeaders() };
+    if (body) opts.body = JSON.stringify(body);
+    const res  = await fetch(url, opts);
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    if (!res.ok) throw new Error(`Booqable ${method} ${path} → ${res.status}: ${text.slice(0, 400)}`);
+    return data;
+  });
 }
 
 // Normalize boomerang JSON:API response to flat object(s)
@@ -122,6 +125,39 @@ export async function BOOQABLE_DELETE_CUSTOMER({ id }) {
   return bq('DELETE', `/customers/${id}`);
 }
 
+// ─── Customer match scoring ─────────────────────────────────────
+// Returns a confidence score: >=40 means a meaningful match.
+// Email exact match = 100, full name exact = 80, contains = 30-40,
+// first/last name partial = 20-25.
+function scoreCustomerMatch(customer, searchName, searchEmail) {
+  let score = 0;
+  const cName  = (customer.name  || '').toLowerCase().trim();
+  const cEmail = (customer.email || '').toLowerCase().trim();
+  const sName  = (searchName  || '').toLowerCase().trim();
+  const sEmail = (searchEmail || '').toLowerCase().trim();
+
+  // Email exact match = highest confidence
+  if (sEmail && cEmail === sEmail) score += 100;
+
+  // Full name exact match
+  if (sName && cName === sName) score += 80;
+
+  // Full name contains (both directions) — only if name is long enough (>4 chars)
+  if (sName && sName.length > 4) {
+    if (cName.includes(sName)) score += 40;
+    if (sName.includes(cName) && cName.length > 4) score += 30;
+  }
+
+  // First name match (only if first name is >3 chars to avoid "Bob" matching everything)
+  const nameParts = sName.split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName  = nameParts.slice(1).join(' ');
+  if (firstName.length > 3 && cName.startsWith(firstName)) score += 20;
+  if (lastName.length  > 3 && cName.includes(lastName))    score += 25;
+
+  return score;
+}
+
 // ─── Find-or-confirm customer (always search before creating) ──
 //
 // Returns one of:
@@ -130,21 +166,31 @@ export async function BOOQABLE_DELETE_CUSTOMER({ id }) {
 //   { found: true, customers: [...], requiresConfirmation: true } → multiple matches
 //
 export async function findOrConfirmCustomer({ name, email }) {
+  const MATCH_THRESHOLD = 40;
+
   // Step 1: Search by email using boomerang filter endpoint
   if (email) {
     try {
       const byEmail = await BOOQABLE_SEARCH_CUSTOMERS_BY_EMAIL({ email });
       const customers = byEmail?.customers || [];
-      const hit = customers.find(c =>
-        c.email?.toLowerCase() === email.toLowerCase()
-      );
-      if (hit) return { found: true, customer: hit, requiresConfirmation: true };
+      const scored = customers
+        .map(c => ({ c, score: scoreCustomerMatch(c, name, email) }))
+        .filter(({ score }) => score >= MATCH_THRESHOLD)
+        .sort((a, b) => b.score - a.score);
+      if (scored.length) {
+        console.log(`[Booqable] Email match score: ${scored[0].score} for ${scored[0].c.name}`);
+        return { found: true, customer: scored[0].c, requiresConfirmation: true };
+      }
       // Also try general search with email as query
       const byQ = await BOOQABLE_SEARCH_CUSTOMERS({ q: email, per_page: 5 });
-      const qHit = (byQ?.customers || []).find(c =>
-        c.email?.toLowerCase() === email.toLowerCase()
-      );
-      if (qHit) return { found: true, customer: qHit, requiresConfirmation: true };
+      const qScored = (byQ?.customers || [])
+        .map(c => ({ c, score: scoreCustomerMatch(c, name, email) }))
+        .filter(({ score }) => score >= MATCH_THRESHOLD)
+        .sort((a, b) => b.score - a.score);
+      if (qScored.length) {
+        console.log(`[Booqable] Email Q-match score: ${qScored[0].score} for ${qScored[0].c.name}`);
+        return { found: true, customer: qScored[0].c, requiresConfirmation: true };
+      }
     } catch (e) {
       console.warn('[Booqable] Email search error:', e.message);
     }
@@ -156,12 +202,18 @@ export async function findOrConfirmCustomer({ name, email }) {
       const byFullName = await BOOQABLE_SEARCH_CUSTOMERS_BY_NAME({ name });
       const customers = byFullName?.customers || [];
       if (customers.length) {
-        const exact = customers.find(c => c.name?.toLowerCase() === name.toLowerCase());
-        const hit = exact || customers[0];
-        if (customers.length > 1) {
-          return { found: true, customers, requiresConfirmation: true };
+        const scored = customers
+          .map(c => ({ c, score: scoreCustomerMatch(c, name, email) }))
+          .filter(({ score }) => score >= MATCH_THRESHOLD)
+          .sort((a, b) => b.score - a.score);
+        if (scored.length > 1) {
+          console.log(`[Booqable] Name search: ${scored.length} matches, top score ${scored[0].score}`);
+          return { found: true, customers: scored.map(s => s.c), requiresConfirmation: true };
         }
-        return { found: true, customer: hit, requiresConfirmation: true };
+        if (scored.length === 1) {
+          console.log(`[Booqable] Name match score: ${scored[0].score} for ${scored[0].c.name}`);
+          return { found: true, customer: scored[0].c, requiresConfirmation: true };
+        }
       }
     } catch (e) {
       console.warn('[Booqable] Name search error:', e.message);
@@ -172,10 +224,17 @@ export async function findOrConfirmCustomer({ name, email }) {
       const byQ = await BOOQABLE_SEARCH_CUSTOMERS({ q: name, per_page: 10 });
       const customers = byQ?.customers || [];
       if (customers.length) {
-        if (customers.length > 1) {
-          return { found: true, customers, requiresConfirmation: true };
+        const scored = customers
+          .map(c => ({ c, score: scoreCustomerMatch(c, name, email) }))
+          .filter(({ score }) => score >= MATCH_THRESHOLD)
+          .sort((a, b) => b.score - a.score);
+        if (scored.length > 1) {
+          return { found: true, customers: scored.map(s => s.c), requiresConfirmation: true };
         }
-        return { found: true, customer: customers[0], requiresConfirmation: true };
+        if (scored.length === 1) {
+          console.log(`[Booqable] Q-search match score: ${scored[0].score} for ${scored[0].c.name}`);
+          return { found: true, customer: scored[0].c, requiresConfirmation: true };
+        }
       }
     } catch {}
 
@@ -186,10 +245,17 @@ export async function findOrConfirmCustomer({ name, email }) {
         const byFirst = await BOOQABLE_SEARCH_CUSTOMERS({ q: firstName, per_page: 10 });
         const customers = byFirst?.customers || [];
         if (customers.length) {
-          if (customers.length > 1) {
-            return { found: true, customers, requiresConfirmation: true };
+          const scored = customers
+            .map(c => ({ c, score: scoreCustomerMatch(c, name, email) }))
+            .filter(({ score }) => score >= MATCH_THRESHOLD)
+            .sort((a, b) => b.score - a.score);
+          if (scored.length > 1) {
+            return { found: true, customers: scored.map(s => s.c), requiresConfirmation: true };
           }
-          return { found: true, customer: customers[0], requiresConfirmation: true };
+          if (scored.length === 1) {
+            console.log(`[Booqable] First-name match score: ${scored[0].score} for ${scored[0].c.name}`);
+            return { found: true, customer: scored[0].c, requiresConfirmation: true };
+          }
         }
       } catch {}
     }
@@ -203,10 +269,17 @@ export async function findOrConfirmCustomer({ name, email }) {
           const byLast = await BOOQABLE_SEARCH_CUSTOMERS({ q: lastName, per_page: 10 });
           const customers = byLast?.customers || [];
           if (customers.length) {
-            if (customers.length > 1) {
-              return { found: true, customers, requiresConfirmation: true };
+            const scored = customers
+              .map(c => ({ c, score: scoreCustomerMatch(c, name, email) }))
+              .filter(({ score }) => score >= MATCH_THRESHOLD)
+              .sort((a, b) => b.score - a.score);
+            if (scored.length > 1) {
+              return { found: true, customers: scored.map(s => s.c), requiresConfirmation: true };
             }
-            return { found: true, customer: customers[0], requiresConfirmation: true };
+            if (scored.length === 1) {
+              console.log(`[Booqable] Last-name match score: ${scored[0].score} for ${scored[0].c.name}`);
+              return { found: true, customer: scored[0].c, requiresConfirmation: true };
+            }
           }
         } catch {}
       }

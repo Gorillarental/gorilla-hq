@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { isQuietHours, quietHoursBlock } from './quietHours.js';
+import { callWithBreaker } from './circuit-breaker.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GHL_API     = process.env.GHL_API_URL     || 'https://services.leadconnectorhq.com';
@@ -24,11 +25,18 @@ const PHONES = {
   andrei: '+15619286999',
 };
 
-const GHL_HEADERS = {
-  'Authorization': `Bearer ${API_KEY}`,
-  'Content-Type':  'application/json',
-  'Version':       GHL_VERSION,
-};
+// Per-endpoint version headers:
+// Conversations API uses 2021-04-15; all other endpoints use 2021-07-28
+function ghlHeaders(version = '2021-07-28') {
+  return {
+    'Authorization': `Bearer ${API_KEY}`,
+    'Content-Type':  'application/json',
+    'Version':       version,
+  };
+}
+
+// Keep backward-compat alias for any direct callers (none expected outside this file)
+const GHL_HEADERS = ghlHeaders();
 
 // ─── Pipeline cache (populated on startup) ─────────────────────
 let _cachedPipelineId  = null;
@@ -89,34 +97,39 @@ const WORKFLOW_MAP = {
 };
 
 // ─── Core request helper ───────────────────────────────────────
-async function ghl(method, endpoint, body = null, retries = 3) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const opts = { method, headers: GHL_HEADERS };
-      if (body) opts.body = JSON.stringify(body);
-      const res  = await fetch(`${GHL_API}${endpoint}`, opts);
-      const text = await res.text();
+// version param: '2021-07-28' (default) or '2021-04-15' (conversations API)
+async function ghl(method, endpoint, body = null, retries = 3, version) {
+  // Auto-detect version from endpoint if not explicitly provided
+  const apiVersion = version || (endpoint.includes('/conversations') ? '2021-04-15' : '2021-07-28');
+  return callWithBreaker('ghl', async () => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const opts = { method, headers: ghlHeaders(apiVersion) };
+        if (body) opts.body = JSON.stringify(body);
+        const res  = await fetch(`${GHL_API}${endpoint}`, opts);
+        const text = await res.text();
 
-      if (res.status === 429) {
-        await new Promise(r => setTimeout(r, 2000 * (i + 1)));
-        continue;
-      }
-
-      if (!res.ok) {
-        console.warn(`[GHL] ${method} ${endpoint} → ${res.status}: ${text.slice(0, 200)}`);
-        if (i < retries - 1) {
-          await new Promise(r => setTimeout(r, 1000));
+        if (res.status === 429) {
+          await new Promise(r => setTimeout(r, 2000 * (i + 1)));
           continue;
         }
-        throw new Error(`GHL ${method} ${endpoint} → ${res.status}`);
-      }
 
-      return text ? JSON.parse(text) : {};
-    } catch (e) {
-      if (i === retries - 1) throw e;
-      await new Promise(r => setTimeout(r, 1000));
+        if (!res.ok) {
+          console.warn(`[GHL] ${method} ${endpoint} → ${res.status}: ${text.slice(0, 200)}`);
+          if (i < retries - 1) {
+            await new Promise(r => setTimeout(r, 1000));
+            continue;
+          }
+          throw new Error(`GHL ${method} ${endpoint} → ${res.status}`);
+        }
+
+        return text ? JSON.parse(text) : {};
+      } catch (e) {
+        if (i === retries - 1) throw e;
+        await new Promise(r => setTimeout(r, 1000));
+      }
     }
-  }
+  });
 }
 
 // ─── PHONE NORMALIZATION ───────────────────────────────────────

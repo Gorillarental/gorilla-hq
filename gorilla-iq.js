@@ -10,6 +10,27 @@ import { dbGetConversation, dbSaveConversation, dbClearConversation } from './db
 import { createTask } from './logger.js';
 import { MEMORY_TOOLS, dispatchMemoryTool } from './memory.js';
 
+// ─── Sticky context persistence helpers ──────────────────────
+async function persistStickyAgent(chatId, agent, awaitingReply) {
+  try {
+    await dbSaveConversation(chatId, '__sticky__', [{
+      role: 'system',
+      content: JSON.stringify({ agent, awaitingReply, savedAt: Date.now() }),
+    }]);
+  } catch {} // Non-fatal
+}
+
+async function loadStickyAgent(chatId) {
+  try {
+    const rows = await dbGetConversation(chatId, '__sticky__');
+    if (!rows?.length) return null;
+    const data = JSON.parse(rows[0].content);
+    // Only valid if saved within 5 minutes
+    if (Date.now() - data.savedAt > 5 * 60 * 1000) return null;
+    return data;
+  } catch { return null; }
+}
+
 const client = new Anthropic({ apiKey: CONFIG.ANTHROPIC_KEY });
 
 // ─── Agents with unlimited persistent memory (DB-backed) ─────
@@ -35,20 +56,36 @@ function getContext(chatId) {
 }
 
 // Returns the sticky agent if the conversation is mid-flow, otherwise null
-function getStickyAgent(chatId) {
+// Falls back to DB-persisted sticky agent if in-memory context is absent
+async function getStickyAgent(chatId) {
   const ctx = contexts.get(chatId);
-  if (!ctx || !ctx.agent) return null;
-  const age = Date.now() - ctx.lastAt;
-  if (age > STICKY_TIMEOUT_MS) return null;   // conversation timed out
-  if (!ctx.awaitingReply) return null;         // agent didn't ask a question
-  return ctx.agent;
+  if (ctx && ctx.agent) {
+    const age = Date.now() - ctx.lastAt;
+    if (age > STICKY_TIMEOUT_MS) return null;  // conversation timed out
+    if (!ctx.awaitingReply) return null;        // agent didn't ask a question
+    return ctx.agent;
+  }
+  // In-memory context absent (restart?) — try DB
+  const persisted = await loadStickyAgent(chatId);
+  if (persisted && persisted.awaitingReply) {
+    // Restore into in-memory context
+    if (!contexts.has(chatId)) contexts.set(chatId, { history: [], agent: null, lastAt: Date.now(), awaitingReply: false });
+    const ctx2 = contexts.get(chatId);
+    ctx2.agent        = persisted.agent;
+    ctx2.awaitingReply = persisted.awaitingReply;
+    ctx2.lastAt       = Date.now();
+    return persisted.agent;
+  }
+  return null;
 }
 
 function setContextAgent(chatId, agent, awaitingReply) {
   const ctx = contexts.get(chatId);
   if (!ctx) return;
-  ctx.agent        = agent;
+  ctx.agent         = agent;
   ctx.awaitingReply = awaitingReply;
+  // Also persist to DB so it survives restarts
+  persistStickyAgent(chatId, agent, awaitingReply).catch(() => {});
 }
 
 export async function clearContext(chatId) {
@@ -344,7 +381,7 @@ export async function gorillaIQ(message, chatId) {
   }
 
   // Use sticky agent if mid-conversation, otherwise classify fresh
-  const stickyAgent = getStickyAgent(chatId);
+  const stickyAgent = await getStickyAgent(chatId);
   let agent, intent;
   if (stickyAgent) {
     agent  = stickyAgent;

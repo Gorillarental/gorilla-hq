@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { sendEmailWithPDF } from './chip.js';
+import { sendTelegram } from './telegram.js';
 
 const __dirname       = path.dirname(fileURLToPath(import.meta.url));
 const APPROVALS_FILE  = path.join(__dirname, 'data', 'approvals.json');
@@ -50,13 +51,15 @@ export async function notifyAndrei(message) {
 
 export async function requestApproval(approvalId, message, metadata = {}) {
   const approvals = loadApprovals();
+  const now = new Date();
 
   const approval = {
-    id:        approvalId,
+    id:         approvalId,
     message,
     metadata,
-    status:    'pending',
-    createdAt: new Date().toISOString(),
+    status:     'pending',
+    createdAt:  now.toISOString(),
+    expiresAt:  new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(), // 24h expiry
     resolvedAt: null,
     reminders:  [],
   };
@@ -64,6 +67,16 @@ export async function requestApproval(approvalId, message, metadata = {}) {
   approvals.push(approval);
   saveApprovals(approvals);
   await dbUpsertApproval(approval).catch(() => {});
+
+  // 12-hour reminder: if still pending after 12h, send Telegram nudge
+  setTimeout(async () => {
+    try {
+      const current = loadApprovals().find(a => a.id === approvalId);
+      if (current && current.status === 'pending') {
+        await sendTelegram(`⏰ <b>Approval pending 12h</b>\nID: ${approvalId}\n\n${message.slice(0, 500)}`);
+      }
+    } catch {}
+  }, 12 * 60 * 60 * 1000);
 
   // Primary: Telegram inline keyboard (tap to approve/deny)
   try {
@@ -118,7 +131,35 @@ export async function denyApproval(approvalId) {
 
 export async function listPendingApprovals() {
   const approvals = await loadApprovalsDB();
-  return approvals.filter(a => a.status === 'pending');
+  const now = new Date();
+  // Filter: pending AND not expired
+  return approvals.filter(a => {
+    if (a.status !== 'pending') return false;
+    if (a.expiresAt && new Date(a.expiresAt) < now) return false;
+    return true;
+  });
+}
+
+// ─── Expire stale approvals ─────────────────────────────────
+
+export async function expireStaleApprovals() {
+  const approvals = loadApprovals();
+  const now = new Date();
+  let changed = false;
+
+  for (const a of approvals) {
+    if (a.status === 'pending' && a.expiresAt && new Date(a.expiresAt) < now) {
+      a.status = 'expired';
+      a.resolvedAt = now.toISOString();
+      changed = true;
+      console.log(`[WhatsApp] Approval expired: ${a.id}`);
+      // Alert Andrei via Telegram
+      await sendTelegram(`⚠️ <b>Approval expired</b>\nID: ${a.id}\n\n${(a.message || '').slice(0, 500)}`).catch(() => {});
+      await dbUpsertApproval(a).catch(() => {});
+    }
+  }
+
+  if (changed) saveApprovals(approvals);
 }
 
 // ─── Stale Reminder ─────────────────────────────────────────

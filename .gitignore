@@ -3,3 +3,23 @@ node_modules/
 npm-debug.log
 .DS_Store
 *.local
+*.log
+
+# Data files with potentially sensitive info (auto-generated at runtime)
+data/pipeline.json
+data/reservations.json
+data/deliveries.json
+data/handoffs.json
+data/quote-outcomes.json
+data/approvals.json
+data/activity-log.json
+data/scrape-log.json
+data/shared-context.json
+data/cashflow.json
+data/leads.json
+data/knowledge.json
+data/payment-links.json
+
+# Keep tracked (no secrets, static reference data):
+# data/drivers.json
+# data/competitors.json

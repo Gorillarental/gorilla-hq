@@ -51,6 +51,30 @@ function writeJSON(fp, data) { fs.writeFileSync(fp, JSON.stringify(data, null, 2
 
 export async function captureLead(data) {
   const leads = readJSON(DATA.leads);
+
+  // Deduplicate by phone or email before creating
+  const phone = (data.phone || data.customerPhone || '').replace(/\D/g, '');
+  const email = (data.email || data.customerEmail || '').toLowerCase().trim();
+
+  const existing = leads.find(l => {
+    const lPhone = (l.phone || '').replace(/\D/g, '');
+    const lEmail = (l.email || '').toLowerCase().trim();
+    return (email && lEmail === email) || (phone.length >= 10 && lPhone === phone);
+  });
+
+  if (existing) {
+    existing.lastContact = new Date().toISOString();
+    existing.source = data.source || existing.source;
+    if (data.notes || data.message) {
+      const newNote = data.notes || data.message;
+      existing.notes = existing.notes ? existing.notes + '\n' + newNote : newNote;
+    }
+    if (data.equipment) existing.equipment = data.equipment;
+    writeJSON(DATA.leads, leads);
+    console.log(`[Marketing] Duplicate lead detected — updated existing: ${existing.id} — ${existing.name}`);
+    return { lead: { ...existing, duplicate: true }, ghlContactId: null };
+  }
+
   const lead  = {
     id:        `LEAD-${Date.now()}`,
     source:    data.source    || 'website',

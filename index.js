@@ -10,6 +10,8 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import multer from 'multer';
+import rateLimit from 'express-rate-limit';
+import { z } from 'zod';
 dotenv.config();
 
 import { sendTelegram, telegramWebhookHandler, notifyAll } from './telegram.js';
@@ -21,7 +23,7 @@ import { marketingRoutes, marketingChat, captureLead, getMarketingStats } from '
 import { knowledgeRoutes } from './knowledge.js';
 import { loggerRoutes } from './logger.js';
 import { CONFIG } from './config.js';
-import { getPipeline, initDB } from './db.js';
+import { getPipeline, initDB, checkDBHealth } from './db.js';
 import { ghlRoutes, getOpportunities, getPipelineId } from './ghl.js';
 import { scraperRoutes } from './google-scraper.js';
 import { getOutcomeSummary } from './outcomes.js';
@@ -31,20 +33,95 @@ const app       = express();
 const PORT      = process.env.PORT || 3000;
 const upload    = multer({ storage: multer.memoryStorage() });
 
+// ─── Rate limiters ─────────────────────────────────────────────
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const chatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: { error: 'Chat rate limit exceeded.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const webhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  message: { error: 'Webhook rate limit exceeded.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.path.includes('/telegram'),
+});
+
+// ─── Input validation middleware ───────────────────────────────
+function validate(schema) {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: 'Invalid input', details: result.error.flatten() });
+    }
+    req.body = result.data;
+    next();
+  };
+}
+
+const leadSchema = z.object({
+  name:     z.string().min(1).max(200).optional(),
+  phone:    z.string().regex(/^[\d\s\-\+\(\)]{7,20}$/).optional(),
+  email:    z.string().email().optional(),
+  interest: z.string().max(500).optional(),
+  source:   z.string().max(100).optional(),
+  equipment: z.string().max(500).optional(),
+  message:  z.string().max(2000).optional(),
+}).passthrough();  // allow extra fields (e.g. customerName, customerEmail)
+
+const chatSchema = z.object({
+  message: z.string().min(1).max(4000),
+  chatId:  z.string().max(100).optional(),
+  agent:   z.string().max(50).optional(),
+  history: z.array(z.any()).optional(),
+}).passthrough();
+
+const depositSchema = z.object({
+  quoteNumber: z.string().regex(/^GR-\d{4}-\d{4}$/),
+}).passthrough();
+
 // ─── Middleware ────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Apply rate limiters
+app.use('/api/', apiLimiter);
+app.use('/chat', chatLimiter);
+app.use('/quote/chat', chatLimiter);
+app.use('/admin/chat', chatLimiter);
+app.use('/ops/chat', chatLimiter);
+app.use('/finance/chat', chatLimiter);
+app.use('/marketing/chat', chatLimiter);
+app.use('/knowledge/chat', chatLimiter);
+app.use('/chip/chat', chatLimiter);
+app.use('/webhook/', webhookLimiter);
+
 // ─── Health ───────────────────────────────────────────────────
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  const { getBreakerStatus } = await import('./circuit-breaker.js');
+  const { getDataSource } = await import('./db.js');
   res.json({
-    ok:        true,
-    service:   'Gorilla Rental AI',
-    version:   '2.0.0',
-    timestamp: new Date().toISOString(),
-    agents:    ['quote', 'admin', 'ops', 'finance', 'marketing', 'knowledge', 'chip'],
+    ok:         true,
+    service:    'Gorilla Rental AI',
+    version:    '2.0.0',
+    timestamp:  new Date().toISOString(),
+    agents:     ['quote', 'admin', 'ops', 'finance', 'marketing', 'knowledge', 'chip'],
+    dataSource: getDataSource(),
+    breakers:   getBreakerStatus(),
   });
 });
 
@@ -97,7 +174,7 @@ app.get('/api/dashboard', async (req, res) => {
 });
 
 // ─── Master chat router ────────────────────────────────────────
-app.post('/chat', async (req, res) => {
+app.post('/chat', validate(chatSchema), async (req, res) => {
   try {
     const { message, agent, history } = req.body;
     if (!message) return res.status(400).json({ ok: false, error: 'message required' });
@@ -131,9 +208,9 @@ function detectAgent(message) {
 }
 
 // ─── Lead intake from website ──────────────────────────────────
-app.post('/lead', async (req, res) => {
+app.post('/lead', validate(leadSchema), async (req, res) => {
   try {
-    const result = await captureLead({ ...req.body, source: 'website' });
+    const result = await captureLead({ ...req.body, source: req.body.source || 'website' });
     res.json({ ok: true, ...result });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
@@ -242,6 +319,9 @@ app.post('/webhook/whatsapp', async (req, res) => {
   }
 });
 
+// Validate deposit-paid endpoint before it reaches admin routes
+app.post('/admin/deposit-paid', validate(depositSchema));
+
 // Multer-wrapped receipt upload (applied at route registration)
 app.post('/admin/receipt', upload.single('file'), async (req, res) => {
   try {
@@ -263,6 +343,18 @@ loggerRoutes(app);
 ghlRoutes(app);
 scraperRoutes(app);
 
+// ─── Cron error alerting helper ────────────────────────────────
+async function runCronJob(label, fn) {
+  try {
+    await fn();
+  } catch (e) {
+    console.error(`[Cron] ${label} failed:`, e.message);
+    try {
+      await sendTelegram(`⚠️ <b>Cron job failed</b>\nJob: ${label}\nError: ${e.message}\nTime: ${new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York' })} ET`);
+    } catch {} // If Telegram also fails, we've done what we can
+  }
+}
+
 // ─── Cron helpers ──────────────────────────────────────────────
 function msUntil(hour, minute = 0) {
   const now = new Date();
@@ -275,10 +367,10 @@ function msUntil(hour, minute = 0) {
 function dailyAt(hour, minute, fn, label) {
   setTimeout(async () => {
     console.log(`[Cron] Running ${label}...`);
-    try { await fn(); } catch (e) { console.error(`[Cron] ${label} error:`, e.message); }
+    await runCronJob(label, fn);
     setInterval(async () => {
       console.log(`[Cron] Running ${label}...`);
-      try { await fn(); } catch (e) { console.error(`[Cron] ${label} error:`, e.message); }
+      await runCronJob(label, fn);
     }, 24 * 60 * 60 * 1000);
   }, msUntil(hour, minute));
 }
@@ -288,13 +380,10 @@ function startCronJobs() {
   console.log('[Cron] Starting scheduled jobs...');
 
   // Reminder sweep every 6 hours (existing)
-  setInterval(async () => {
-    console.log('[Cron] Running reminder sweep...');
-    try {
-      const result = await runReminderSweep();
-      console.log(`[Cron] Sweep: ${result.sent48h?.length || 0} 48h, ${result.sent24h?.length || 0} 24h sent`);
-    } catch (e) { console.error('[Cron] Sweep error:', e.message); }
-  }, 6 * 60 * 60 * 1000);
+  setInterval(() => runCronJob('Finance reminder sweep', async () => {
+    const result = await runReminderSweep();
+    console.log(`[Cron] Sweep: ${result.sent48h?.length || 0} 48h, ${result.sent24h?.length || 0} 24h sent`);
+  }), 6 * 60 * 60 * 1000);
 
   // 7:00 AM — Morning briefing (full version from admin.js)
   dailyAt(7, 0, async () => {
@@ -323,11 +412,10 @@ function startCronJobs() {
   const now = new Date();
   const firstOfNext = new Date(now.getFullYear(), now.getMonth() + 1, 1, 8, 0, 0, 0);
   setTimeout(async function monthlyTick() {
-    console.log('[Cron] Running Monthly Report...');
-    try {
+    await runCronJob('Monthly Report', async () => {
       const { sendMonthlyReport } = await import('./admin.js');
       await sendMonthlyReport();
-    } catch (e) { console.error('[Cron] Monthly report error:', e.message); }
+    });
     // Schedule next one (1st of following month)
     const next = new Date();
     next.setMonth(next.getMonth() + 1, 1);
@@ -335,65 +423,62 @@ function startCronJobs() {
     setTimeout(monthlyTick, next - Date.now());
   }, firstOfNext - Date.now());
 
-  // Every hour — approval reminders (stale approval alerts)
-  setInterval(async () => {
-    const { sendReminderIfStale } = await import('./whatsapp.js');
-    sendReminderIfStale().catch(e => console.error('[Cron] Approval reminder error:', e.message));
-  }, 60 * 60 * 1000);
+  // Every hour — approval reminders + expire stale approvals
+  setInterval(() => runCronJob('Approval reminders', async () => {
+    const { sendReminderIfStale, expireStaleApprovals } = await import('./whatsapp.js');
+    await expireStaleApprovals();
+    await sendReminderIfStale();
+  }), 60 * 60 * 1000);
 
-  // Every hour — quote expiry check
-  setInterval(async () => {
-    try {
-      const now = new Date();
-      const { getPipeline, updateJob } = await import('./db.js');
-      const { recordExpiry } = await import('./outcomes.js');
-      const { updateGHLStage, enrollInWorkflow } = await import('./ghl.js');
-      const { logActivity } = await import('./logger.js');
+  // Every hour — quote expiry check + payment link expiry warnings
+  setInterval(() => runCronJob('Quote & payment expiry sweep', async () => {
+    const now = new Date();
+    const { getPipeline, updateJob } = await import('./db.js');
+    const { recordExpiry } = await import('./outcomes.js');
+    const { updateGHLStage, enrollInWorkflow } = await import('./ghl.js');
+    const { logActivity } = await import('./logger.js');
 
-      const pipeline = await getPipeline().catch(() => []);
-      const expiredQuotes = pipeline.filter(j =>
-        j.status === 'sent' && j.expiresAt && new Date(j.expiresAt) < now
-      );
+    const pipeline = await getPipeline().catch(() => []);
+    const expiredQuotes = pipeline.filter(j =>
+      j.status === 'sent' && j.expiresAt && new Date(j.expiresAt) < now
+    );
 
-      for (const quote of expiredQuotes) {
-        try {
-          // 1. Update pipeline.json status
-          await updateJob(quote.jobId, { status: 'expired', stage: 'expired', expiredAt: now.toISOString() });
-
-          // 2. Write to quote-outcomes.json
-          await recordExpiry(quote);
-
-          // 3. Update GHL stage
-          await updateGHLStage(quote.jobId || quote.quoteNumber, 'expired');
-
-          // 4. Enroll in Re-engagement workflow
-          if (quote.ghlContactId) {
-            await enrollInWorkflow(quote.ghlContactId, 'expired');
-          }
-
-          // 5. Log
-          await logActivity({
-            agent: 'quote',
-            action: 'quote_expired',
-            description: `Quote expired — ${quote.customerName} — ${quote.jobId}`,
-            jobId: quote.jobId,
-            status: 'info',
-            notify: false,
-          });
-
-          console.log(`[Cron] Quote expired: ${quote.jobId} (${quote.customerName})`);
-        } catch (e) {
-          console.error(`[Cron] Expiry error for ${quote.jobId}: ${e.message}`);
-        }
+    for (const quote of expiredQuotes) {
+      try {
+        await updateJob(quote.jobId, { status: 'expired', stage: 'expired', expiredAt: now.toISOString() });
+        await recordExpiry(quote);
+        await updateGHLStage(quote.jobId || quote.quoteNumber, 'expired');
+        if (quote.ghlContactId) await enrollInWorkflow(quote.ghlContactId, 'expired');
+        await logActivity({ agent: 'quote', action: 'quote_expired', description: `Quote expired — ${quote.customerName} — ${quote.jobId}`, jobId: quote.jobId, status: 'info', notify: false });
+        console.log(`[Cron] Quote expired: ${quote.jobId} (${quote.customerName})`);
+      } catch (e) {
+        console.error(`[Cron] Expiry error for ${quote.jobId}: ${e.message}`);
       }
+    }
 
-      if (expiredQuotes.length > 0) {
-        console.log(`[Cron] Quote expiry sweep: ${expiredQuotes.length} expired`);
+    if (expiredQuotes.length > 0) console.log(`[Cron] Quote expiry sweep: ${expiredQuotes.length} expired`);
+
+    // Check payment links expiring in next 5 days
+    const plPath = new URL('./data/payment-links.json', import.meta.url).pathname;
+    try {
+      if (fs.existsSync(plPath)) {
+        const store = JSON.parse(fs.readFileSync(plPath, 'utf8'));
+        const links = store?.links || [];
+        let changed = false;
+        for (const link of links) {
+          if (link.notified) continue;
+          if (new Date(link.warningAt).getTime() < Date.now()) {
+            await sendTelegram(`⚠️ <b>Payment link expiring soon!</b>\nQuote: ${link.quoteNumber}\nAmount: $${link.amount}\nExpires: ${new Date(link.expiresAt).toLocaleDateString()}\nURL: ${link.url}\n\nRegenerate if not yet paid.`);
+            link.notified = true;
+            changed = true;
+          }
+        }
+        if (changed) fs.writeFileSync(plPath, JSON.stringify(store, null, 2));
       }
     } catch (e) {
-      console.error('[Cron] Expiry sweep error:', e.message);
+      console.warn('[Cron] Payment link check error:', e.message);
     }
-  }, 60 * 60 * 1000);
+  }), 60 * 60 * 1000);
 
   // Daily learning sweep — 2:00 AM
   dailyAt(2, 0, async () => {
@@ -411,30 +496,26 @@ function startCronJobs() {
   }
 
   setTimeout(() => {
-    console.log('[Cron] Running daily Google scrape...');
-    import('./google-scraper.js').then(({ scrapeAndAddToGHL }) =>
-      scrapeAndAddToGHL({ maxTotal: 50, maxPerSearch: 5 }).catch(e =>
-        console.error('[Cron] Scrape error:', e.message)
-      )
-    );
-    setInterval(() => {
-      console.log('[Cron] Running daily Google scrape...');
-      import('./google-scraper.js').then(({ scrapeAndAddToGHL }) =>
-        scrapeAndAddToGHL({ maxTotal: 50, maxPerSearch: 5 }).catch(e =>
-          console.error('[Cron] Scrape error:', e.message)
-        )
-      );
-    }, 24 * 60 * 60 * 1000);
+    runCronJob('Daily Google scrape', async () => {
+      const { scrapeAndAddToGHL } = await import('./google-scraper.js');
+      await scrapeAndAddToGHL({ maxTotal: 50, maxPerSearch: 5 });
+    });
+    setInterval(() => runCronJob('Daily Google scrape', async () => {
+      const { scrapeAndAddToGHL } = await import('./google-scraper.js');
+      await scrapeAndAddToGHL({ maxTotal: 50, maxPerSearch: 5 });
+    }), 24 * 60 * 60 * 1000);
   }, getMsUntilHour5());
 
   // Weekly knowledge report — Monday 8:00 AM
   // Check if today is Monday (day 1)
   setInterval(async () => {
     if (new Date().getDay() === 1 && new Date().getHours() === 8 && new Date().getMinutes() < 5) {
-      const { weeklyKnowledgeReport } = await import('./knowledge.js');
-      const { notifyAndrei } = await import('./whatsapp.js');
-      const result = await weeklyKnowledgeReport().catch(e => ({ report: 'Error: ' + e.message }));
-      await notifyAndrei('📚 WEEKLY KNOWLEDGE REPORT\n\n' + result.report).catch(() => {});
+      await runCronJob('Weekly Knowledge Report', async () => {
+        const { weeklyKnowledgeReport } = await import('./knowledge.js');
+        const { notifyAndrei } = await import('./whatsapp.js');
+        const result = await weeklyKnowledgeReport();
+        await notifyAndrei('📚 WEEKLY KNOWLEDGE REPORT\n\n' + result.report).catch(() => {});
+      });
     }
   }, 5 * 60 * 1000); // check every 5 minutes
 
@@ -579,6 +660,7 @@ app.post('/webhook/telegram', telegramWebhookHandler);
 
 // ─── Start ─────────────────────────────────────────────────────
 await initDB();
+await checkDBHealth();
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
 ╔══════════════════════════════════════════════╗

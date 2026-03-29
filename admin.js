@@ -74,6 +74,16 @@ function writeJSON(fp, data) { fs.writeFileSync(fp, JSON.stringify(data, null, 2
 
 // ─── Stripe ────────────────────────────────────────────────
 
+const PAYMENT_LINKS_FILE = path.join(__dirname, 'data/payment-links.json');
+
+function readPaymentLinks() {
+  try {
+    if (!fs.existsSync(PAYMENT_LINKS_FILE)) { fs.writeFileSync(PAYMENT_LINKS_FILE, JSON.stringify({ links: [] }, null, 2)); return { links: [] }; }
+    return JSON.parse(fs.readFileSync(PAYMENT_LINKS_FILE, 'utf8'));
+  } catch { return { links: [] }; }
+}
+function writePaymentLinks(data) { fs.writeFileSync(PAYMENT_LINKS_FILE, JSON.stringify(data, null, 2)); }
+
 async function createStripePaymentLink(amount, metadata = {}) {
   const res = await fetch('https://api.stripe.com/v1/payment_links', {
     method:  'POST',
@@ -93,7 +103,26 @@ async function createStripePaymentLink(amount, metadata = {}) {
     }),
   });
   if (!res.ok) throw new Error(`Stripe: ${await res.text()}`);
-  return (await res.json()).url;
+  const link = await res.json();
+
+  // Track expiry (Stripe links expire after 30 days; warn at 25 days)
+  const now = Date.now();
+  const linkRecord = {
+    url:         link.url,
+    linkId:      link.id,
+    createdAt:   new Date(now).toISOString(),
+    expiresAt:   new Date(now + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    warningAt:   new Date(now + 25 * 24 * 60 * 60 * 1000).toISOString(),
+    amount,
+    type:        metadata.type        || 'payment',
+    quoteNumber: metadata.jobId       || '',
+    notified:    false,
+  };
+  const store = readPaymentLinks();
+  store.links.push(linkRecord);
+  writePaymentLinks(store);
+
+  return link.url;
 }
 
 // ─── Contract HTML ─────────────────────────────────────────

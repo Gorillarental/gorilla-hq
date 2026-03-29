@@ -61,33 +61,66 @@ const BOOQABLE_PRODUCT_IDS = {
   T001:  '3551cc84-26dc-4498-bb43-98c5d0c3e853',
 };
 
+// ─── Customer match scoring (mirrors booqable.js scoreCustomerMatch) ──
+function scoreCustomerMatch(customer, searchName, searchEmail) {
+  let score = 0;
+  const cName  = (customer.name  || '').toLowerCase().trim();
+  const cEmail = (customer.email || '').toLowerCase().trim();
+  const sName  = (searchName  || '').toLowerCase().trim();
+  const sEmail = (searchEmail || '').toLowerCase().trim();
+
+  if (sEmail && cEmail === sEmail) score += 100;
+  if (sName && cName === sName) score += 80;
+  if (sName && sName.length > 4) {
+    if (cName.includes(sName)) score += 40;
+    if (sName.includes(cName) && cName.length > 4) score += 30;
+  }
+  const nameParts = sName.split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName  = nameParts.slice(1).join(' ');
+  if (firstName.length > 3 && cName.startsWith(firstName)) score += 20;
+  if (lastName.length  > 3 && cName.includes(lastName))    score += 25;
+  return score;
+}
+
 // ─── Booqable customer lookup ──────────────────────────────────
 async function lookupBooqableCustomer(query) {
   try {
     const { BASE_URL, API_KEY } = CONFIG.BOOQABLE;
     const q = (query || '').toLowerCase().trim();
-    // Fetch all customers (Booqable v1 filter endpoint has bugs — filter client-side)
-    let page = 1, found = null;
-    while (!found && page <= 5) {
+    // Determine if query looks like an email
+    const isEmail = q.includes('@');
+    let best = null, bestScore = 0;
+
+    let page = 1;
+    while (page <= 5) {
       const res  = await fetch(`${BASE_URL}/customers?per_page=100&page=${page}&api_key=${API_KEY}`);
       const data = await res.json();
       const customers = data?.customers || [];
       if (!customers.length) break;
-      found = customers.find(c =>
-        (c.email && c.email.toLowerCase() === q) ||
-        (c.name  && c.name.toLowerCase().includes(q)) ||
-        (c.properties_attributes?.phone && c.properties_attributes.phone.replace(/\D/g,'').includes(q.replace(/\D/g,'')))
-      );
+
+      for (const c of customers) {
+        // Always include exact phone match (legacy behavior)
+        const phone = c.properties_attributes?.phone || c.phone || '';
+        if (phone && phone.replace(/\D/g,'').includes(q.replace(/\D/g,'')) && q.replace(/\D/g,'').length >= 7) {
+          return { name: c.name, email: c.email, phone, address: c.properties_attributes?.main_address || c.address1 || c.city || '' };
+        }
+        const score = scoreCustomerMatch(c, isEmail ? '' : query, isEmail ? query : '');
+        if (score > bestScore) { bestScore = score; best = c; }
+      }
+
       if (customers.length < 100) break;
       page++;
     }
-    if (!found) return null;
-    const props = found.properties_attributes || {};
+
+    // Require score >= 40 (email or meaningful name match)
+    if (!best || bestScore < 40) return null;
+    const props = best.properties_attributes || {};
     return {
-      name:    found.name,
-      email:   found.email,
-      phone:   props.phone || found.phone || '',
-      address: props.main_address || found.address1 || found.city || '',
+      name:    best.name,
+      email:   best.email,
+      phone:   props.phone || best.phone || '',
+      address: props.main_address || best.address1 || best.city || '',
     };
   } catch {
     return null;
